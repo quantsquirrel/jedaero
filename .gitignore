@@ -47,3 +47,4 @@ data/*.db
 credentials.*
 .vercel
 .verify-build.log
+.env*.local
