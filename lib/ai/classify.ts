@@ -2,8 +2,6 @@
 // - 서버에서만 호출한다. 클라이언트 번들에 절대 포함 금지.
 // - 확정 주체는 항상 사용자. 신뢰도 < 0.7이면 분류하지 않고 묻는다 (오분류 비용 > 미분류 비용).
 import OpenAI from 'openai';
-import { db } from '../../db';
-import { aiCalls } from '../../db/schema';
 
 export type Tier = 'A' | 'B' | 'C';
 export type ClassifyResult = {
@@ -53,9 +51,9 @@ const RESPONSE_SCHEMA = {
   },
 };
 
-/** 분류 제안. 실패 시 null (지출은 미분류로 남고 사용자가 직접 고른다) */
+/** 분류 제안. 실패 시 null (지출은 미분류로 남고 사용자가 직접 고른다).
+ *  호출 기록·rate limit·킬스위치는 lib/ai/guard.ts의 guardedAiCall이 담당한다. */
 export async function classifyExpense(input: {
-  userId: string;
   amount: number;
   memo: string;
   occurredOn: string;
@@ -76,7 +74,6 @@ export async function classifyExpense(input: {
       max_tokens: 100,
       temperature: 0,
     });
-    await db.insert(aiCalls).values({ userId: input.userId, kind: 'AI-1' });
     const raw = res.choices[0]?.message?.content;
     if (!raw) return null;
     const parsed = JSON.parse(raw) as ClassifyResult;

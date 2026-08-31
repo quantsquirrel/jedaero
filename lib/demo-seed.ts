@@ -3,12 +3,21 @@
 // - 3개월치 지출 (A/B/C 골고루 + 미확정 3건)
 // - 퀘스트 5종 중 2종 완료
 // 리그·성향분석용 더미 사용자 200명은 3단계(리그·인사이트 구현)에서 전역 시드로 추가한다.
-import { eq, inArray } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 import { db } from '../db';
-import { allocations, expenses, questProgress, quests, users } from '../db/schema';
+import {
+  allocations,
+  budgetEnvelopes,
+  budgetMonths,
+  exemptionClaims,
+  expenses,
+  questProgress,
+  quests,
+  users,
+} from '../db/schema';
 import { addDays, mondayOfWeeksAgo, weekOf, weekOfDateStr } from './week';
 import { nextTradingDay } from './portfolio/prices';
-import type { Weights } from './constants';
+import { SALARY_2026, TRANSPORT_CAP, type Weights } from './constants';
 
 const NICKNAMES = ['해뜰날', '강철비', '초코우유', '별헤는밤', '든든적금', '월급지킴이'];
 
@@ -79,7 +88,8 @@ export async function createDemoUser(now: Date = new Date()): Promise<{ id: stri
       branch: 'ARMY',
       enlistedAt: addDays(todayK, -430), // 약 14개월차
       dischargeAt: addDays(todayK, 120), // 전역 D-120
-      homeDistance: 'MID',
+      homeDistance: 'FAR', // 왕복 상한 90,000원 — 시나리오 11(KTX 86,000)이 상한 내 면제
+      // analytics_opt_in은 기본 false로 시작 — 시나리오 15(옵트인 동의 화면)를 시연하기 위해
     })
     .returning({ id: users.id });
 
@@ -130,6 +140,43 @@ export async function createDemoUser(now: Date = new Date()): Promise<{ id: stri
       })),
     );
   }
+
+  // 예산 봉투: 확정(잠금)된 이번 달 + 미확정 다음 달 (docs/SEED.md §8)
+  const thisMonth = todayK.slice(0, 7);
+  const nextDate = new Date(`${thisMonth}-01T00:00:00Z`);
+  nextDate.setUTCMonth(nextDate.getUTCMonth() + 1);
+  const nextMonth = nextDate.toISOString().slice(0, 7);
+  const salary = SALARY_2026.CORPORAL;
+  const [lockedMonth] = await db
+    .insert(budgetMonths)
+    .values({ userId: user.id, yearMonth: thisMonth, baseSalary: salary, lockedAt: now })
+    .returning({ id: budgetMonths.id });
+  await db.insert(budgetEnvelopes).values([
+    { budgetMonthId: lockedMonth.id, category: '통신비', allocated: 45_000 },
+    { budgetMonthId: lockedMonth.id, category: '생필품', allocated: 40_000 },
+    { budgetMonthId: lockedMonth.id, category: '외박 식비', allocated: 60_000 },
+    { budgetMonthId: lockedMonth.id, category: '이발', allocated: 12_000 },
+    { budgetMonthId: lockedMonth.id, category: '자기계발', allocated: 30_000 },
+  ]);
+  const [openMonth] = await db
+    .insert(budgetMonths)
+    .values({ userId: user.id, yearMonth: nextMonth, baseSalary: salary, lockedAt: null })
+    .returning({ id: budgetMonths.id });
+  await db.insert(budgetEnvelopes).values([
+    { budgetMonthId: openMonth.id, category: '통신비', allocated: 45_000 },
+    { budgetMonthId: openMonth.id, category: '생필품', allocated: 35_000 },
+  ]);
+
+  // A계층 면제 내역: 확정된 정기휴가 KTX 86,000원 — FAR 상한(90,000) 내 전액 면제
+  const quarter = `${todayK.slice(0, 4)}-${Math.ceil(Number(todayK.slice(5, 7)) / 3)}`;
+  await db.insert(exemptionClaims).values({
+    userId: user.id,
+    yearQuarter: quarter,
+    type: 'TRANSPORT',
+    amount: 86_000,
+    reason: '정기휴가 왕복 KTX',
+    capApplied: Math.min(86_000, TRANSPORT_CAP.FAR),
+  });
 
   return user;
 }

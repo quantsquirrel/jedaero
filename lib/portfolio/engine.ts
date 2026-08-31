@@ -35,12 +35,15 @@ export function tickerFractions(h: WeightHistoryItem): Record<string, number> {
   return out;
 }
 
+const THEME_OF: Record<string, string> = {};
+for (const t of TICKERS) THEME_OF[t.ticker] = t.theme;
+
 export function computeCurve(
   dates: string[],
   series: Record<string, number[]>,
   history: WeightHistoryItem[],
   cashflows: Record<string, number>,
-): { dates: string[]; values: number[]; invested: number } {
+): { dates: string[]; values: number[]; invested: number; finalThemeValues: Record<string, number> } {
   const sorted = [...history].sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
   const units: Record<string, number> = {}; // 종목별 수량 (메모리에서만, 저장 금지)
   let current: WeightHistoryItem | null = null;
@@ -78,7 +81,18 @@ export function computeCurve(
     }
     values.push(totalValue(i));
   }
-  return { dates, values, invested };
+
+  // 마지막 시점의 테마별 평가액 — 목표 vs 현재 비중 갭 계산용 (SPEC §3-6 g)
+  const finalThemeValues: Record<string, number> = {};
+  const last = dates.length - 1;
+  if (last >= 0) {
+    for (const [tk, u] of Object.entries(units)) {
+      const theme = THEME_OF[tk];
+      if (!theme) continue;
+      finalThemeValues[theme] = (finalThemeValues[theme] ?? 0) + u * (series[tk]?.[last] ?? 0);
+    }
+  }
+  return { dates, values, invested, finalThemeValues };
 }
 
 export function maxDrawdown(values: number[]): number {

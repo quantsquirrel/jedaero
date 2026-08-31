@@ -35,7 +35,7 @@ function orderedTiers(suggested: string | null): ('A' | 'B' | 'C')[] {
   return [suggested as 'A' | 'B' | 'C', ...all.filter((t) => t !== suggested)];
 }
 
-export function ExpenseList({ items }: { items: ExpenseItem[] }) {
+export function ExpenseList({ items, aiEnabled = true }: { items: ExpenseItem[]; aiEnabled?: boolean }) {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('ALL');
   const [pending, startTransition] = useTransition();
 
@@ -98,7 +98,13 @@ export function ExpenseList({ items }: { items: ExpenseItem[] }) {
 
             {unconfirmed ? (
               <div className="flex flex-col gap-2 rounded-md bg-muted/40 p-2.5">
-                <AiNotice />
+                {aiEnabled ? (
+                  <AiNotice />
+                ) : (
+                  <span className="inline-flex w-fit items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                    규칙 기반 분류 · AI 아님
+                  </span>
+                )}
                 {e.aiSuggestedTier == null ? (
                   <p className="text-sm text-muted-foreground">
                     AI 제안을 만들지 못했습니다. 직접 선택해주세요.

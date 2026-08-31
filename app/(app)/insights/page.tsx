@@ -1,0 +1,156 @@
+import { redirect } from 'next/navigation';
+import { NarrativeButton, OptInGate, OptOutButton } from '@/components/insights-panel';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { THEMES, type Weights } from '@/lib/constants';
+import { currentDayType } from '@/lib/day-context';
+import { buildFactSentences, COHORT_LABEL } from '@/lib/insights';
+import { computeInsightStats } from '@/lib/insights-data';
+import { getSessionUser } from '@/lib/session';
+import { db } from '@/db';
+import { allocations } from '@/db/schema';
+import { desc, eq } from 'drizzle-orm';
+
+// S9 성향 분석 (AI-7) — 옵트인 + 상호주의 + k-익명성.
+// 출력은 사실 서술 + 질문으로 끝난다. 조언·성향 라벨 없음 (C8, C10)
+export default async function InsightsPage() {
+  const user = await getSessionUser();
+  if (!user) redirect('/');
+
+  const dt = await currentDayType();
+  if (dt !== 'WEEKEND') {
+    return (
+      <main className="flex flex-col gap-4 px-5 py-8">
+        <h1 className="text-2xl font-bold">성향 분석</h1>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col gap-1.5 py-5">
+            <p className="text-lg font-semibold">🔒 성향 분석은 주말에 열립니다</p>
+            <p className="text-sm text-muted-foreground">비교도 장중에 하지 않는 훈련입니다.</p>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  // 상호주의: 미동의 사용자에게는 비교 화면을 보여주지 않는다
+  if (!user.analyticsOptIn) {
+    return (
+      <main className="flex flex-col gap-4 px-5 py-8">
+        <h1 className="text-2xl font-bold">성향 분석</h1>
+        <OptInGate />
+      </main>
+    );
+  }
+
+  const data = await computeInsightStats(user);
+  const [latest] = await db
+    .select()
+    .from(allocations)
+    .where(eq(allocations.userId, user.id))
+    .orderBy(desc(allocations.effectiveFrom))
+    .limit(1);
+  const myWeights = (latest?.weights ?? {}) as Weights;
+
+  return (
+    <main className="flex flex-col gap-4 px-5 py-8">
+      <h1 className="text-2xl font-bold">성향 분석</h1>
+
+      {!data ? (
+        <p className="text-sm text-muted-foreground">아직 배분 이력이 없습니다.</p>
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground">
+            비교 집단: {COHORT_LABEL[data.stats.cohort]} {data.stats.cohortN}명 · 20명 미만이면 더 큰
+            집단으로 합쳐 표시합니다
+          </p>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">① 테마 비중</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1.5">
+              {THEMES.map((t) => (
+                <div key={t.code} className="flex items-center gap-2 text-sm">
+                  <span className="w-24 shrink-0">{t.name}</span>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${myWeights[t.code] ?? 0}%` }} />
+                  </div>
+                  <span className="w-10 text-right font-mono text-xs tabular-nums">{myWeights[t.code] ?? 0}%</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">② 집중도</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm">
+                <p className="font-semibold tabular-nums">최대 {data.stats.myMaxTheme.weight}%</p>
+                <p className="text-xs text-muted-foreground">
+                  HHI {data.stats.myHhi.toFixed(2)} · 코호트 최대비중 중앙값{' '}
+                  {Math.round(data.stats.cohortMaxWeightMedian)}%
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">③ 회전율</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm">
+                <p className="font-semibold tabular-nums">주당 {data.stats.myTurnover.toFixed(1)}%p</p>
+                <p className="text-xs text-muted-foreground">
+                  코호트 중앙값 {data.stats.cohortTurnoverMedian.toFixed(1)}%p
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">④ 현금비중</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm">
+                <p className="font-semibold tabular-nums">{data.stats.myCash}%</p>
+                <p className="text-xs text-muted-foreground">
+                  코호트 중앙값 {Math.round(data.stats.cohortCashMedian)}%
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">⑤ 변동성</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm">
+                <p className="font-semibold tabular-nums">연 {Math.round(data.stats.myVol * 100)}%</p>
+                <p className="text-xs text-muted-foreground">전역 곡선 일간 수익률 기준</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">사실 서술</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                {buildFactSentences(data.stats, THEMES.find((t) => t.code === data.stats.myMaxTheme.code)?.name ?? '').map(
+                  (s, i) => (
+                    <p key={i} className="text-sm leading-relaxed">
+                      {s}
+                    </p>
+                  ),
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                위 문장은 규칙 기반 계산 결과입니다 (AI 아님). 아래 버튼은 같은 숫자를 생성형 AI가
+                서술합니다 — 조언이 감지되면 표시하지 않습니다.
+              </p>
+              <NarrativeButton />
+            </CardContent>
+          </Card>
+
+          <OptOutButton />
+        </>
+      )}
+    </main>
+  );
+}
