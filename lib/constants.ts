@@ -71,3 +71,6 @@ export const PORTFOLIO_TEMPLATES = [
 
 // AI rate limit (SPEC §5)
 export const AI_RATE_LIMIT = { perMinute: 5, perDay: 50 } as const;
+
+// AI-1: 신뢰도가 이 값 미만이면 분류하지 않고 사용자에게 묻는다 (오분류 비용 > 미분류 비용)
+export const CONFIDENCE_THRESHOLD = 0.7;
