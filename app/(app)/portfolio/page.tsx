@@ -65,11 +65,16 @@ export default async function PortfolioPage() {
   const lumpFinal = lumpCurve.values[lumpCurve.values.length - 1] ?? 0;
 
   // 목표 vs 현재 비중 갭 — 시장 변동으로 흐트러진 거리. 항상 표시한다
+  // ★ 정수로 반올림하지 않는다. 6축으로 분산된 포트폴리오의 주간 표류는 보통 1%p 미만이라
+  //   반올림하면 실제 드리프트가 전부 0%p로 사라지고 "목표와 일치합니다"라는 거짓말이 남는다.
+  //   되돌리기 버튼도 그 순간 함께 사라져 리밸런싱 개념이 화면에서 증발한다.
   const themeTotal = Object.values(lumpCurve.finalThemeValues).reduce((a, b) => a + b, 0);
+  const round1 = (x: number) => Math.round(x * 10) / 10;
   const gaps = THEMES.map((t) => {
-    const current = themeTotal > 0 ? Math.round(((lumpCurve.finalThemeValues[t.code] ?? 0) / themeTotal) * 100) : (targetWeights[t.code] ?? 0);
     const target = targetWeights[t.code] ?? 0;
-    return { code: t.code, name: t.name, target, current, gap: current - target };
+    const current =
+      themeTotal > 0 ? round1(((lumpCurve.finalThemeValues[t.code] ?? 0) / themeTotal) * 100) : target;
+    return { code: t.code, name: t.name, target, current, gap: round1(current - target) };
   });
   const maxAbsGap = Math.max(...gaps.map((g) => Math.abs(g.gap)));
 
@@ -175,16 +180,16 @@ export default async function PortfolioPage() {
             <div key={g.code} className="flex items-center justify-between gap-2 text-sm">
               <span className="w-24 shrink-0">{g.name}</span>
               <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                목표 {g.target}% → 현재 {g.current}%
+                목표 {g.target}% → 현재 {g.current.toFixed(1)}%
               </span>
               <span
                 className={cn(
-                  'w-14 text-right font-mono text-xs tabular-nums',
+                  'w-16 text-right font-mono text-xs tabular-nums',
                   g.gap === 0 ? 'text-muted-foreground' : g.gap > 0 ? 'text-emerald-400' : 'text-red-400',
                 )}
               >
                 {g.gap > 0 ? '+' : ''}
-                {g.gap}%p
+                {g.gap.toFixed(1)}%p
               </span>
             </div>
           ))}
@@ -195,9 +200,18 @@ export default async function PortfolioPage() {
             </Link>
           </p>
           {maxAbsGap > 0 ? (
-            <RevertButton target={targetWeights} disabled={!open || alreadyThisWeek} />
+            <>
+              <p className="text-xs text-muted-foreground">
+                가장 많이 벌어진 축이 <b className="text-foreground">{maxAbsGap.toFixed(1)}%p</b>{' '}
+                떨어져 있습니다. 마지막 체결은 {latest.effectiveFrom}입니다.
+              </p>
+              <RevertButton target={targetWeights} disabled={!open || alreadyThisWeek} />
+            </>
           ) : (
-            <p className="text-xs text-muted-foreground">지금은 목표와 현재가 일치합니다.</p>
+            <p className="text-xs text-muted-foreground">
+              지금은 목표와 현재가 0.1%p 미만으로 일치합니다. 체결 직후이거나 시장이 거의 움직이지
+              않은 구간입니다.
+            </p>
           )}
         </CardContent>
       </Card>

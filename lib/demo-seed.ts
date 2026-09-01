@@ -1,5 +1,5 @@
 // /demo 진입 시 주입되는 체험용 데이터 (SPEC §7, docs/SEED.md §8)
-// - 12주치 비중 변경 이력 (조정하지 않은 주 2주 포함 — 행이 없는 주가 곧 "유지")
+// - 12주치 비중 변경 이력 (조정하지 않은 주 4주 포함 — 행이 없는 주가 곧 "유지")
 // - 3개월치 지출 (A/B/C 골고루 + 미확정 3건)
 // - 퀘스트 5종 중 2종 완료
 // 리그·성향분석용 더미 사용자 200명은 3단계(리그·인사이트 구현)에서 전역 시드로 추가한다.
@@ -17,26 +17,10 @@ import {
 } from '../db/schema';
 import { addDays, mondayOfWeeksAgo, weekOf, weekOfDateStr } from './week';
 import { nextTradingDay } from './portfolio/prices';
-import { SALARY_2026, TRANSPORT_CAP, type Weights } from './constants';
+import { SALARY_2026, TRANSPORT_CAP } from './constants';
+import { ACTIVE_WEIGHT_STORY } from './demo-story';
 
 const NICKNAMES = ['해뜰날', '강철비', '초코우유', '별헤는밤', '든든적금', '월급지킴이'];
-
-// 12주 중 8주 전·3주 전은 조정하지 않았다 (HOLD 상태 시연)
-const SKIP_WEEKS_AGO = new Set([8, 3]);
-
-// 12주 전 → 1주 전. GLOBAL에서 시작해 5%p 단위로 조금씩 이동한 이력
-const WEIGHT_STORY: { weeksAgo: number; weights: Weights; templateId?: string }[] = [
-  { weeksAgo: 12, weights: { KR_LARGE: 20, KR_THEME: 0, US_INDEX: 50, BOND_CASH: 20, GOLD_COMM: 10, DIVIDEND: 0 }, templateId: 'GLOBAL' },
-  { weeksAgo: 11, weights: { KR_LARGE: 20, KR_THEME: 5, US_INDEX: 50, BOND_CASH: 15, GOLD_COMM: 10, DIVIDEND: 0 } },
-  { weeksAgo: 10, weights: { KR_LARGE: 25, KR_THEME: 5, US_INDEX: 45, BOND_CASH: 15, GOLD_COMM: 10, DIVIDEND: 0 } },
-  { weeksAgo: 9, weights: { KR_LARGE: 25, KR_THEME: 10, US_INDEX: 45, BOND_CASH: 10, GOLD_COMM: 10, DIVIDEND: 0 } },
-  { weeksAgo: 7, weights: { KR_LARGE: 20, KR_THEME: 10, US_INDEX: 50, BOND_CASH: 10, GOLD_COMM: 10, DIVIDEND: 0 } },
-  { weeksAgo: 6, weights: { KR_LARGE: 20, KR_THEME: 15, US_INDEX: 45, BOND_CASH: 10, GOLD_COMM: 10, DIVIDEND: 0 } },
-  { weeksAgo: 5, weights: { KR_LARGE: 15, KR_THEME: 15, US_INDEX: 45, BOND_CASH: 15, GOLD_COMM: 10, DIVIDEND: 0 } },
-  { weeksAgo: 4, weights: { KR_LARGE: 15, KR_THEME: 20, US_INDEX: 40, BOND_CASH: 15, GOLD_COMM: 10, DIVIDEND: 0 } },
-  { weeksAgo: 2, weights: { KR_LARGE: 20, KR_THEME: 20, US_INDEX: 40, BOND_CASH: 10, GOLD_COMM: 10, DIVIDEND: 0 } },
-  { weeksAgo: 1, weights: { KR_LARGE: 20, KR_THEME: 20, US_INDEX: 35, BOND_CASH: 15, GOLD_COMM: 10, DIVIDEND: 0 } },
-];
 
 // 지출 3개월치: [일수 전, 금액, 메모, tier, 확정 여부, AI 제안, 신뢰도]
 type DemoExpense = [number, number, string, string, boolean, string | null, number | null];
@@ -94,7 +78,7 @@ export async function createDemoUser(now: Date = new Date()): Promise<{ id: stri
     .returning({ id: users.id });
 
   // 12주치 비중 이력 (스킵 주 2주는 행 없음 = 직전 비중 유지)
-  const allocRows = WEIGHT_STORY.filter((w) => !SKIP_WEEKS_AGO.has(w.weeksAgo)).map((w) => {
+  const allocRows = ACTIVE_WEIGHT_STORY.map((w) => {
     const monday = mondayOfWeeksAgo(now, w.weeksAgo);
     const sunday = addDays(monday, 6);
     const decidedAt = new Date(`${sunday}T11:00:00Z`); // 일요일 20:00 KST

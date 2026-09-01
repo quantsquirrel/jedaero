@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { and, desc, eq } from 'drizzle-orm';
 import { ExpenseForm } from '@/components/expense-form';
 import { ExpenseList, type ExpenseItem } from '@/components/expense-list';
+import { SupportCard } from '@/components/support-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
 import { exemptionClaims, expenses } from '@/db/schema';
@@ -10,6 +11,7 @@ import { TRANSPORT_CAP, type HomeDistance } from '@/lib/constants';
 import { kstToday } from '@/lib/day-type';
 import { won } from '@/lib/format';
 import { getSessionUser } from '@/lib/session';
+import { detectSupportSignal } from '@/lib/support';
 
 // S5 가계부 — 지출 기록·AI 분류 제안·사용자 확정·면제 내역. 평일에도 언제나 동작한다.
 export default async function ExpensesPage() {
@@ -45,6 +47,9 @@ export default async function ExpensesPage() {
     .orderBy(desc(exemptionClaims.capApplied))
     .limit(20);
   const cap = TRANSPORT_CAP[user.homeDistance as HomeDistance] ?? TRANSPORT_CAP.MID;
+
+  // AI-6: 면제 청구 패턴 관찰 → 차단이 아니라 상담 채널 연결 (SPEC §4 AI-6)
+  const supportSignal = await detectSupportSignal(user.id, quarter);
 
   return (
     <main className="flex flex-col gap-4 px-5 py-8">
@@ -93,6 +98,8 @@ export default async function ExpensesPage() {
           )}
         </CardContent>
       </Card>
+
+      <SupportCard signal={supportSignal} />
 
       <p className="text-xs leading-relaxed text-muted-foreground">
         분류 축은 &ldquo;필수 vs 사치&rdquo;가 아니라 &ldquo;통제 가능 vs 불가&rdquo;입니다. A

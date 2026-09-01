@@ -292,6 +292,13 @@ run_check P1-11 scripts/checks/p1-11-unit-filter.ts
 run_check P1-12 scripts/checks/p1-12-injection.ts
 run_check P1-13 scripts/checks/p1-13-guard.ts
 
+# P1-14 목표 vs 현재 갭 회귀 (P0-1) / P1-15 AI-4 주간 시황 계산
+# P1-16 LLM 출력 검증(조언·라벨·전망) / P1-17 AI-2 봉투 제안 폴백
+run_check P1-14 scripts/checks/p1-14-gap.ts
+run_check P1-15 scripts/checks/p1-15-market-week.ts
+run_check P1-16 scripts/checks/p1-16-output-guard.ts
+run_check P1-17 scripts/checks/p1-17-budget-suggest.ts
+
 # ---------- 요약 ----------
 echo '---'
 printf 'P0: %d/%d PASS   P1: %d/%d PASS\n' "$P0P" "$P0T" "$P1P" "$P1T"

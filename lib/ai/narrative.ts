@@ -2,8 +2,7 @@
 // 출력은 사실 서술 + 질문으로 끝난다. 조언·추천이 감지되면 규칙 기반 템플릿으로 폴백 (C8, C10).
 import OpenAI from 'openai';
 import type { InsightStats } from '../insights';
-
-const ADVICE_PATTERN = /(해\s?보세요|하세요|해야|권장|추천|필요합니다|줄이(시|세요)|늘리(시|세요)|바꾸(시|세요)|고려)/;
+import { verifyFactualOutput } from './output-guard';
 
 const SYSTEM_PROMPT = `너는 병사의 자산 배분 통계를 "사실 그대로" 서술하는 도구다.
 규칙 (어기면 출력이 폐기된다):
@@ -45,8 +44,8 @@ export async function generateNarrative(stats: InsightStats, themeName: string):
     });
     const text = res.choices[0]?.message?.content?.trim();
     if (!text) return null;
-    // 출력 검증: 조언 패턴이 감지되면 폐기 (사실 서술 원칙 위반)
-    if (ADVICE_PATTERN.test(text)) return null;
+    // 출력 검증: 조언·성향 라벨·전망이 감지되면 폐기 (사실 서술 원칙 위반)
+    if (!verifyFactualOutput(text).ok) return null;
     return text;
   } catch {
     return null;
