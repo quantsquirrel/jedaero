@@ -65,6 +65,7 @@ users (
   discharge_at      date NOT NULL,        -- 동기 코호트 키
   home_distance     text NOT NULL,        -- NEAR|MID|FAR|ISLAND (주소 원문 저장 금지)
   analytics_opt_in  boolean NOT NULL DEFAULT false,   -- 집단 성향 분석 동의 (AI-7)
+  is_demo           boolean NOT NULL DEFAULT false,   -- /demo가 만든 체험 계정만 true (§7 요일 토글 인정 근거)
   created_at        timestamptz NOT NULL
 )
 

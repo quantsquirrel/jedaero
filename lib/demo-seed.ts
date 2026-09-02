@@ -89,6 +89,7 @@ export async function createDemoUser(now: Date = new Date()): Promise<{ id: stri
       enlistedAt: addDays(todayK, -430), // 약 14개월차
       dischargeAt: addDays(todayK, 120), // 전역 D-120
       homeDistance: 'FAR', // 왕복 상한 90,000원 — 시나리오 11(KTX 86,000)이 상한 내 면제
+      isDemo: true, // 요일 토글이 서버 판정을 덮어쓸 수 있는 계정은 여기서 만든 것뿐이다
       // analytics_opt_in은 기본 false로 시작 — 시나리오 15(옵트인 동의 화면)를 시연하기 위해
     })
     .returning({ id: users.id });

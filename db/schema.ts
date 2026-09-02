@@ -26,6 +26,9 @@ export const users = pgTable('users', {
   dischargeAt: date('discharge_at').notNull(), // 동기 코호트 키
   homeDistance: text('home_distance').notNull(), // NEAR|MID|FAR|ISLAND (주소 원문 저장 금지)
   analyticsOptIn: boolean('analytics_opt_in').notNull().default(false), // AI-7 옵트인
+  // /demo 라우트가 만든 체험 계정만 true. 데모 요일 토글 쿠키를 인정할지 판정하는 유일한 근거이므로
+  // 사용자 입력·온보딩 어디에서도 이 값을 받지 말 것 (SPEC §7)
+  isDemo: boolean('is_demo').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
