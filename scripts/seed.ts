@@ -1,8 +1,9 @@
 // DB 시드 적재 (멱등). 실행: npm run seed
-// tickers·quests·holidays·settings는 upsert, prices는 전체 교체.
+// tickers·quests·holidays·settings는 upsert, prices와 더미 사용자는 전체 교체.
+import { randomUUID } from 'node:crypto';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { TICKERS } from '../db/seed/tickers';
 import { QUESTS } from '../db/seed/quests';
@@ -78,7 +79,11 @@ async function main() {
 }
 
 // ---- 리그·성향분석용 더미 사용자 200명 (SPEC §7) ----
-// 합성 분포·결정론적(시드 고정)·멱등(고정 UUID upsert). 닉네임은 실명처럼 보이지 않게.
+// 합성 분포·결정론적(시드 고정). 닉네임은 실명처럼 보이지 않게.
+// ★ users.id는 서명 없는 익명 쿠키 값 그대로가 세션 자격증명이다 (lib/session.ts).
+//   규칙적인 UUID를 코드에 박아 두면 그 계정 세션을 누구나 그대로 재현할 수 있으므로,
+//   더미 ID는 실행할 때마다 난수로 만든다. 고정 UUID upsert로 얻던 멱등성은
+//   "생성한 ID 목록을 settings에 남기고 → 다음 실행에서 지우고 다시 심는" 방식으로 대신한다.
 function mulberry32(seed: number) {
   let a = seed >>> 0;
   return () => {
@@ -91,7 +96,13 @@ function mulberry32(seed: number) {
 }
 
 const DUMMY_COUNT = 200;
-const dummyId = (i: number) => `00000000-0000-4000-8000-${String(100000000000 + i)}`;
+const DUMMY_IDS_KEY = 'seed_dummy_user_ids';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// 순번 UUID로 심었던 구버전 더미. 이미 적재된 DB에 남아 있으면 그 세션이 그대로 열려 있으므로 걷어낸다.
+const LEGACY_DUMMY_IDS = Array.from(
+  { length: DUMMY_COUNT },
+  (_, i) => `00000000-0000-4000-8000-${String(100000000000 + i)}`,
+);
 const NICKS = ['해뜰날', '강철비', '초코우유', '별헤는밤', '든든적금', '월급지킴이', '산바람', '바다안개', '새벽별', '고요아침', '달빛산책', '구름과자'];
 
 function randomWeights(rng: () => number): Weights {
@@ -116,6 +127,18 @@ function shiftWeights(rng: () => number, base: Weights): Weights {
   return w;
 }
 
+// 지난 실행이 심어 둔 더미 ID 목록. 값이 깨져 있으면 정리를 건너뛰지 않고 형식이 맞는 것만 쓴다.
+async function storedDummyIds(): Promise<string[]> {
+  const rows = await db.select().from(schema.settings).where(eq(schema.settings.key, DUMMY_IDS_KEY)).limit(1);
+  if (!rows[0]) return [];
+  try {
+    const parsed: unknown = JSON.parse(rows[0].value);
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string' && UUID_RE.test(v)) : [];
+  } catch {
+    return [];
+  }
+}
+
 async function seedDummyUsers() {
   const rng = mulberry32(20260907);
   const now = new Date();
@@ -134,7 +157,7 @@ async function seedDummyUsers() {
   const distances = ['NEAR', 'MID', 'FAR', 'ISLAND'];
 
   for (let i = 0; i < DUMMY_COUNT; i++) {
-    const id = dummyId(i);
+    const id = randomUUID(); // 코호트 분포는 i로 정하고, ID만 예측 불가하게 둔다
     let dischargeMonth: string;
     if (i < 60) dischargeMonth = demoMonthA;
     else if (i < 120) dischargeMonth = demoMonthB;
@@ -180,15 +203,27 @@ async function seedDummyUsers() {
     }
   }
 
+  // 이전 실행이 남긴 더미 + 구버전 순번 UUID 더미를 먼저 제거한다. allocations만 users를 FK로
+  // 참조하므로 자식 행부터 지운다. (더미는 users·allocations·weekly_scores에만 존재한다)
+  const staleIds = [...(await storedDummyIds()), ...LEGACY_DUMMY_IDS];
+  await db.delete(schema.weeklyScores).where(inArray(schema.weeklyScores.userId, staleIds));
+  await db.delete(schema.allocations).where(inArray(schema.allocations.userId, staleIds));
+  await db.delete(schema.users).where(inArray(schema.users.id, staleIds));
+
+  // 적재 전에 ID를 먼저 기록한다 — 도중에 실패해도 다음 실행이 남은 행을 정리할 수 있게.
+  const ids = userRows.map((u) => u.id);
+  await db
+    .insert(schema.settings)
+    .values({ key: DUMMY_IDS_KEY, value: JSON.stringify(ids) })
+    .onConflictDoUpdate({ target: schema.settings.key, set: { value: sql`excluded.value` } });
+
   const CHUNK = 500;
   for (let i = 0; i < userRows.length; i += CHUNK) {
-    await db.insert(schema.users).values(userRows.slice(i, i + CHUNK)).onConflictDoNothing();
+    await db.insert(schema.users).values(userRows.slice(i, i + CHUNK));
   }
   for (let i = 0; i < allocRows.length; i += CHUNK) {
-    await db.insert(schema.allocations).values(allocRows.slice(i, i + CHUNK)).onConflictDoNothing();
+    await db.insert(schema.allocations).values(allocRows.slice(i, i + CHUNK));
   }
-  const ids = userRows.map((u) => u.id);
-  await db.delete(schema.weeklyScores).where(inArray(schema.weeklyScores.userId, ids));
   for (let i = 0; i < scoreRows.length; i += CHUNK) {
     await db.insert(schema.weeklyScores).values(scoreRows.slice(i, i + CHUNK));
   }
