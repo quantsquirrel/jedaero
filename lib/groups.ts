@@ -1,6 +1,7 @@
 // 초대코드 그룹 (SPEC §3-8) — 정원 30명, 지표는 예산 준수율 + 규율 스트릭.
 // ★ 그룹 내 수익률은 비공개다. 부대 내 "얼마 벌었다" 자랑 문화(군기문란 리스크)를 차단한다.
 //   이 파일과 그룹 화면은 수익률 필드를 참조하지 않는다 (P1-10).
+import { randomInt } from 'node:crypto';
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { groupMembers, groups, users, weeklyScores } from '../db/schema';
@@ -10,9 +11,12 @@ import { weekOf } from './week';
 
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // 혼동 문자 제외
 
+// 초대코드는 그룹 참여를 인가하는 유일한 비밀값이다 — Math.random()은 관측된 코드로 상태를 복원해
+// 남의 코드를 예측할 수 있으므로 쓰지 않는다. randomInt는 거부 표집이라 31자 알파벳에 편향이 없다
+// (바이트를 31로 나머지 연산하면 256 % 31 ≠ 0 때문에 앞쪽 문자가 더 자주 나온다).
 function randomInviteCode(): string {
   let out = '';
-  for (let i = 0; i < 6; i++) out += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+  for (let i = 0; i < 6; i++) out += CODE_CHARS[randomInt(CODE_CHARS.length)];
   return out;
 }
 
