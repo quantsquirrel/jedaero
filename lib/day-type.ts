@@ -24,6 +24,18 @@ export function dayType(now: Date): DayType {
   return HOLIDAY_SET.has(k.toISOString().slice(0, 10)) ? 'WEEKEND' : 'WEEKDAY';
 }
 
+/**
+ * 다음 편성 창까지 남은 일수. 오늘이 이미 편성 창(주말·공휴일)이면 0.
+ * 홈 화면의 "다음 편성까지 D-n"에 쓴다 — 전역 D-Day를 대신한다.
+ */
+export function daysUntilRebalance(now: Date = new Date()): number {
+  for (let d = 0; d < 8; d += 1) {
+    const probe = new Date(now.getTime() + d * 86_400_000);
+    if (dayType(probe) === 'WEEKEND') return d;
+  }
+  return 0;
+}
+
 /** 비중 조정 가능 여부. 일요일 21:00 KST가 그 주 마감 (21:00 정각까지 허용) */
 export function isRebalanceOpen(now: Date): boolean {
   if (dayType(now) !== 'WEEKEND') return false;

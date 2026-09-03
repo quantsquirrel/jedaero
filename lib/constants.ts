@@ -19,7 +19,7 @@ export const TRANSPORT_CAP = {
 export type HomeDistance = keyof typeof TRANSPORT_CAP;
 
 // 모의 시드 금액: 장병내일준비적금 18개월 만기 수령액. 전원 동일
-export const SEED_AMOUNT = 20_200_000;
+export const SEED_AMOUNT = 20_000_000;
 
 // 테마 6축. 사용자가 조작하는 유일한 대상
 export const THEMES = [
