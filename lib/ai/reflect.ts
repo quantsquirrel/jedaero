@@ -4,6 +4,7 @@
 // 사용자가 쓴 한 줄 + 이번 주 규칙 기반 사실 → 사실 확인 1~2문장 + 열린 질문 1개.
 import OpenAI from 'openai';
 import type { ReviewFacts } from '../review-context';
+import { verifyNumbersFrom } from './number-guard';
 import { verifyFactualOutput } from './output-guard';
 
 export type Reflection = { acknowledgement: string; question: string };
@@ -42,20 +43,18 @@ export async function generateReflection(text: string, facts: ReviewFacts): Prom
   if (!process.env.OPENAI_API_KEY) return null;
   try {
     const client = new OpenAI();
+    const input = {
+      이번주_회고_원문: text,
+      이번주에_비중을_바꿨나: facts.changedThisWeek,
+      바꾼폭_퍼센트포인트: Number(facts.turnoverPp.toFixed(1)),
+      마지막_조정_이후_지난_주수: facts.weeksUnchanged,
+      어느_전선에도_놓지_않은_몫_퍼센트: facts.reservePct,
+    };
     const res = await client.chat.completions.create({
       model: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        {
-          role: 'user',
-          content: JSON.stringify({
-            이번주_회고_원문: text,
-            이번주에_비중을_바꿨나: facts.changedThisWeek,
-            바꾼폭_퍼센트포인트: Number(facts.turnoverPp.toFixed(1)),
-            마지막_조정_이후_지난_주수: facts.weeksUnchanged,
-            어느_전선에도_놓지_않은_몫_퍼센트: facts.reservePct,
-          }),
-        },
+        { role: 'user', content: JSON.stringify(input) },
       ],
       response_format: RESPONSE_SCHEMA,
       max_tokens: 250,
@@ -66,7 +65,10 @@ export async function generateReflection(text: string, facts: ReviewFacts): Prom
     const parsed = JSON.parse(raw) as Reflection;
     if (typeof parsed.acknowledgement !== 'string' || typeof parsed.question !== 'string') return null;
     if (!parsed.question.trim()) return null;
-    if (!verifyFactualOutput(`${parsed.acknowledgement} ${parsed.question}`).ok) return null;
+    const out = `${parsed.acknowledgement} ${parsed.question}`;
+    if (!verifyFactualOutput(out).ok) return null;
+    // 숫자 검증 — 회고 원문의 숫자는 허용된다(사용자가 쓴 것을 되짚는 것이므로).
+    if (!verifyNumbersFrom(out, input).ok) return null;
     return parsed;
   } catch {
     return null;

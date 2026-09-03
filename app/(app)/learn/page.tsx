@@ -1,20 +1,24 @@
 import { redirect } from 'next/navigation';
 import { desc, eq } from 'drizzle-orm';
+import { DrillDeck } from '@/components/drill-deck';
 import { LearnCardsView } from '@/components/learn-cards-view';
 import { MarketWeekCard } from '@/components/market-week-card';
 import { ReviewForm } from '@/components/review-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
 import { allocations } from '@/db/schema';
-import type { ThemeCode } from '@/lib/constants';
+import { BASELINE_OPERATION, type ThemeCode } from '@/lib/constants';
 import { currentDayType } from '@/lib/day-context';
 import { kstToday } from '@/lib/day-type';
+import { DRILL_SCENARIOS } from '@/lib/drill/scenarios';
+import { runDrill } from '@/lib/drill/run';
 import { LEARN_CARDS } from '@/lib/learn-cards';
 import { computeMarketWeek } from '@/lib/market-week';
+import type { WeightHistoryItem } from '@/lib/portfolio/engine';
 import { getSessionUser } from '@/lib/session';
 
 // S8 학습·회고 — 5단계 학습 카드는 기능과 1:1 페어링, 각 기능 화면에서 이리로 진입한다
-// 전선 등락(시황)은 평일에도 연다. 내 손익 가중과 AI-4 브리핑만 주말 (DESIGN-DECISIONS §5).
+// 전선 등락은 평일에도 연다. 내 손익 가중은 주말. 평일 AI 문장(질문 1개)은 지형 카드에.
 export default async function LearnPage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
@@ -22,12 +26,20 @@ export default async function LearnPage() {
   const dt = await currentDayType();
 
   const [latest] = await db
-    .select({ weights: allocations.weights })
+    .select({ weights: allocations.weights, details: allocations.details })
     .from(allocations)
     .where(eq(allocations.userId, user.id))
     .orderBy(desc(allocations.effectiveFrom))
     .limit(1);
-  const week = computeMarketWeek(kstToday(), (latest?.weights ?? {}) as Partial<Record<ThemeCode, number>>);
+  const weights = (latest?.weights ?? {}) as Partial<Record<ThemeCode, number>>;
+  const details = (latest?.details ?? null) as WeightHistoryItem['details'];
+  const week = computeMarketWeek(kstToday(), weights);
+  const baseline = BASELINE_OPERATION.weights;
+  const drillItems = DRILL_SCENARIOS.map((sc) => ({
+    id: sc.id,
+    mine: runDrill(weights, sc.id, details),
+    alliance: runDrill(baseline, sc.id),
+  }));
 
   return (
     <main className="flex flex-col gap-4 px-5 py-8">
@@ -37,6 +49,8 @@ export default async function LearnPage() {
         좋은 읽을 때입니다.
       </p>
       <LearnCardsView cards={[...LEARN_CARDS]} />
+
+      <DrillDeck items={drillItems} hasAllocation={Boolean(latest)} />
 
       <Card>
         <CardHeader>

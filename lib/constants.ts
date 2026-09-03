@@ -106,6 +106,17 @@ export const OPERATIONS = [
   weights: Weights;
 }>;
 
+/** 도상훈련·비교 화면의 기준선으로 쓰는 예시 작전.
+ *  ★ "정답"이 아니라 «전 전선에 고르게 놓은 한 장»이라 비교의 원점으로 삼는다.
+ *  호출부가 `OPERATIONS.find(...)!` 로 논넌널 단언을 쓰지 않게 여기서 한 번만 확인한다 —
+ *  id가 바뀌면 요청 때가 아니라 모듈 로드(=빌드) 때 터진다. */
+export const BASELINE_OPERATION_ID = 'ALLIANCE';
+export const BASELINE_OPERATION = (() => {
+  const op = OPERATIONS.find((o) => o.id === BASELINE_OPERATION_ID);
+  if (!op) throw new Error(`기준선 작전(${BASELINE_OPERATION_ID})이 OPERATIONS에 없습니다.`);
+  return op;
+})();
+
 // AI rate limit (SPEC §5)
 export const AI_RATE_LIMIT = { perMinute: 5, perDay: 50 } as const;
 

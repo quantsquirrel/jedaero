@@ -2,7 +2,7 @@
 // ★ 부대 정보는 어디에도 쓰지 않는다 (C4). 그룹명은 AI-5 필터를 통과한 것만.
 // ★ 그룹 내 수익률은 비공개다. 부대 내 "얼마 벌었다" 자랑 문화(군기문란 리스크)를 차단한다.
 //   이 파일과 그룹 화면은 수익률 필드를 참조하지 않는다 (P1-10).
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { groupMembers, groups, users, weeklyScores } from '../db/schema';
 import { checkGroupName } from './filters/unit-filter';
@@ -88,7 +88,9 @@ export async function myGroupBoards(userId: string): Promise<GroupBoard[]> {
       .select({ userId: users.id, nickname: users.nickname })
       .from(groupMembers)
       .innerJoin(users, eq(groupMembers.userId, users.id))
-      .where(eq(groupMembers.groupId, g.id));
+      .where(eq(groupMembers.groupId, g.id))
+      // 가입순을 명시한다 — ORDER BY 없는 조회 순서는 Postgres가 보장하지 않는다
+      .orderBy(asc(users.createdAt), asc(users.id));
 
     const memberIds = memberRows.map((m) => m.userId);
     const scores = await db

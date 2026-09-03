@@ -26,11 +26,14 @@ export function WeightEditor({
   initialDetails,
   disabled,
   disabledReason,
+  draft,
 }: {
   initial: Weights;
   initialDetails?: Details | null;
   disabled: boolean;
   disabledReason?: string;
+  /** 평일에 남긴 초안 (명령하달). 있으면 나란히 보여주고 «한 번» 불러올 수 있다. */
+  draft?: { weights: Weights; note: string | null } | null;
 }) {
   const [weights, setWeights] = useState<Weights>(initial);
   const [details, setDetails] = useState<Details>(initialDetails ?? {});
@@ -38,6 +41,7 @@ export function WeightEditor({
   const [notice, setNotice] = useState<string | null>(null);
   const [result, setResult] = useState<{ ok?: string; error?: string }>({});
   const [pending, startTransition] = useTransition();
+  const [loadedDraft, setLoadedDraft] = useState(false);
 
   const dirty =
     THEMES.some((t) => weights[t.code] !== initial[t.code]) ||
@@ -193,6 +197,60 @@ export function WeightEditor({
           </div>
         );
       })}
+
+      {/* 명령하달 초안 — «자동 적용 금지». 불러오는 것 자체가 명령이 되면 안 된다 (잠금 문서 §1) */}
+      {draft ? (
+        <div className="flex flex-col gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-400/80">
+            평일에 남긴 초안
+          </p>
+          <div className="flex flex-col gap-1">
+            {THEMES.map((t) => {
+              const d = Math.round((draft.weights[t.code] ?? 0) / POINT_UNIT);
+              const now = pointsOf(weights, t.code);
+              return (
+                <div key={t.code} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="w-24 shrink-0 truncate">{t.name}</span>
+                  <span className="font-mono tabular-nums text-muted-foreground">
+                    초안 {d}p → 지금 {now}p
+                  </span>
+                  <span
+                    className={cn(
+                      'w-10 text-right font-mono tabular-nums',
+                      now === d ? 'text-muted-foreground' : 'text-amber-300',
+                    )}
+                  >
+                    {now === d ? '같음' : `${now > d ? '+' : ''}${now - d}p`}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          {draft.note ? (
+            <p className="border-t border-amber-500/20 pt-2 text-xs leading-relaxed text-amber-200/80">
+              “{draft.note}”
+            </p>
+          ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={locked || loadedDraft}
+            onClick={() => {
+              setWeights(draft.weights);
+              setDetails({});
+              setLoadedDraft(true);
+              setNotice('초안을 편성기에 올렸습니다. 아직 확정되지 않았습니다 — 그대로 둘지 고칠지는 지금 정합니다.');
+            }}
+          >
+            {loadedDraft ? '초안을 올렸습니다' : '초안 불러오기'}
+          </Button>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            초안은 저절로 적용되지 않습니다. 화요일의 판단과 지금의 판단은 다를 수 있고, 그 차이를
+            보는 것이 이 화면의 목적입니다.
+          </p>
+        </div>
+      ) : null}
 
       {/* 예비대 — 축이 아니라 잔여지만, 하나의 축처럼 보여야 한다 */}
       <div className="rounded-md border border-dashed border-border px-3 py-2">

@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { DeadlineCountdown } from '@/components/deadline-countdown';
+import { DraftEditor } from '@/components/draft-editor';
 import { RevertButton } from '@/components/revert-button';
 import { WeightEditor } from '@/components/weight-editor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
-import { allocations } from '@/db/schema';
+import { allocations, drafts } from '@/db/schema';
 import { POINT_UNIT, RESERVE, SEED_AMOUNT, THEMES, type Weights } from '@/lib/constants';
 import { currentDayType, currentRebalanceOpen, demoOverride } from '@/lib/day-context';
 import { kstToday } from '@/lib/day-type';
@@ -15,6 +16,7 @@ import { computeCurve, type WeightHistoryItem } from '@/lib/portfolio/engine';
 import { pricesUpTo } from '@/lib/portfolio/prices';
 import type { Details } from '@/lib/portfolio/details';
 import { reservePoints } from '@/lib/portfolio/weights';
+import { compareDraft } from '@/lib/drafts/compare';
 import { computeMarketWeek } from '@/lib/market-week';
 import { getSessionUser } from '@/lib/session';
 import { addDays, mondayOfWeeksAgo, weekOf } from '@/lib/week';
@@ -37,6 +39,16 @@ export default async function PortfolioPage() {
     .where(eq(allocations.userId, user.id))
     .orderBy(asc(allocations.effectiveFrom), asc(allocations.decidedAt));
 
+  const thisWeek = weekOf(new Date());
+  const [draftRow] = await db
+    .select()
+    .from(drafts)
+    .where(and(eq(drafts.userId, user.id), eq(drafts.weekOf, thisWeek)))
+    .limit(1);
+  const draft = draftRow
+    ? { weights: draftRow.weights as Weights, note: draftRow.note as string | null }
+    : null;
+
   if (rows.length === 0) {
     return (
       <main className="flex flex-col gap-4 px-5 py-8">
@@ -53,7 +65,7 @@ export default async function PortfolioPage() {
 
   const latest = rows[rows.length - 1];
   const targetWeights = latest.weights as Weights;
-  const alreadyThisWeek = rows.some((r) => r.weekOf === weekOf(new Date()));
+  const alreadyThisWeek = rows.some((r) => r.weekOf === thisWeek);
 
   // 전역(일시금) 곡선 — 갭 계산에는 항상 필요. 수익률 수치는 주말에만 내려보낸다.
   const { dates, series } = pricesUpTo(kstToday());
@@ -219,9 +231,40 @@ export default async function PortfolioPage() {
             initialDetails={(latest.details as Details | null) ?? null}
             disabled={!open || alreadyThisWeek}
             disabledReason={disabledReason}
+            draft={open && !alreadyThisWeek ? draft : null}
           />
         </CardContent>
       </Card>
+
+      {/* 명령하달 — 평일에는 초안을 남기고, 확정한 뒤에는 초안과 확정을 나란히 본다 */}
+      {alreadyThisWeek && draft ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">초안과 확정</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <span className="inline-flex w-fit items-center rounded-full border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-400">
+              규칙 기반 · 생성형 AI 아님
+            </span>
+            <p className="text-sm leading-relaxed">{compareDraft(draft.weights, targetWeights).sentence}</p>
+            {draft.note ? (
+              <p className="text-xs leading-relaxed text-muted-foreground">평일에 적은 한 줄 — “{draft.note}”</p>
+            ) : null}
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              화요일의 판단과 주말의 판단이 다른 것은 잘못이 아닙니다. 그 차이를 본인 기록으로 보는
+              것이 이 훈련입니다.
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {dt === 'WEEKDAY' && !alreadyThisWeek ? (
+        <DraftEditor
+          initial={draft?.weights ?? null}
+          initialNote={draft?.note ?? ''}
+          existed={Boolean(draft)}
+        />
+      ) : null}
 
       <p className="text-xs leading-relaxed text-muted-foreground">
         주 1회, 주말·공휴일에만 조정할 수 있고 일요일 21:00에 마감됩니다. 확정된 편성은 다음

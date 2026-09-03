@@ -35,7 +35,7 @@ export function DemoToggle({ mode }: { mode: 'WEEKDAY' | 'WEEKEND' }) {
       <p className="text-[11px] leading-relaxed text-amber-200/80">
         {weekday
           ? '주말로 바꾸면 편성 조정 · 이번 주 변동 · 제대로 지수가 열립니다.'
-          : '평일로 바꾸면 전선 등락과 누적 수익률만 남고, 편성 조정은 잠깁니다.'}
+          : '평일로 바꾸면 전선 등락과 오늘의 지형 요약이 열리고, 편성 조정은 잠깁니다.'}
       </p>
     </div>
   );

@@ -21,7 +21,7 @@ export function BottomNav() {
             href={it.href}
             className={cn(
               'flex-1 py-3 text-center text-sm font-medium',
-              pathname.startsWith(it.href) ? 'text-foreground' : 'text-muted-foreground',
+              pathname.startsWith(it.href) ? 'text-amber-400' : 'text-muted-foreground',
             )}
           >
             {it.label}

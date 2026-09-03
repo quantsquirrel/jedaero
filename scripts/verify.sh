@@ -38,16 +38,16 @@ else
   BUILD_OK=0
 fi
 
-# P0-02 스키마: public 스키마 테이블 정확히 10개(승인된 ai_calls 포함), 목록 일치
+# P0-02 스키마: public 스키마 테이블 정확히 11개(ai_calls·drafts 포함), 목록 일치
 # quests·quest_progress는 퀘스트·XP 폐지로,
 # budget_months·budget_envelopes·expenses·exemption_claims는 가계부 제외로 제거됐다. 되살리지 말 것.
-EXPECTED="ai_calls allocations group_members groups holidays prices settings tickers users weekly_scores"
+EXPECTED="ai_calls allocations drafts group_members groups holidays prices settings tickers users weekly_scores"
 if ! have_db; then
   report P0-02 FAIL "DATABASE_URL 없음"
 else
   ACTUAL=$(q "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY 1" | tr '\n' ' ' | sed 's/ *$//')
   if [ "$ACTUAL" = "$EXPECTED" ]; then
-    report P0-02 PASS "테이블 10개 목록 일치"
+    report P0-02 PASS "테이블 11개 목록 일치"
   else
     report P0-02 FAIL "테이블 불일치: [${ACTUAL:-없음}]"
   fi
@@ -138,20 +138,33 @@ else
   mdd_of() {
     q "SELECT round(((SELECT min(close::float8 / peak) FROM (SELECT close, max(close) OVER (ORDER BY trade_date) AS peak FROM prices WHERE ticker='$1') s) - 1) * 1000) / 10"
   }
+  ret_of() {
+    q "SELECT round(((SELECT close FROM prices WHERE ticker='$1' ORDER BY trade_date DESC LIMIT 1)::float8 / (SELECT close FROM prices WHERE ticker='$1' ORDER BY trade_date ASC LIMIT 1) - 1) * 1000) / 10"
+  }
   DD_MSG=""; DD_FAIL=""
-  for pair in KR_LARGE:005930 KR_THEME:091160 US_INDEX:360750 GOLD_COMM:132030; do
+  # 위험 4전선 대표지수는 -15% 이상 빠지는 구간이 있어야 한다
+  for pair in KR_STOCK:KR-IDX US_STOCK:US-IDX INTL_STOCK:IN-IDX REIT_INFRA:RE-IDX; do
     axis=${pair%%:*}; tk=${pair##*:}
     v=$(mdd_of "$tk")
     DD_MSG="$DD_MSG $axis ${v:-없음}%"
     [ -z "$v" ] && DD_FAIL="$DD_FAIL $axis(시드없음)" && continue
     awk "BEGIN{exit !($v <= -15)}" || DD_FAIL="$DD_FAIL $axis($v%)"
   done
-  vb=$(mdd_of 157450)
-  DD_MSG="$DD_MSG BOND_CASH ${vb:-없음}%"
+  # 채권은 얕게 — 여섯 전선이 같이 빠지면 리밸런싱을 가르칠 재료가 사라진다
+  vb=$(mdd_of BD-IDX)
+  DD_MSG="$DD_MSG BOND ${vb:-없음}%"
   if [ -z "$vb" ]; then
-    DD_FAIL="$DD_FAIL BOND_CASH(시드없음)"
+    DD_FAIL="$DD_FAIL BOND(시드없음)"
   else
-    awk "BEGIN{exit !($vb >= -8)}" || DD_FAIL="$DD_FAIL BOND_CASH($vb%)"
+    awk "BEGIN{exit !($vb >= -8)}" || DD_FAIL="$DD_FAIL BOND($vb%)"
+  fi
+  # 금·원자재는 주식이 빠지는 구간에 오르도록 생성된다 — 전구간 수익률이 양수여야 한다
+  vg=$(ret_of CM-IDX)
+  DD_MSG="$DD_MSG GOLD_COMM 전구간 ${vg:-없음}%"
+  if [ -z "$vg" ]; then
+    DD_FAIL="$DD_FAIL GOLD_COMM(시드없음)"
+  else
+    awk "BEGIN{exit !($vg > 0)}" || DD_FAIL="$DD_FAIL GOLD_COMM(전구간 $vg%)"
   fi
   if [ -z "$DD_FAIL" ]; then
     report P0-11 PASS "대표 종목 MDD:$DD_MSG"
@@ -290,6 +303,11 @@ run_check P1-13 scripts/checks/p1-13-guard.ts
 run_check P1-14 scripts/checks/p1-14-gap.ts
 run_check P1-15 scripts/checks/p1-15-market-week.ts
 run_check P1-16 scripts/checks/p1-16-output-guard.ts
+run_check P1-18 scripts/checks/p1-18-drill.ts
+run_check P1-19 scripts/checks/p1-19-weekday-briefing.ts
+run_check P1-20 scripts/checks/p1-20-krx-map.ts
+run_check P1-21 scripts/checks/p1-21-number-guard.ts
+run_check P1-22 scripts/checks/p1-22-drafts.ts
 
 # ---------- 요약 ----------
 echo '---'

@@ -4,7 +4,7 @@
 //   그 행동을 표창하는 순간 서비스가 가르치려는 것과 반대로 작동한다.
 // ★ 코호트(전역 예정 월 자동 배정)는 폐지했다. 비교 집단은 사용자가 아는 집단이어야 한다 —
 //   우리 그룹 / 같은 군종 / 같은 계급. 부대 정보는 어디에도 쓰지 않는다 (C4).
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { allocations, groupMembers, users, weeklyScores } from '../db/schema';
 import { SEED_AMOUNT, type Weights } from './constants';
@@ -51,16 +51,20 @@ function scoreFromAllocations(
   return { ...parts, hasHistory: true };
 }
 
-/** 내 이번 주 점수를 요청 시점에 계산해 weekly_scores에 lazy upsert (크론 없음) */
-export async function computeAndStoreWeeklyScore(user: SessionUser): Promise<WeeklyScore> {
-  const week = weekOf(new Date());
+/** 내 이번 주 점수를 «읽기만» 한다. 홈처럼 보여주기만 하는 화면이 쓴다 — DB 쓰기 없음. */
+export async function computeWeeklyScore(user: SessionUser): Promise<WeeklyScore> {
   const allocs = await db
     .select()
     .from(allocations)
     .where(eq(allocations.userId, user.id))
     .orderBy(allocations.effectiveFrom);
+  return scoreFromAllocations(allocs, kstToday());
+}
 
-  const score = scoreFromAllocations(allocs, kstToday());
+/** 내 이번 주 점수를 요청 시점에 계산해 weekly_scores에 lazy upsert (크론 없음) */
+export async function computeAndStoreWeeklyScore(user: SessionUser): Promise<WeeklyScore> {
+  const week = weekOf(new Date());
+  const score = await computeWeeklyScore(user);
 
   const existing = await db
     .select({ id: weeklyScores.id })
@@ -122,10 +126,13 @@ export async function board(user: SessionUser, scope: BoardScope): Promise<Board
   }
   if (memberIds.length === 0) return { scope, n: 0, entries: [] };
 
+  // ★ 가입순을 «명시»한다. ORDER BY가 없으면 Postgres가 임의 순서를 주고,
+  //   그 순서가 우연히 점수와 나란히 보이는 순간 화면의 "가입순" 문구가 거짓말이 된다.
   const people = await db
     .select({ id: users.id, nickname: users.nickname })
     .from(users)
-    .where(inArray(users.id, memberIds));
+    .where(inArray(users.id, memberIds))
+    .orderBy(asc(users.createdAt), asc(users.id));
   const scores = await db
     .select({ userId: weeklyScores.userId, total: weeklyScores.total })
     .from(weeklyScores)

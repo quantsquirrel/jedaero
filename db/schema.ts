@@ -1,7 +1,7 @@
 // ★ 부대 관련 컬럼이 하나도 없다는 점이 이 스키마의 핵심이다. 절대 추가하지 말 것. (C4)
 // ★ holdings 테이블·cash_balance 컬럼 없음 — 보유수량은 (비중 이력 × 일별 종가 × 현금흐름)으로
 //   요청 시점에 계산한다. 현금은 예비대(미배치 포인트)로 표현된다 — 축이 아니라 잔여다.
-// 논리 스키마 원본: SPEC.md §2. 테이블 10개 (ai_calls 포함). 가계부·퀘스트 테이블 없음.
+// 논리 스키마 원본: SPEC.md §2. 테이블 11개 (ai_calls·drafts 포함). 가계부·퀘스트 테이블 없음.
 import {
   pgTable,
   uuid,
@@ -48,6 +48,22 @@ export const allocations = pgTable(
     // ★ 주 1회 + 수정 불가를 DB가 강제
     unique('allocations_user_id_week_of_unique').on(t.userId, t.weekOf),
   ],
+);
+
+// 평일 명령하달 초안. allocations 가 아니다. 안 적은 주가 정상. 반쪽 UI는 넣지 않음.
+export const drafts = pgTable(
+  'drafts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    weekOf: text('week_of').notNull(),
+    weights: jsonb('weights').notNull(), // 의도 목표 비중. 현재 편성 대비가 아니라 목표 그 자체
+    note: text('note'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique('drafts_user_id_week_of_unique').on(t.userId, t.weekOf)],
 );
 
 // 가계부(지출·봉투 예산·면제 청구)는 제거됐다 (DESIGN-DECISIONS §9 → 완전 제외).
