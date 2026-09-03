@@ -44,14 +44,14 @@ export default async function LearnPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">이번 주 6축은 어떻게 움직였나</CardTitle>
+          <CardTitle className="text-base">이번 주 6전선은 어떻게 움직였나</CardTitle>
         </CardHeader>
         <CardContent>
           {dt !== 'WEEKEND' ? (
             <div className="flex flex-col gap-2">
               <p className="text-sm">🔒 장중에 보지 않는 훈련입니다. 주말에 한 번에 보세요.</p>
               <p className="text-xs leading-relaxed text-muted-foreground">
-                주말에는 6축 등락과 주간 브리핑이 열립니다. 학습 카드와 회고는 평일에도 그대로
+                주말에는 6전선 등락과 주간 브리핑이 열립니다. 학습 카드와 회고는 평일에도 그대로
                 쓸 수 있습니다.{' '}
                 <Link href="/learn#card-patience" className="underline">
                   왜 매일 보면 안 되는가

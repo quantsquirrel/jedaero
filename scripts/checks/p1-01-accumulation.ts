@@ -1,6 +1,6 @@
 // P1-01: 같은 비중·같은 가격에 현금흐름만 다르게 → 최종 평가액이 서로 다름. 두 값 출력
 import { PRICE_DATES, PRICE_SERIES } from '../../db/seed/prices';
-import { PORTFOLIO_TEMPLATES, SEED_AMOUNT } from '../../lib/constants';
+import { OPERATIONS, SEED_AMOUNT } from '../../lib/constants';
 
 async function main() {
   let m: typeof import('../../lib/portfolio/engine');
@@ -10,7 +10,7 @@ async function main() {
     console.log('lib/portfolio/engine.ts 미구현 (3단계)');
     process.exit(1);
   }
-  const history = [{ effectiveFrom: PRICE_DATES[0], weights: PORTFOLIO_TEMPLATES[0].weights }];
+  const history = [{ effectiveFrom: PRICE_DATES[0], weights: OPERATIONS[0].weights }];
 
   // 전역(일시금): 첫 거래일에 전액
   const lump: Record<string, number> = { [PRICE_DATES[0]]: SEED_AMOUNT };

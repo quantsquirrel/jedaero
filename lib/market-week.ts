@@ -1,15 +1,12 @@
-// 주간 6축 등락 — 규칙 기반 계산. AI가 아니다 (C9 구분 표기 대상).
+// 주간 6전선 등락 — 규칙 기반 계산. AI가 아니다 (C9 구분 표기 대상).
 // 시드 가격만 쓴다. 런타임 외부 API 호출 없음 (C6).
 // AI-4 주간 브리핑은 여기서 나온 "숫자"를 입력으로 받는다 — 브리핑이 숫자를 지어내지 않게 하려는 분리다.
-import { TICKERS } from '../db/seed/tickers';
+import { REPRESENTATIVE } from '../db/seed/tickers';
 import { THEMES, type ThemeCode } from './constants';
 import { pricesUpTo } from './portfolio/prices';
 
 // 한 주(영업일 5일)를 등락 구간으로 본다. 거래일이 모자라면 있는 만큼만 본다.
 export const WEEK_TRADING_DAYS = 5;
-
-const BY_THEME: Record<string, string[]> = {};
-for (const t of TICKERS) (BY_THEME[t.theme] ??= []).push(t.ticker);
 
 export type ThemeMove = {
   code: ThemeCode;
@@ -26,26 +23,21 @@ export type MarketWeek = {
   moves: ThemeMove[]; // 등락률 내림차순
   best: ThemeMove;
   worst: ThemeMove;
-  weightedPct: number; // 6축 등락률을 내 비중으로 가중한 값
+  weightedPct: number; // 6전선 등락률을 내 비중으로 가중한 값. 예비대는 0이므로 기여하지 않는다
 };
 
-/** 테마 등락률 = 그 테마 종목들의 구간 등락률 동일가중 평균.
- *  종목 수가 축마다 달라 지수를 따로 만들지 않고 평균으로 둔다 — 축 간 비교만 하면 되기 때문이다. */
-function themeChange(series: Record<string, number[]>, theme: string, from: number, to: number): number {
-  const list = BY_THEME[theme] ?? [];
-  let sum = 0;
-  let n = 0;
-  for (const tk of list) {
-    const a = series[tk]?.[from];
-    const b = series[tk]?.[to];
-    if (!a || !b) continue;
-    sum += b / a - 1;
-    n += 1;
-  }
-  return n > 0 ? sum / n : 0;
+/** 전선 등락률 = 그 전선의 대표지수 등락률.
+ *  하위 테마까지 평균 내면 사용자가 고르지도 않은 테마가 전선의 숫자를 흔든다.
+ *  기본 편성이 대표지수 추종이므로 화면의 전선 등락률도 대표지수를 따른다. */
+function themeChange(series: Record<string, number[]>, theme: ThemeCode, from: number, to: number): number {
+  const tk = REPRESENTATIVE[theme];
+  const a = series[tk]?.[from];
+  const b = series[tk]?.[to];
+  if (!a || !b) return 0;
+  return b / a - 1;
 }
 
-/** 오늘까지의 시드로 최근 한 주(영업일 5일) 6축 등락을 계산한다.
+/** 오늘까지의 시드로 최근 한 주(영업일 5일) 6전선 등락을 계산한다.
  *  거래일이 2일 미만이면 null — 화면은 "아직 집계할 구간이 없습니다"로 간다. */
 export function computeMarketWeek(
   todayStr: string,

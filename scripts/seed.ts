@@ -94,15 +94,19 @@ const DUMMY_COUNT = 200;
 const dummyId = (i: number) => `00000000-0000-4000-8000-${String(100000000000 + i)}`;
 const NICKS = ['해뜰날', '강철비', '초코우유', '별헤는밤', '든든적금', '월급지킴이', '산바람', '바다안개', '새벽별', '고요아침', '달빛산책', '구름과자'];
 
+// 포인트 20개를 무작위로 놓는다. 일부는 다 놓지 않아 예비대가 남는다 —
+// 전원이 100%를 채우면 「예비대」 코호트 중앙값이 항상 0이 되어 비교 화면이 무의미해진다.
 function randomWeights(rng: () => number): Weights {
   const w = Object.fromEntries(THEME_CODES.map((c) => [c, 0])) as Weights;
-  for (let b = 0; b < 20; b++) {
+  const place = rng() < 0.3 ? 16 + Math.floor(rng() * 4) : 20; // 30%는 예비대를 남긴다
+  for (let b = 0; b < place; b++) {
     const c = THEME_CODES[Math.floor(rng() * THEME_CODES.length)];
     w[c] += 5;
   }
   return w;
 }
 
+// 1포인트를 다른 전선으로 옮긴다. 합계는 그대로이므로 예비대도 그대로다.
 function shiftWeights(rng: () => number, base: Weights): Weights {
   const w = { ...base };
   const from = THEME_CODES.filter((c) => w[c] >= 5);

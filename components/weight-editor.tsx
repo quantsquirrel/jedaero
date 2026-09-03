@@ -1,11 +1,14 @@
 'use client';
-// 6축 비중 조정기 — 사용자가 조작하는 유일한 대상 (SPEC §3-6)
-// 슬라이더 금지. 5%p 단위 +/- 버튼. 하나를 움직이면 나머지가 비례 조정되어 합은 항상 100.
+// 전선 편성기 — 사용자가 조작하는 유일한 대상 (DESIGN-DECISIONS §3)
+// 슬라이더 금지. 포인트 20개를 +/- 버튼으로 배치한다. % 는 작은 글씨로 병기.
+// ★ 자동 재조정 없음. 한 전선을 올려도 다른 전선은 그대로다. 포인트는 원래 유한하다.
+// ★ 예비대(미배치분)를 항상 표시한다. "0%"가 아니라 "예비대 7포인트"라고 적혀야
+//   방치가 아니라 선택이 된다 (과소투자를 조용히 훈련시키지 않기 위한 장치).
 import { useState, useTransition } from 'react';
 import { saveAllocation } from '@/app/actions/allocation';
 import { Button } from '@/components/ui/button';
-import { THEMES, type ThemeCode, type Weights } from '@/lib/constants';
-import { adjustWeight } from '@/lib/portfolio/weights';
+import { POINT_UNIT, RESERVE, THEMES, TOTAL_POINTS, type ThemeCode, type Weights } from '@/lib/constants';
+import { adjustPoints, pointsOf, reservePoints } from '@/lib/portfolio/weights';
 import { cn } from '@/lib/utils';
 
 export function WeightEditor({
@@ -23,10 +26,11 @@ export function WeightEditor({
 
   const dirty = THEMES.some((t) => weights[t.code] !== initial[t.code]);
   const locked = disabled || pending;
+  const reserve = reservePoints(weights);
 
-  const bump = (code: ThemeCode, delta: 5 | -5) => {
+  const bump = (code: ThemeCode, delta: 1 | -1) => {
     setResult({});
-    setWeights((w) => adjustWeight(w, code, delta));
+    setWeights((w) => adjustPoints(w, code, delta));
   };
 
   const submit = () =>
@@ -38,40 +42,58 @@ export function WeightEditor({
 
   return (
     <div className="flex flex-col gap-3">
-      {THEMES.map((t) => (
-        <div key={t.code} className="flex items-center justify-between gap-3">
-          <span className="text-sm">{t.name}</span>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label={`${t.name} 5%p 줄이기`}
-              disabled={locked || weights[t.code] <= 0}
-              onClick={() => bump(t.code, -5)}
-            >
-              −
-            </Button>
-            <span className="w-12 text-center font-mono text-base tabular-nums">{weights[t.code]}%</span>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label={`${t.name} 5%p 늘리기`}
-              disabled={locked || weights[t.code] >= 100}
-              onClick={() => bump(t.code, 5)}
-            >
-              +
-            </Button>
-          </div>
-        </div>
-      ))}
+      <p className="text-sm text-muted-foreground">
+        포인트 <span className="font-mono tabular-nums">{TOTAL_POINTS}</span>개를 여섯 전선에
+        나눠 놓습니다. 1포인트 = {POINT_UNIT}%.
+      </p>
 
-      <div className="flex items-center justify-between border-t border-border pt-2 text-sm text-muted-foreground">
-        <span>합계</span>
-        <span className="font-mono tabular-nums">
-          {THEMES.reduce((s, t) => s + weights[t.code], 0)}%
-        </span>
+      {THEMES.map((t) => {
+        const pt = pointsOf(weights, t.code);
+        return (
+          <div key={t.code} className="flex items-center justify-between gap-3">
+            <span className="text-sm">{t.name}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label={`${t.name} 1포인트 빼기`}
+                disabled={locked || pt <= 0}
+                onClick={() => bump(t.code, -1)}
+              >
+                −
+              </Button>
+              <span className="w-16 text-center font-mono text-base tabular-nums">
+                {pt}
+                <span className="ml-1 text-xs text-muted-foreground">
+                  {weights[t.code] ?? 0}%
+                </span>
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label={`${t.name} 1포인트 놓기`}
+                disabled={locked || reserve <= 0}
+                onClick={() => bump(t.code, 1)}
+              >
+                +
+              </Button>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* 예비대 — 축이 아니라 잔여지만, 하나의 축처럼 보여야 한다 */}
+      <div className="rounded-md border border-dashed border-border px-3 py-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm">{RESERVE.name}</span>
+          <span className="font-mono text-base tabular-nums">
+            {reserve}
+            <span className="ml-1 text-xs text-muted-foreground">{reserve * POINT_UNIT}%</span>
+          </span>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">{RESERVE.note}</p>
       </div>
 
       {disabled && disabledReason ? (
@@ -86,7 +108,7 @@ export function WeightEditor({
         disabled={locked || !dirty}
         onClick={submit}
       >
-        {pending ? '저장 중…' : '이번 주 비중 확정'}
+        {pending ? '저장 중…' : '이번 주 편성 확정'}
       </Button>
       <p className="text-xs text-muted-foreground">
         확정하면 이번 주에는 다시 바꿀 수 없고, 다음 거래일 종가로 반영됩니다. 결정과 체결 사이의

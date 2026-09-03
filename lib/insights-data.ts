@@ -10,6 +10,7 @@ import {
   hhi,
   maxWeightOf,
   median,
+  reserveWeight,
   resolveCohort,
   turnover,
   type InsightStats,
@@ -98,7 +99,7 @@ export async function computeInsightStats(user: SessionUser): Promise<InsightDat
   const weeksUnchanged = Math.max(0, weekIndex(nowWeek) - weekIndex(lastWeek));
 
   const myMaxWeight = maxWeightOf(myWeights);
-  const myMaxCode = THEME_CODES.find((c) => (myWeights[c] ?? 0) === myMaxWeight) ?? 'KR_LARGE';
+  const myMaxCode = THEME_CODES.find((c) => (myWeights[c] ?? 0) === myMaxWeight) ?? THEME_CODES[0];
 
   const stats: InsightStats = {
     cohort,
@@ -108,8 +109,9 @@ export async function computeInsightStats(user: SessionUser): Promise<InsightDat
     myHhi: hhi(myWeights),
     myTurnover: turnover(myHistory),
     cohortTurnoverMedian: median(turnoverList),
-    myCash: myWeights.BOND_CASH ?? 0,
-    cohortCashMedian: median(latestList.map((w) => w.BOND_CASH ?? 0)),
+    // 현금 = 예비대(미배치분). 「현금성」 축을 없앴으므로 잔여로 계산한다 (DESIGN-DECISIONS §3)
+    myCash: reserveWeight(myWeights),
+    cohortCashMedian: median(latestList.map(reserveWeight)),
     myVol: annualizedVol(values),
     weeksUnchanged,
   };

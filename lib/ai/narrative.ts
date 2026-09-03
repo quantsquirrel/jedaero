@@ -26,14 +26,14 @@ export async function generateNarrative(stats: InsightStats, themeName: string):
         {
           role: 'user',
           content: JSON.stringify({
-            최대테마: themeName,
-            최대테마비중: stats.myMaxTheme.weight,
+            최대전선: themeName,
+            최대전선비중: stats.myMaxTheme.weight,
             코호트최대비중중앙값: Math.round(stats.cohortMaxWeightMedian),
             코호트인원: stats.cohortN,
             주당변경폭: Number(stats.myTurnover.toFixed(1)),
             코호트변경폭중앙값: Number(stats.cohortTurnoverMedian.toFixed(1)),
-            현금비중: stats.myCash,
-            코호트현금비중중앙값: Math.round(stats.cohortCashMedian),
+            예비대비중: stats.myCash,
+            코호트예비대중앙값: Math.round(stats.cohortCashMedian),
             연변동성퍼센트: Math.round(stats.myVol * 100),
             비중유지주수: stats.weeksUnchanged,
           }),

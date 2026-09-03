@@ -8,18 +8,19 @@ import { WeightEditor } from '@/components/weight-editor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
 import { allocations, expenses } from '@/db/schema';
-import { SEED_AMOUNT, THEMES, type Rank, type Weights } from '@/lib/constants';
+import { POINT_UNIT, RESERVE, SEED_AMOUNT, THEMES, type Rank, type Weights } from '@/lib/constants';
 import { currentDayType, currentRebalanceOpen, demoOverride } from '@/lib/day-context';
 import { kstToday } from '@/lib/day-type';
 import { pct, won } from '@/lib/format';
 import { buildSavingsCashflows } from '@/lib/portfolio/accumulation';
 import { computeCurve, type WeightHistoryItem } from '@/lib/portfolio/engine';
 import { pricesUpTo } from '@/lib/portfolio/prices';
+import { reservePoints } from '@/lib/portfolio/weights';
 import { getSessionUser } from '@/lib/session';
 import { addDays, mondayOfWeeksAgo, weekOf } from '@/lib/week';
 import { cn } from '@/lib/utils';
 
-// S4 포트폴리오 — 사용자가 조작하는 유일한 대상: 테마 6축 비중
+// S4 포트폴리오 — 사용자가 조작하는 유일한 대상: 6전선 포인트 편성
 // 평일: 수익률 마스킹 + 조정 잠금. 갭(비중 정보)은 항상 표시 (SPEC §3-6 g)
 export default async function PortfolioPage() {
   const user = await getSessionUser();
@@ -42,7 +43,7 @@ export default async function PortfolioPage() {
         <p className="text-sm text-muted-foreground">
           아직 배분이 없습니다.{' '}
           <Link href="/onboarding" className="underline">
-            온보딩에서 예시 포트폴리오를 골라
+            온보딩에서 예시 작전을 골라
           </Link>{' '}
           시작해주세요.
         </p>
@@ -65,16 +66,23 @@ export default async function PortfolioPage() {
   const lumpFinal = lumpCurve.values[lumpCurve.values.length - 1] ?? 0;
 
   // 목표 vs 현재 비중 갭 — 시장 변동으로 흐트러진 거리. 항상 표시한다
-  // ★ 정수로 반올림하지 않는다. 6축으로 분산된 포트폴리오의 주간 표류는 보통 1%p 미만이라
+  // ★ 정수로 반올림하지 않는다. 6전선으로 분산된 포트폴리오의 주간 표류는 보통 1%p 미만이라
   //   반올림하면 실제 드리프트가 전부 0%p로 사라지고 "목표와 일치합니다"라는 거짓말이 남는다.
   //   되돌리기 버튼도 그 순간 함께 사라져 리밸런싱 개념이 화면에서 증발한다.
   const themeTotal = Object.values(lumpCurve.finalThemeValues).reduce((a, b) => a + b, 0);
   const round1 = (x: number) => Math.round(x * 10) / 10;
-  const gaps = THEMES.map((t) => {
-    const target = targetWeights[t.code] ?? 0;
+  // 예비대도 한 줄로 넣는다. 빼면 미배치분만 갭 표에서 사라져 합이 맞지 않는 화면이 된다.
+  const reserveTarget = reservePoints(targetWeights) * POINT_UNIT;
+  const gapRows: { code: string; name: string; target: number }[] = [
+    ...THEMES.map((t) => ({ code: t.code, name: t.name, target: targetWeights[t.code] ?? 0 })),
+    { code: RESERVE.code, name: RESERVE.name, target: reserveTarget },
+  ];
+  const gaps = gapRows.map((row) => {
     const current =
-      themeTotal > 0 ? round1(((lumpCurve.finalThemeValues[t.code] ?? 0) / themeTotal) * 100) : target;
-    return { code: t.code, name: t.name, target, current, gap: round1(current - target) };
+      themeTotal > 0
+        ? round1(((lumpCurve.finalThemeValues[row.code] ?? 0) / themeTotal) * 100)
+        : row.target;
+    return { ...row, current, gap: round1(current - row.target) };
   });
   const maxAbsGap = Math.max(...gaps.map((g) => Math.abs(g.gap)));
 
@@ -118,7 +126,7 @@ export default async function PortfolioPage() {
   const disabledReason = !open
     ? '주말에만 조정할 수 있습니다. 평일에는 기록과 학습만 열려 있어요.'
     : alreadyThisWeek
-      ? '이번 주는 이미 조정했습니다. 조정하지 않아도 기존 비중이 그대로 유지됩니다.'
+      ? '이번 주는 이미 조정했습니다. 조정하지 않아도 기존 편성이 그대로 유지됩니다.'
       : undefined;
 
   return (
@@ -202,7 +210,7 @@ export default async function PortfolioPage() {
           {maxAbsGap > 0 ? (
             <>
               <p className="text-xs text-muted-foreground">
-                가장 많이 벌어진 축이 <b className="text-foreground">{maxAbsGap.toFixed(1)}%p</b>{' '}
+                가장 많이 벌어진 전선이 <b className="text-foreground">{maxAbsGap.toFixed(1)}%p</b>{' '}
                 떨어져 있습니다. 마지막 체결은 {latest.effectiveFrom}입니다.
               </p>
               <RevertButton target={targetWeights} disabled={!open || alreadyThisWeek} />
@@ -250,7 +258,7 @@ export default async function PortfolioPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">테마 6축 비중 (5%p 단위)</CardTitle>
+          <CardTitle className="text-base">전선 편성 (포인트 20개)</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {open && !alreadyThisWeek ? (
@@ -258,7 +266,7 @@ export default async function PortfolioPage() {
               <div className="flex flex-col gap-1 rounded-md border border-border bg-muted/40 px-3 py-2">
                 <p className="text-sm font-medium">마감: 매주 일요일 21:00 (KST)</p>
                 <p className="text-sm font-medium text-emerald-300">
-                  조정하지 않으면 기존 비중이 그대로 유지됩니다.
+                  조정하지 않으면 기존 편성이 그대로 유지됩니다.
                 </p>
               </div>
             ) : (
@@ -270,7 +278,7 @@ export default async function PortfolioPage() {
       </Card>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
-        주 1회, 주말·공휴일에만 조정할 수 있고 일요일 21:00에 마감됩니다. 확정된 비중은 다음
+        주 1회, 주말·공휴일에만 조정할 수 있고 일요일 21:00에 마감됩니다. 확정된 편성은 다음
         거래일 종가로 반영됩니다. 본 서비스의 시세는 교육용 모의 데이터입니다.
       </p>
     </main>

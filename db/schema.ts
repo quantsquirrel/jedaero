@@ -1,6 +1,6 @@
 // ★ 부대 관련 컬럼이 하나도 없다는 점이 이 스키마의 핵심이다. 절대 추가하지 말 것. (C4)
 // ★ holdings 테이블·cash_balance 컬럼 없음 — 보유수량은 (비중 이력 × 일별 종가 × 현금흐름)으로
-//   요청 시점에 계산한다. 현금은 BOND_CASH 축 비중으로 표현된다.
+//   요청 시점에 계산한다. 현금은 예비대(미배치 포인트)로 표현된다 — 축이 아니라 잔여다.
 // 논리 스키마 원본: SPEC.md §2 (테이블 15개 + 승인된 추가 1개 = 16개)
 import {
   pgTable,
@@ -38,9 +38,9 @@ export const allocations = pgTable(
       .notNull()
       .references(() => users.id),
     weekOf: text('week_of').notNull(), // YYYY-WW (ISO 주, KST)
-    weights: jsonb('weights').notNull(), // {"KR_LARGE":30,"US_INDEX":40,...} 합계 100
-    details: jsonb('details'), // 하위 비중(2축만). NULL이면 동일가중
-    templateId: text('template_id'), // 예시 포트폴리오에서 시작했으면 그 id
+    weights: jsonb('weights').notNull(), // {"KR_STOCK":20,"US_STOCK":40,...} 5의 배수, 합계 100 이하(나머지=예비대)
+    details: jsonb('details'), // 하위 테마 비중(주식 2전선만). NULL이면 그 전선의 대표지수 추종
+    templateId: text('template_id'), // 예시 작전에서 시작했으면 그 id (OPERATIONS)
     decidedAt: timestamp('decided_at', { withTimezone: true }).notNull(),
     effectiveFrom: date('effective_from').notNull(), // 체결 기준일 = 다음 거래일
   },
@@ -146,7 +146,7 @@ export const weeklyScores = pgTable('weekly_scores', {
 export const tickers = pgTable('tickers', {
   ticker: text('ticker').primaryKey(),
   name: text('name').notNull(),
-  theme: text('theme').notNull(), // KR_LARGE|KR_THEME|US_INDEX|BOND_CASH|GOLD_COMM|DIVIDEND
+  theme: text('theme').notNull(), // KR_STOCK|US_STOCK|INTL_STOCK|BOND|GOLD_COMM|REIT_INFRA
   kind: text('kind').notNull(), // STOCK|ETF
 });
 

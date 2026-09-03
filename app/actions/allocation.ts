@@ -1,5 +1,5 @@
 'use server';
-// 6축 비중 조정 확정 (SPEC §3-5)
+// 전선 편성 확정 (SPEC §3-5)
 // 주말·공휴일만, 주 1회, 일요일 21:00 마감, 체결은 다음 거래일 종가.
 // 주 1회는 UNIQUE(user_id, week_of)가 DB에서 최종 강제한다.
 import { revalidatePath } from 'next/cache';
@@ -20,7 +20,7 @@ export async function saveAllocation(weights: Record<string, number>): Promise<S
   if (!user) return { error: '세션이 없습니다. 처음 화면에서 다시 시작해주세요.' };
 
   if (!(await currentRebalanceOpen())) return { error: '주말에만 조정할 수 있습니다.' };
-  if (!isValidWeights(weights)) return { error: '비중 합계가 100이 아닙니다.' };
+  if (!isValidWeights(weights)) return { error: '편성 값이 올바르지 않습니다. 포인트는 20개를 넘을 수 없습니다.' };
 
   const week = weekOf(new Date());
   const existing = await db

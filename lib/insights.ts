@@ -1,5 +1,5 @@
 // AI-7 집단 성향 분석 — 옵트인·상호주의·k-익명성 (SPEC §4 AI-7)
-// 표시 5개 축: 테마 비중 / 집중도(최대비중·HHI) / 회전율(주당 변경폭) / 현금비중 / 변동성
+// 표시 5개 축: 전선 편성 / 집중도(최대비중·HHI) / 회전율(주당 변경폭) / 예비대 / 변동성
 // 출력은 사실 서술 + 질문으로 끝난다 (C8, C10). 조언·추천 금지.
 import { THEME_CODES, type ThemeCode, type Weights } from './constants';
 
@@ -22,6 +22,12 @@ export const COHORT_LABEL: Record<'MONTH' | 'QUARTER' | 'ALL', string> = {
 };
 
 /** 집중도: 최대 비중과 HHI(Σ(wᵢ/100)²) */
+/** 예비대(미배치) 비중 %. 「현금성」 축을 없앤 뒤의 현금 포지션이다 */
+export function reserveWeight(w: Weights): number {
+  const placed = THEME_CODES.reduce((sum, c) => sum + (w[c] ?? 0), 0);
+  return Math.max(0, 100 - placed);
+}
+
 export function maxWeightOf(w: Weights): number {
   return Math.max(...THEME_CODES.map((c) => w[c] ?? 0));
 }
@@ -77,9 +83,9 @@ export type InsightStats = {
 /** 규칙 기반 사실 서술 (AI 폴백 겸 기본 표시). 조언하지 않는다 — 사실과 질문만 */
 export function buildFactSentences(s: InsightStats, themeName: string): string[] {
   return [
-    `최대 테마 비중은 ${themeName} ${s.myMaxTheme.weight}%입니다. ${COHORT_LABEL[s.cohort]} ${s.cohortN}명의 중앙값은 ${Math.round(s.cohortMaxWeightMedian)}%입니다.`,
+    `가장 많이 놓은 전선은 ${themeName} ${s.myMaxTheme.weight}%입니다. ${COHORT_LABEL[s.cohort]} ${s.cohortN}명의 중앙값은 ${Math.round(s.cohortMaxWeightMedian)}%입니다.`,
     `주당 평균 변경폭은 ${s.myTurnover.toFixed(1)}%p, 코호트 중앙값은 ${s.cohortTurnoverMedian.toFixed(1)}%p입니다.`,
-    `채권·현금성 비중은 ${s.myCash}%이고, 코호트 중앙값은 ${Math.round(s.cohortCashMedian)}%입니다.`,
+    `예비대(어느 전선에도 놓지 않은 몫)는 ${s.myCash}%이고, 코호트 중앙값은 ${Math.round(s.cohortCashMedian)}%입니다.`,
     s.weeksUnchanged >= 2
       ? `최근 ${s.weeksUnchanged}주 동안 비중을 바꾸지 않았습니다.`
       : `이 배분은 지난 조정에서 정해졌습니다.`,

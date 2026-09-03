@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { NarrativeButton, OptInGate, OptOutButton } from '@/components/insights-panel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { THEMES, type Weights } from '@/lib/constants';
+import { POINT_UNIT, RESERVE, THEMES, type Weights } from '@/lib/constants';
 import { currentDayType } from '@/lib/day-context';
 import { buildFactSentences, COHORT_LABEL } from '@/lib/insights';
 import { computeInsightStats } from '@/lib/insights-data';
@@ -65,7 +65,7 @@ export default async function InsightsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">① 테마 비중</CardTitle>
+              <CardTitle className="text-base">① 전선 편성</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-1.5">
               {THEMES.map((t) => (
@@ -74,9 +74,26 @@ export default async function InsightsPage() {
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary" style={{ width: `${myWeights[t.code] ?? 0}%` }} />
                   </div>
-                  <span className="w-10 text-right font-mono text-xs tabular-nums">{myWeights[t.code] ?? 0}%</span>
+                  <span className="w-14 text-right font-mono text-xs tabular-nums">
+                    {(myWeights[t.code] ?? 0) / POINT_UNIT}
+                    <span className="ml-1 text-muted-foreground">{myWeights[t.code] ?? 0}%</span>
+                  </span>
                 </div>
               ))}
+              {/* 예비대도 한 줄로. 미배치분이 화면에서 사라지면 방치가 선택으로 보이지 않는다 */}
+              <div className="flex items-center gap-2 text-sm">
+                <span className="w-24 shrink-0">{RESERVE.name}</span>
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full border border-dashed border-muted-foreground/60"
+                    style={{ width: `${data.stats.myCash}%` }}
+                  />
+                </div>
+                <span className="w-14 text-right font-mono text-xs tabular-nums">
+                  {data.stats.myCash / POINT_UNIT}
+                  <span className="ml-1 text-muted-foreground">{data.stats.myCash}%</span>
+                </span>
+              </div>
             </CardContent>
           </Card>
 
@@ -106,10 +123,12 @@ export default async function InsightsPage() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">④ 현금비중</CardTitle>
+                <CardTitle className="text-sm">④ 예비대</CardTitle>
               </CardHeader>
               <CardContent className="text-sm">
-                <p className="font-semibold tabular-nums">{data.stats.myCash}%</p>
+                <p className="font-semibold tabular-nums">
+                  {data.stats.myCash / POINT_UNIT}포인트
+                </p>
                 <p className="text-xs text-muted-foreground">
                   코호트 중앙값 {Math.round(data.stats.cohortCashMedian)}%
                 </p>
