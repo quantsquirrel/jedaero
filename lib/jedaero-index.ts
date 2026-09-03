@@ -17,9 +17,11 @@ import { reserveWeight } from './insights';
 export const INDEX_MAX = { grown: 40, spread: 30, held: 30 } as const;
 
 // 각 축의 만점 기준선. 값을 바꾸면 점수 분포가 통째로 움직이므로 근거 없이 건드리지 말 것.
-const SHARPE_FULL = 1.5; // 샤프 1.5 이상이면 만점
-const EFFECTIVE_FRONTS_FULL = 3.2; // 유효 전선 3.2개 이상이면 만점 (3.0에서 이미 만점 근처)
-const TURNOVER_ZERO = 15; // 주당 평균 변경폭 15%p(= 3포인트 이동)이면 0점
+// ★ 랜딩(app/page.tsx)의 「무엇을 어떻게 계산했나」가 이 값을 그대로 읽어 표시한다.
+//   심사에서 읽히는 숫자이므로 화면과 계산이 갈라지지 않도록 상수를 공유한다.
+export const SHARPE_FULL = 1.5; // 샤프 1.5 이상이면 만점
+export const EFFECTIVE_FRONTS_FULL = 3.2; // 유효 전선 3.2개 이상이면 만점 (3.0에서 이미 만점 근처)
+export const TURNOVER_ZERO = 15; // 주당 평균 변경폭 15%p(= 3포인트 이동)이면 0점
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 

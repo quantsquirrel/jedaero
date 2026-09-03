@@ -1,5 +1,11 @@
 import Link from 'next/link';
 import { Reveal } from '@/components/reveal';
+import {
+  EFFECTIVE_FRONTS_FULL,
+  INDEX_MAX,
+  SHARPE_FULL,
+  TURNOVER_ZERO,
+} from '@/lib/jedaero-index';
 
 // S1 랜딩 — 히어로(선택지 2개만) + 스크롤하며 기능이 순차 등장.
 // 색 비율 6:3:1 — 바탕 zinc-950 / 표면 zinc-900 / 강조 amber. 강조색은 한 화면에 한 곳만.
@@ -59,9 +65,41 @@ const FRONTS = [
 ];
 
 const INDEX_ROWS = [
-  { label: '불린 만큼', hint: '위험 대비 수익', solo: 40, spread: 33, max: 40 },
-  { label: '나눠 담은 만큼', hint: '실질 몇 개에 나눴나', solo: 2, spread: 30, max: 30 },
-  { label: '버틴 만큼', hint: '몇 주 유지했나', solo: 8, spread: 30, max: 30 },
+  { label: '불린 만큼', hint: '위험 대비 수익', solo: 40, spread: 33, max: INDEX_MAX.grown },
+  { label: '나눠 담은 만큼', hint: '실질 몇 개에 나눴나', solo: 2, spread: 30, max: INDEX_MAX.spread },
+  { label: '버틴 만큼', hint: '몇 주 유지했나', solo: 8, spread: 30, max: INDEX_MAX.held },
+];
+
+// 산정 근거 — ★ lib/jedaero-index.ts의 상수와 반드시 일치시킬 것.
+// 심사에서 읽히는 화면이므로 실제 계산과 어긋나면 그 자체가 결함이다.
+const METHOD = [
+  {
+    label: '불린 만큼',
+    formula: '연환산 수익률 ÷ 연환산 변동성',
+    full: `샤프 ${SHARPE_FULL} 이상이면 만점`,
+    notes: [
+      '무위험수익률을 0으로 둡니다. 어디에도 놓지 않은 예비대가 곧 무위험 자산이라, 이미 편성 안에 들어 있기 때문입니다. 밖에서 따로 빼지 않습니다.',
+      '손실 구간은 0점이지 음수가 아닙니다.',
+    ],
+  },
+  {
+    label: '나눠 담은 만큼',
+    formula: '1 ÷ Σ(비중²)',
+    full: `유효 전선 ${EFFECTIVE_FRONTS_FULL}개 이상이면 만점`,
+    notes: [
+      '한 곳에 다 넣으면 1.0, 네 곳에 고르게 넣으면 4.0이 나옵니다. 여섯 칸에 나눴어도 한 칸이 90%면 실질은 1개에 가깝습니다.',
+      '예비대도 한 몫으로 셉니다. 빼면 전부 예비대인 편성의 값이 무한대가 됩니다.',
+    ],
+  },
+  {
+    label: '버틴 만큼',
+    formula: '주당 평균 변경폭 = Σ|Δ목표비중| ÷ 2',
+    full: `0%p면 만점, ${TURNOVER_ZERO}%p면 0점`,
+    notes: [
+      '체결량이 아니라 목표 비중의 변화량으로 잽니다. 그래서 흐트러진 비중을 목표로 되돌리는 리밸런싱은 여기에 잡히지 않습니다 — 같은 목표를 다시 확정하는 것이라 변화량이 0입니다.',
+      '규칙으로 예외를 두지 않고 계산 방식이 그 구분을 대신합니다.',
+    ],
+  },
 ];
 
 export default function LandingPage() {
@@ -281,9 +319,9 @@ export default function LandingPage() {
 
             <div className="grid gap-4 sm:grid-cols-3">
               {[
-                ['불린 만큼', '40점', '수익을 위험으로 나눈 값. 많이 벌어도 크게 흔들렸다면 점수가 깎입니다.'],
-                ['나눠 담은 만큼', '30점', '실질적으로 몇 개에 나눈 셈인지 계산합니다. 한 곳에 몰수록 낮습니다.'],
-                ['버틴 만큼', '30점', '편성을 얼마나 유지했는지. 자주 바꿀수록 낮습니다.'],
+                ['불린 만큼', `${INDEX_MAX.grown}점`, '수익을 위험으로 나눈 값. 많이 벌어도 크게 흔들렸다면 점수가 깎입니다.'],
+                ['나눠 담은 만큼', `${INDEX_MAX.spread}점`, '실질적으로 몇 개에 나눈 셈인지 계산합니다. 한 곳에 몰수록 낮습니다.'],
+                ['버틴 만큼', `${INDEX_MAX.held}점`, '편성을 얼마나 유지했는지. 자주 바꿀수록 낮습니다.'],
               ].map(([t, p, d]) => (
                 <Panel key={t}>
                   <div className="flex items-baseline justify-between">
@@ -338,8 +376,12 @@ export default function LandingPage() {
               <div className="flex items-center justify-between border-t border-zinc-800 px-6 py-5">
                 <span className="text-sm font-semibold">제대로 지수</span>
                 <span className="flex items-baseline gap-5 font-mono tabular-nums">
-                  <span className="text-lg text-zinc-500">50</span>
-                  <span className="text-2xl font-bold text-amber-400">93</span>
+                  <span className="text-lg text-zinc-500">
+                    {INDEX_ROWS.reduce((a, r) => a + r.solo, 0)}
+                  </span>
+                  <span className="text-2xl font-bold text-amber-400">
+                    {INDEX_ROWS.reduce((a, r) => a + r.spread, 0)}
+                  </span>
                 </span>
               </div>
             </Panel>
@@ -350,6 +392,59 @@ export default function LandingPage() {
               짧은 기간의 수익률 지표는 통계적으로 불안정하다는 연구와, 자주 거래한 개인투자자일수록
               성과가 나빴다는 실증에 근거합니다.
             </Body>
+
+            {/* 산정 근거 — 심사에서 읽히는 부분. 숨기지 않고 펼쳐 둔다 */}
+            <Panel className="!p-0 overflow-hidden">
+              <div className="border-b border-zinc-800 px-6 py-4">
+                <p className="text-sm font-semibold">무엇을 어떻게 계산했나</p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  세 축의 합이 {INDEX_MAX.grown + INDEX_MAX.spread + INDEX_MAX.held}점이고, 한 축만
+                  밀어서는 만점이 나오지 않습니다. 한 곳에 몰아넣고 크게 벌어도 상한은{' '}
+                  {INDEX_MAX.grown}점입니다.
+                </p>
+              </div>
+              <div className="divide-y divide-zinc-800">
+                {METHOD.map((m) => (
+                  <div key={m.label} className="px-6 py-5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <p className="text-sm font-semibold text-zinc-300">{m.label}</p>
+                      <p className="font-mono text-xs text-zinc-500">{m.full}</p>
+                    </div>
+                    <p className="mt-2 overflow-x-auto whitespace-nowrap rounded-md bg-zinc-950/60 px-3 py-2 font-mono text-xs text-zinc-400">
+                      {m.formula}
+                    </p>
+                    <ul className="mt-3 flex flex-col gap-1.5">
+                      {m.notes.map((n) => (
+                        <li key={n} className="break-keep text-[13px] leading-relaxed text-zinc-500">
+                          {n}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-zinc-800 px-6 py-5">
+                <p className="text-xs font-semibold text-zinc-400">배점 근거</p>
+                <ul className="mt-2 flex flex-col gap-1.5 text-[13px] leading-relaxed text-zinc-500">
+                  <li className="break-keep">
+                    Lo (2002), <i>The Statistics of Sharpe Ratios</i> — 샤프 비율은 관측 기간이
+                    짧을수록 추정오차가 커집니다. 그래서 주간 수익률 하나로 줄을 세우지 않습니다.
+                  </li>
+                  <li className="break-keep">
+                    Barber &amp; Odean (2000), <i>Trading Is Hazardous to Your Wealth</i> — 자주
+                    거래한 개인투자자일수록 성과가 나빴습니다. 「버틴 만큼」에 30점을 둔 이유입니다.
+                  </li>
+                  <li className="break-keep">
+                    Benartzi &amp; Thaler (1995), 근시안적 손실회피 — 평가 주기가 투자 기간과
+                    어긋나면 판단이 망가집니다. 주 1회 편성과 예비대 표시가 여기서 나왔습니다.
+                  </li>
+                </ul>
+                <p className="mt-4 break-keep text-[13px] leading-relaxed text-zinc-500">
+                  등수 숫자는 만들지 않습니다. 목록도 점수순이 아니라 가입순입니다 — 정렬 자체가
+                  등수가 되기 때문입니다. 수익 금액도 어디에도 표시하지 않습니다.
+                </p>
+              </div>
+            </Panel>
           </div>
         </Reveal>
 
