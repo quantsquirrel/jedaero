@@ -119,6 +119,25 @@ Benartzi & Thaler가 관찰한 실패 양상이 정확히 그것이다.
 
 ## 3. 환경 함정 — 반드시 알고 시작할 것
 
+### 세션은 프로젝트 폴더에서 시작할 것
+
+```bash
+cd ~/projects/jedaero && claude
+```
+
+홈 디렉토리에서 시작하면 **`CLAUDE.md`가 자동 로딩되지 않는다.**
+그 파일에 절대 금지 C1~C11(카메라·GPS·현금성 보상·부대정보 등)이 있으므로
+못 읽은 채로 작업하면 위험하다. 이미 다른 곳에서 시작했다면 `/add-dir ~/projects/jedaero`.
+
+### API 키 위치
+
+```
+.env          실제 값. gitignore 대상. KRX_API_KEY · DATA_GO_KR_API_KEY 들어 있음
+.env.example  자리만 표시. 추적되는 파일이므로 여기에 실제 값을 절대 넣지 말 것
+```
+
+`.gitignore`에 `!.env.example` 예외가 있어 이 파일은 커밋된다.
+
 ### `.env`가 없다
 
 ```
