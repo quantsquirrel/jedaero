@@ -53,13 +53,7 @@ export async function generateReflection(text: string, facts: ReviewFacts): Prom
             이번주에_비중을_바꿨나: facts.changedThisWeek,
             바꾼폭_퍼센트포인트: Number(facts.turnoverPp.toFixed(1)),
             마지막_조정_이후_지난_주수: facts.weeksUnchanged,
-            이번달_기록한_지출건수: facts.recordedCount,
-            아직_확정하지_않은_분류: facts.unconfirmedCount,
-            초과한_봉투: facts.overspent.map((o) => ({
-              카테고리: o.category,
-              배정: o.allocated,
-              실지출: o.spent,
-            })),
+            어느_전선에도_놓지_않은_몫_퍼센트: facts.reservePct,
           }),
         },
       ],
@@ -81,27 +75,26 @@ export async function generateReflection(text: string, facts: ReviewFacts): Prom
 
 /** 규칙 기반 폴백 — 이번 주 사실 중 가장 두드러진 하나를 골라 되묻는다. 생성형 AI 아님 (C9). */
 export function reflectionFallback(facts: ReviewFacts): Reflection {
-  if (facts.overspent.length > 0) {
-    const o = facts.overspent[0];
-    return {
-      acknowledgement: `${o.category} 봉투는 ${o.allocated.toLocaleString('ko-KR')}원 배정에 ${o.spent.toLocaleString('ko-KR')}원을 썼습니다.`,
-      question: '이 차이는 예상 밖이었나요, 알고도 넘긴 것인가요?',
-    };
-  }
   if (!facts.changedThisWeek && facts.weeksUnchanged > 0) {
     return {
-      acknowledgement: `마지막 비중 조정 이후 ${facts.weeksUnchanged}주가 지났습니다. 아무것도 바꾸지 않은 주도 기록에는 하나의 선택으로 남습니다.`,
+      acknowledgement: `마지막 편성 이후 ${facts.weeksUnchanged}주가 지났습니다. 아무것도 바꾸지 않은 주도 기록에는 하나의 선택으로 남습니다.`,
       question: '그대로 둔 것은 결정이었나요, 미룬 것이었나요?',
     };
   }
   if (facts.changedThisWeek) {
     return {
-      acknowledgement: `이번 주에 비중을 ${facts.turnoverPp.toFixed(0)}%p 옮겼습니다.`,
+      acknowledgement: `이번 주에 병력을 ${facts.turnoverPp.toFixed(0)}%p 옮겼습니다.`,
       question: '그 판단의 근거는 다음 주에도 그대로일까요?',
     };
   }
+  if (facts.reservePct > 0) {
+    return {
+      acknowledgement: `지금 ${facts.reservePct}%가 예비대로 남아 있습니다. 잃지는 않지만 물가만큼 조용히 줄어듭니다.`,
+      question: '이 병력을 아껴 두는 것은 기다림인가요, 미룸인가요?',
+    };
+  }
   return {
-    acknowledgement: `이번 달 지출 ${facts.recordedCount}건을 기록했습니다.`,
+    acknowledgement: '이번 주에는 편성을 바꾸지 않았습니다.',
     question: '다음 주에 한 가지만 다르게 한다면 무엇일까요?',
   };
 }

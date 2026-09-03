@@ -38,15 +38,16 @@ else
   BUILD_OK=0
 fi
 
-# P0-02 스키마: public 스키마 테이블 정확히 14개(승인된 ai_calls 포함), 목록 일치
-# quests·quest_progress는 퀘스트·XP 폐지로 제거됐다 (DESIGN-DECISIONS §7). 되살리지 말 것.
-EXPECTED="ai_calls allocations budget_envelopes budget_months exemption_claims expenses group_members groups holidays prices settings tickers users weekly_scores"
+# P0-02 스키마: public 스키마 테이블 정확히 10개(승인된 ai_calls 포함), 목록 일치
+# quests·quest_progress는 퀘스트·XP 폐지로,
+# budget_months·budget_envelopes·expenses·exemption_claims는 가계부 제외로 제거됐다. 되살리지 말 것.
+EXPECTED="ai_calls allocations group_members groups holidays prices settings tickers users weekly_scores"
 if ! have_db; then
   report P0-02 FAIL "DATABASE_URL 없음"
 else
   ACTUAL=$(q "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY 1" | tr '\n' ' ' | sed 's/ *$//')
   if [ "$ACTUAL" = "$EXPECTED" ]; then
-    report P0-02 PASS "테이블 14개 목록 일치"
+    report P0-02 PASS "테이블 10개 목록 일치"
   else
     report P0-02 FAIL "테이블 불일치: [${ACTUAL:-없음}]"
   fi
@@ -222,9 +223,10 @@ fi
 
 # ---------- P1 ----------
 
-run_check P1-01 scripts/checks/p1-01-accumulation.ts
+# P1-01 폐지 — 「매달 모았다면」 곡선 제거 (가계부 제외). 곡선은 전역(일시금) 하나뿐이다.
 
 # P1-02 합산 금지: app/·components/ .tsx에서 총 자산·총 평가액·totalAssets·combinedValue 0건
+# 곡선이 하나가 된 뒤에도 남긴다 — 이 표기가 되살아나는 것 자체가 두 번째 곡선이 생겼다는 신호다.
 SUM_HITS=$(grep -rnE '총 자산|총 평가액|totalAssets|combinedValue' app components --include='*.tsx' 2>/dev/null)
 if [ -z "$SUM_HITS" ]; then
   report P1-02 PASS "합산 표기 0건"
@@ -246,7 +248,7 @@ else
   fi
 fi
 
-run_check P1-05 scripts/checks/p1-05-accuracy.ts
+run_check P1-05 scripts/checks/p1-05-jedaero-index.ts
 
 # P1-06 폐지 — 퀘스트·XP 제거 (DESIGN-DECISIONS §7). 번호는 상호참조를 위해 비워 둔다.
 
@@ -283,11 +285,10 @@ run_check P1-12 scripts/checks/p1-12-injection.ts
 run_check P1-13 scripts/checks/p1-13-guard.ts
 
 # P1-14 목표 vs 현재 갭 회귀 (P0-1) / P1-15 AI-4 주간 시황 계산
-# P1-16 LLM 출력 검증(조언·라벨·전망) / P1-17 AI-2 봉투 제안 폴백
+# P1-16 LLM 출력 검증(조언·라벨·전망). P1-17은 폐지 (AI-2 봉투 제안 — 가계부 제외)
 run_check P1-14 scripts/checks/p1-14-gap.ts
 run_check P1-15 scripts/checks/p1-15-market-week.ts
 run_check P1-16 scripts/checks/p1-16-output-guard.ts
-run_check P1-17 scripts/checks/p1-17-budget-suggest.ts
 
 # ---------- 요약 ----------
 echo '---'

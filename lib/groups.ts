@@ -1,4 +1,5 @@
-// 초대코드 그룹 (SPEC §3-8) — 정원 30명, 지표는 예산 준수율 + 규율 스트릭.
+// 초대코드 그룹 (SPEC §3-8) — 정원 30명, 지표는 제대로 지수.
+// ★ 부대 정보는 어디에도 쓰지 않는다 (C4). 그룹명은 AI-5 필터를 통과한 것만.
 // ★ 그룹 내 수익률은 비공개다. 부대 내 "얼마 벌었다" 자랑 문화(군기문란 리스크)를 차단한다.
 //   이 파일과 그룹 화면은 수익률 필드를 참조하지 않는다 (P1-10).
 import { and, eq, inArray } from 'drizzle-orm';
@@ -57,7 +58,7 @@ export async function joinGroup(userId: string, rawCode: string): Promise<GroupA
 export type GroupBoardMember = {
   nickname: string;
   isMe: boolean;
-  accuracy: number | null; // 이번 달 예산 준수율
+  total: number | null; // 이번 주 제대로 지수 (집계 전이면 null)
 };
 
 export type GroupBoard = {
@@ -91,20 +92,18 @@ export async function myGroupBoards(userId: string): Promise<GroupBoard[]> {
 
     const memberIds = memberRows.map((m) => m.userId);
     const scores = await db
-      .select({ userId: weeklyScores.userId, budgetAccuracy: weeklyScores.budgetAccuracy })
+      .select({ userId: weeklyScores.userId, total: weeklyScores.total })
       .from(weeklyScores)
       .where(and(inArray(weeklyScores.userId, memberIds), eq(weeklyScores.weekOf, week)));
-    const accByUser = new Map(scores.map((s) => [s.userId, s.budgetAccuracy]));
+    const totalByUser = new Map(scores.map((s) => [s.userId, s.total]));
 
-    const members: GroupBoardMember[] = [];
-    for (const m of memberRows) {
-      members.push({
-        nickname: m.nickname,
-        isMe: m.userId === userId,
-        accuracy: accByUser.get(m.userId) ?? null,
-      });
-    }
-    members.sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
+    // ★ 점수 내림차순으로 정렬하지 않는다. 등수 숫자를 지워도 정렬이 등수를 만든다.
+    //   가입순(조회 순서)을 그대로 둔다.
+    const members: GroupBoardMember[] = memberRows.map((m) => ({
+      nickname: m.nickname,
+      isMe: m.userId === userId,
+      total: totalByUser.get(m.userId) ?? null,
+    }));
     boards.push({ id: g.id, name: g.name, inviteCode: g.inviteCode, memberLimit: g.memberLimit, members });
   }
   return boards;

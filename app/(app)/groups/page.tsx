@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation';
 import { GroupForms } from '@/components/group-forms';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { pct } from '@/lib/format';
 import { myGroupBoards } from '@/lib/groups';
 import { getSessionUser } from '@/lib/session';
 import { cn } from '@/lib/utils';
 
-// S10 그룹 — 초대코드, 정원 30명. 지표는 예산 준수율 + 규율 스트릭.
+// S10 그룹 — 초대코드, 정원 30명. 지표는 제대로 지수 하나뿐이다.
+// ★ 등수도 정렬도 만들지 않는다. 목록은 가입순.
 // 그룹 안에서 수익률은 보이지 않는다 — "얼마 벌었다" 문화를 만들지 않기 위해서다.
 export default async function GroupsPage() {
   const user = await getSessionUser();
@@ -48,12 +48,13 @@ export default async function GroupsPage() {
                   {m.isMe ? ' (나)' : ''}
                 </span>
                 <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                  준수율 {m.accuracy != null ? pct(m.accuracy, 0).replace('+', '') : '—'}
+                  {m.total != null ? `${m.total}점` : '집계 대기'}
                 </span>
               </div>
             ))}
             <p className="text-xs text-muted-foreground">
-              이 화면에는 수익 정보가 없습니다. 그룹은 규율을 겨루는 곳입니다.
+              이 화면에는 수익 금액도 등수도 없습니다. 제대로 지수는 불린 만큼(40) · 나눠 담은
+              만큼(30) · 버틴 만큼(30)을 합한 점수입니다.
             </p>
           </CardContent>
         </Card>

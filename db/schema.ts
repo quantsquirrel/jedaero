@@ -50,49 +50,9 @@ export const allocations = pgTable(
   ],
 );
 
-// 지출·예산
-export const budgetMonths = pgTable(
-  'budget_months',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
-    yearMonth: text('year_month').notNull(), // YYYY-MM
-    baseSalary: integer('base_salary').notNull(),
-    lockedAt: timestamp('locked_at', { withTimezone: true }), // NULL 아니면 수정 불가
-  },
-  (t) => [unique('budget_months_user_id_year_month_unique').on(t.userId, t.yearMonth)],
-);
-
-export const budgetEnvelopes = pgTable('budget_envelopes', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  budgetMonthId: uuid('budget_month_id').notNull(),
-  category: text('category').notNull(),
-  allocated: integer('allocated').notNull(),
-  spent: integer('spent').notNull().default(0),
-});
-
-export const expenses = pgTable('expenses', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
-  occurredOn: date('occurred_on').notNull(),
-  amount: integer('amount').notNull(), // 원 단위 정수
-  memo: text('memo'),
-  tier: text('tier').notNull().default('UNCLASSIFIED'), // A|B|C|UNCLASSIFIED
-  category: text('category'),
-  aiSuggestedTier: text('ai_suggested_tier'),
-  aiConfidence: real('ai_confidence'),
-  confirmedByUser: boolean('confirmed_by_user').notNull().default(false), // false면 tier 미반영
-});
-
-export const exemptionClaims = pgTable('exemption_claims', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
-  yearQuarter: text('year_quarter').notNull(), // YYYY-Q. 분기 1회 제한 키
-  type: text('type').notNull(), // TRANSPORT|MEDICAL|FAMILY_EMERGENCY
-  amount: integer('amount').notNull(),
-  reason: text('reason'), // 자유서술. 검증하지 않음
-  capApplied: integer('cap_applied').notNull(),
-});
+// 가계부(지출·봉투 예산·면제 청구)는 제거됐다 (DESIGN-DECISIONS §9 → 완전 제외).
+// budget_months / budget_envelopes / expenses / exemption_claims 테이블을 되살리지 말 것.
+// 투자 파트와의 접합이 약했고, 지출 분류가 서비스의 초점을 흐렸다.
 
 // 퀘스트·XP는 제거됐다 (DESIGN-DECISIONS §7).
 // 빈도를 늘리는 게임화는 이 서비스가 가르치려는 것(주 1회·오래 버티기)과 정면으로 어긋난다.
@@ -113,13 +73,16 @@ export const groupMembers = pgTable('group_members', {
   userId: uuid('user_id').notNull(),
 });
 
-// 주간 집계 (랭킹용) — 요청 시점 lazy upsert. 크론 없음
+// 주간 집계 (제대로 지수) — 요청 시점 lazy upsert. 크론 없음
+// 세 축을 따로 저장한다. 총점만 두면 화면에서 "왜 이 점수인가"를 보여줄 수 없다.
 export const weeklyScores = pgTable('weekly_scores', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
   weekOf: text('week_of').notNull(),
-  twrPct: real('twr_pct'), // 전역(일시금) 곡선 시간가중수익률 (비교용)
-  budgetAccuracy: real('budget_accuracy'), // 예산 준수율 0~1 (비교용)
+  grown: real('grown'), // 불린 만큼 (40점 만점)
+  spread: real('spread'), // 나눠 담은 만큼 (30점 만점)
+  held: real('held'), // 버틴 만큼 (30점 만점)
+  total: real('total'), // 제대로 지수 (100점 만점)
 });
 
 // 종목 마스터 + 일별 종가 (사전 시드. 더미 데이터이며 실제 시세와 무관)

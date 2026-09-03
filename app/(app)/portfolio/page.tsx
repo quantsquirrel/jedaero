@@ -1,18 +1,16 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { asc, eq } from 'drizzle-orm';
-import { ComparisonChart } from '@/components/comparison-chart';
 import { DeadlineCountdown } from '@/components/deadline-countdown';
 import { RevertButton } from '@/components/revert-button';
 import { WeightEditor } from '@/components/weight-editor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
-import { allocations, expenses } from '@/db/schema';
-import { POINT_UNIT, RESERVE, SEED_AMOUNT, THEMES, type Rank, type Weights } from '@/lib/constants';
+import { allocations } from '@/db/schema';
+import { POINT_UNIT, RESERVE, SEED_AMOUNT, THEMES, type Weights } from '@/lib/constants';
 import { currentDayType, currentRebalanceOpen, demoOverride } from '@/lib/day-context';
 import { kstToday } from '@/lib/day-type';
 import { pct, won } from '@/lib/format';
-import { buildSavingsCashflows } from '@/lib/portfolio/accumulation';
 import { computeCurve, type WeightHistoryItem } from '@/lib/portfolio/engine';
 import { pricesUpTo } from '@/lib/portfolio/prices';
 import { reservePoints } from '@/lib/portfolio/weights';
@@ -21,6 +19,7 @@ import { addDays, mondayOfWeeksAgo, weekOf } from '@/lib/week';
 import { cn } from '@/lib/utils';
 
 // S4 포트폴리오 — 사용자가 조작하는 유일한 대상: 6전선 포인트 편성
+// ★ 「매달 모았다면」 곡선은 가계부 제거와 함께 폐지됐다. 곡선은 전역(일시금) 하나뿐이다.
 // 평일: 수익률 마스킹 + 조정 잠금. 갭(비중 정보)은 항상 표시 (SPEC §3-6 g)
 export default async function PortfolioPage() {
   const user = await getSessionUser();
@@ -85,42 +84,6 @@ export default async function PortfolioPage() {
     return { ...row, current, gap: round1(current - row.target) };
   });
   const maxAbsGap = Math.max(...gaps.map((g) => Math.abs(g.gap)));
-
-  // 「매달 모았다면」 — 같은 비중·같은 가격, 현금흐름만 다르게. 주말에만 계산·표시
-  let comparison: null | {
-    chartDates: string[];
-    lump: number[];
-    save: number[];
-    lumpReturn: number;
-    saveInvested: number;
-    saveFinal: number;
-    saveReturn: number;
-  } = null;
-  if (dt === 'WEEKEND' && lumpCurve.invested > 0) {
-    const expenseRows = await db
-      .select({ occurredOn: expenses.occurredOn, amount: expenses.amount })
-      .from(expenses)
-      .where(eq(expenses.userId, user.id));
-    const savingsFlows = buildSavingsCashflows(
-      user.rank as Rank,
-      expenseRows,
-      dates,
-      rows[0].effectiveFrom,
-    );
-    const saveCurve = computeCurve(dates, series, history, savingsFlows);
-    const saveFinal = saveCurve.values[saveCurve.values.length - 1] ?? 0;
-    const from = dates.findIndex((d) => d >= rows[0].effectiveFrom);
-    const s = Math.max(0, from);
-    comparison = {
-      chartDates: dates.slice(s),
-      lump: lumpCurve.values.slice(s).map(Math.round),
-      save: saveCurve.values.slice(s).map(Math.round),
-      lumpReturn: lumpFinal / lumpCurve.invested - 1,
-      saveInvested: saveCurve.invested,
-      saveFinal,
-      saveReturn: saveCurve.invested > 0 ? saveFinal / saveCurve.invested - 1 : 0,
-    };
-  }
 
   const deadlineIso = `${addDays(mondayOfWeeksAgo(new Date(), 0), 6)}T12:00:00Z`;
   const disabledReason = !open
@@ -223,38 +186,6 @@ export default async function PortfolioPage() {
           )}
         </CardContent>
       </Card>
-
-      {comparison ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">매달 모았다면</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <ComparisonChart dates={comparison.chartDates} lump={comparison.lump} savings={comparison.save} />
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="rounded-md border border-border p-2.5">
-                <p className="text-xs text-muted-foreground">전역 일시금 {won(SEED_AMOUNT)}</p>
-                <p className="font-semibold tabular-nums">{won(lumpFinal)}</p>
-                <p className={cn('text-xs', comparison.lumpReturn >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                  투입 대비 {pct(comparison.lumpReturn, 2)}
-                </p>
-              </div>
-              <div className="rounded-md border border-border p-2.5">
-                <p className="text-xs text-muted-foreground">매달 저축액 투입 {won(comparison.saveInvested)}</p>
-                <p className="font-semibold tabular-nums">{won(comparison.saveFinal)}</p>
-                <p className={cn('text-xs', comparison.saveReturn >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                  투입 대비 {pct(comparison.saveReturn, 2)}
-                </p>
-              </div>
-            </div>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              같은 배분, 같은 가격 — 현금흐름만 다릅니다. 하락 구간에서 두 곡선이 다르게 아픈
-              이유가 이 훈련의 핵심입니다. 두 값은 같은 돈을 두 방식으로 본 것이라{' '}
-              <b className="text-foreground">더하지 않습니다</b>.
-            </p>
-          </CardContent>
-        </Card>
-      ) : null}
 
       <Card>
         <CardHeader>

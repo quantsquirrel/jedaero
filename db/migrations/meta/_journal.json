@@ -15,6 +15,20 @@
       "when": 1788418173315,
       "tag": "0001_drop_quests",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788421220768,
+      "tag": "0002_drop_budget",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788421229239,
+      "tag": "0003_add_jedaero_index",
+      "breakpoints": true
     }
   ]
 }

@@ -164,8 +164,12 @@ async function seedDummyUsers() {
       scoreRows.push({
         userId: id,
         weekOf: weekOfDateStr(mondayOfWeeksAgo(now, -off)),
-        twrPct: Math.round((rng() * 10 - 4) * 100) / 100,
-        budgetAccuracy: Math.round((0.5 + rng() * 0.48) * 1000) / 1000,
+        ...(() => {
+          const grown = Math.round(rng() * 40 * 10) / 10;
+          const spread = Math.round((10 + rng() * 20) * 10) / 10;
+          const held = Math.round((12 + rng() * 18) * 10) / 10;
+          return { grown, spread, held, total: Math.round((grown + spread + held) * 10) / 10 };
+        })(),
       });
     }
   }
