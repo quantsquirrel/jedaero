@@ -15,7 +15,8 @@ import { pricesUpTo } from '@/lib/portfolio/prices';
 import { getSessionUser } from '@/lib/session';
 
 // S7 리그 — 동기 코호트(전역 예정 월 자동 배정). 주간 시즌제, 누적 순위 없음 (C7)
-// 지표는 예산 준수율 + XP. 수익률은 백분위로만, 변동성·최대낙폭·집중도와 함께 (SPEC §3-8)
+// 지표는 예산 준수율. 수익률은 백분위로만, 변동성·최대낙폭·집중도와 함께 (SPEC §3-8)
+// ★ 퀘스트·XP 폐지로 점수 축 하나가 비었다. 「제대로 지수」(40:30:30)로 재구성 예정 — HANDOFF ③
 export default async function LeaguePage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
@@ -86,11 +87,6 @@ export default async function LeaguePage() {
               {cohort.accuracyPercentile != null ? (
                 <p className="text-xs text-muted-foreground">코호트 상위 {100 - cohort.accuracyPercentile}%</p>
               ) : null}
-            </div>
-            <div className="rounded-md border border-border p-2.5">
-              <p className="text-xs text-muted-foreground">이번 주 XP</p>
-              <p className="font-semibold tabular-nums">{mine.xp} XP</p>
-              <p className="text-xs text-muted-foreground">코호트 상위 {100 - cohort.xpPercentile}%</p>
             </div>
           </div>
           <div className="rounded-md border border-border p-2.5">

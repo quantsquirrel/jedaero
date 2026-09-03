@@ -48,8 +48,7 @@ export default async function GroupsPage() {
                   {m.isMe ? ' (나)' : ''}
                 </span>
                 <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                  준수율 {m.accuracy != null ? pct(m.accuracy, 0).replace('+', '') : '—'} · 스트릭{' '}
-                  {m.streak}주
+                  준수율 {m.accuracy != null ? pct(m.accuracy, 0).replace('+', '') : '—'}
                 </span>
               </div>
             ))}

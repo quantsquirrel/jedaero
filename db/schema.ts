@@ -94,28 +94,9 @@ export const exemptionClaims = pgTable('exemption_claims', {
   capApplied: integer('cap_applied').notNull(),
 });
 
-// 위클리 퀘스트
-export const quests = pgTable('quests', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  code: text('code').unique().notNull(),
-  title: text('title').notNull(),
-  description: text('description').notNull(),
-  xp: integer('xp').notNull(),
-  badge: text('badge'),
-});
-
-export const questProgress = pgTable(
-  'quest_progress',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
-    questId: uuid('quest_id').notNull(),
-    weekOf: text('week_of').notNull(),
-    progress: integer('progress').notNull().default(0),
-    completedAt: timestamp('completed_at', { withTimezone: true }),
-  },
-  (t) => [unique('quest_progress_user_quest_week_unique').on(t.userId, t.questId, t.weekOf)],
-);
+// 퀘스트·XP는 제거됐다 (DESIGN-DECISIONS §7).
+// 빈도를 늘리는 게임화는 이 서비스가 가르치려는 것(주 1회·오래 버티기)과 정면으로 어긋난다.
+// quests / quest_progress 테이블을 되살리지 말 것.
 
 // 그룹
 export const groups = pgTable('groups', {
@@ -139,7 +120,6 @@ export const weeklyScores = pgTable('weekly_scores', {
   weekOf: text('week_of').notNull(),
   twrPct: real('twr_pct'), // 전역(일시금) 곡선 시간가중수익률 (비교용)
   budgetAccuracy: real('budget_accuracy'), // 예산 준수율 0~1 (비교용)
-  xp: integer('xp'),
 });
 
 // 종목 마스터 + 일별 종가 (사전 시드. 더미 데이터이며 실제 시세와 무관)

@@ -5,7 +5,6 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { groupMembers, groups, users, weeklyScores } from '../db/schema';
 import { checkGroupName } from './filters/unit-filter';
-import { disciplineStreak } from './quests';
 import { weekOf } from './week';
 
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // 혼동 문자 제외
@@ -59,7 +58,6 @@ export type GroupBoardMember = {
   nickname: string;
   isMe: boolean;
   accuracy: number | null; // 이번 달 예산 준수율
-  streak: number; // 규율 스트릭 (주간 퀘스트 1개 이상 완료 연속 주)
 };
 
 export type GroupBoard = {
@@ -104,7 +102,6 @@ export async function myGroupBoards(userId: string): Promise<GroupBoard[]> {
         nickname: m.nickname,
         isMe: m.userId === userId,
         accuracy: accByUser.get(m.userId) ?? null,
-        streak: await disciplineStreak(m.userId),
       });
     }
     members.sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));

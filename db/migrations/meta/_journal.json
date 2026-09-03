@@ -8,6 +8,13 @@
       "when": 1788003007557,
       "tag": "0000_futuristic_the_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788418173315,
+      "tag": "0001_drop_quests",
+      "breakpoints": true
     }
   ]
 }

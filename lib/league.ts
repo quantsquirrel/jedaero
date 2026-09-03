@@ -1,5 +1,5 @@
 // 동기 코호트 리그 (SPEC §3-8) — 주간 시즌제, 누적 순위 없음 (C7)
-// 지표는 예산 준수율 + XP. 수익률은 순위 대신 코호트 분포 안의 백분위로만 보여주고,
+// 지표는 예산 준수율. 수익률은 순위 대신 코호트 분포 안의 백분위로만 보여주고,
 // 변동성·최대낙폭·집중도를 반드시 함께 표시한다.
 // ★ 랭킹은 전역(일시금) 곡선의 TWR만 사용한다. 다른 곡선은 여기에 절대 넣지 않는다.
 import { and, eq, gte, inArray, lt } from 'drizzle-orm';
@@ -11,11 +11,10 @@ import { kstToday } from './day-type';
 import { computeCurve, type WeightHistoryItem } from './portfolio/engine';
 import { pricesUpTo } from './portfolio/prices';
 import { twr } from './portfolio/twr';
-import { weekXp } from './quests';
 import { mondayOfWeeksAgo, weekOf } from './week';
 import type { SessionUser } from './session';
 
-export type WeeklyScore = { twrPct: number | null; budgetAccuracy: number | null; xp: number };
+export type WeeklyScore = { twrPct: number | null; budgetAccuracy: number | null };
 
 /** 내 이번 주 점수를 요청 시점에 계산해 weekly_scores에 lazy upsert (크론 없음) */
 export async function computeAndStoreWeeklyScore(user: SessionUser): Promise<WeeklyScore> {
@@ -63,8 +62,6 @@ export async function computeAndStoreWeeklyScore(user: SessionUser): Promise<Wee
     if (envs.length > 0) accuracy = budgetAccuracy(envs);
   }
 
-  const xp = await weekXp(user.id, week);
-
   const existing = await db
     .select({ id: weeklyScores.id })
     .from(weeklyScores)
@@ -73,12 +70,12 @@ export async function computeAndStoreWeeklyScore(user: SessionUser): Promise<Wee
   if (existing.length > 0) {
     await db
       .update(weeklyScores)
-      .set({ twrPct, budgetAccuracy: accuracy, xp })
+      .set({ twrPct, budgetAccuracy: accuracy })
       .where(eq(weeklyScores.id, existing[0].id));
   } else {
-    await db.insert(weeklyScores).values({ userId: user.id, weekOf: week, twrPct, budgetAccuracy: accuracy, xp });
+    await db.insert(weeklyScores).values({ userId: user.id, weekOf: week, twrPct, budgetAccuracy: accuracy });
   }
-  return { twrPct, budgetAccuracy: accuracy, xp };
+  return { twrPct, budgetAccuracy: accuracy };
 }
 
 /** 값 배열에서 내 값의 백분위 (0~100, 내 값보다 작은 비율) */
@@ -92,7 +89,6 @@ export type CohortView = {
   cohortMonth: string; // 전역 예정 연월
   n: number;
   accuracyPercentile: number | null;
-  xpPercentile: number;
   twrPercentile: number | null;
 };
 
@@ -111,13 +107,12 @@ export async function cohortView(user: SessionUser, mine: WeeklyScore): Promise<
     .where(and(gte(users.dischargeAt, monthStart), lt(users.dischargeAt, monthEnd)));
   const peerIds = peers.map((p) => p.id).filter((id) => id !== user.id);
 
-  let scores: { twrPct: number | null; budgetAccuracy: number | null; xp: number | null }[] = [];
+  let scores: { twrPct: number | null; budgetAccuracy: number | null }[] = [];
   if (peerIds.length > 0) {
     scores = await db
       .select({
         twrPct: weeklyScores.twrPct,
         budgetAccuracy: weeklyScores.budgetAccuracy,
-        xp: weeklyScores.xp,
       })
       .from(weeklyScores)
       .where(and(inArray(weeklyScores.userId, peerIds), eq(weeklyScores.weekOf, week)));
@@ -125,13 +120,11 @@ export async function cohortView(user: SessionUser, mine: WeeklyScore): Promise<
 
   const accs = scores.map((s) => s.budgetAccuracy).filter((v): v is number => v != null);
   const twrs = scores.map((s) => s.twrPct).filter((v): v is number => v != null);
-  const xps = scores.map((s) => s.xp ?? 0);
 
   return {
     cohortMonth,
     n: scores.length + 1,
     accuracyPercentile: mine.budgetAccuracy != null && accs.length > 0 ? percentile(accs, mine.budgetAccuracy) : null,
-    xpPercentile: percentile(xps, mine.xp),
     twrPercentile: mine.twrPct != null && twrs.length > 0 ? percentile(twrs, mine.twrPct) : null,
   };
 }

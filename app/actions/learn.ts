@@ -1,18 +1,16 @@
 'use server';
-// 학습 카드 완료(LEARN_1) + 주말 한 줄 회고(REVIEW_1) + AI-3 되묻기
+// 학습 카드 완료 + 주말 한 줄 회고 + AI-3 되묻기
 // 회고 입력은 LLM 파이프라인과 동일한 입력 필터를 통과해야 한다 (SPEC §5, 시나리오 17).
 import { revalidatePath } from 'next/cache';
 import { generateReflection, reflectionFallback, type Reflection } from '../../lib/ai/reflect';
 import { guardedAiCall, recordAiCall } from '../../lib/ai/guard';
 import { detectInjection } from '../../lib/filters/injection-filter';
-import { bumpQuest } from '../../lib/quests';
 import { collectReviewFacts } from '../../lib/review-context';
 import { getSessionUser } from '../../lib/session';
 
 export async function completeLearnCard(): Promise<{ error?: string; ok?: boolean }> {
   const user = await getSessionUser();
   if (!user) return { error: '세션이 없습니다.' };
-  await bumpQuest(user.id, 'LEARN_1', 1);
   revalidatePath('/learn');
   revalidatePath('/home');
   return { ok: true };
@@ -41,7 +39,6 @@ export async function submitReview(_prev: ReviewState, formData: FormData): Prom
   }
 
   // 회고 텍스트는 저장하지 않는다 (스키마에 저장 컬럼 없음). 퀘스트 완료만 기록.
-  await bumpQuest(user.id, 'REVIEW_1', 1);
   revalidatePath('/learn');
   revalidatePath('/home');
 

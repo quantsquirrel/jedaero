@@ -1,9 +1,7 @@
 // /demo 진입 시 주입되는 체험용 데이터 (SPEC §7, docs/SEED.md §8)
 // - 12주치 비중 변경 이력 (조정하지 않은 주 4주 포함 — 행이 없는 주가 곧 "유지")
 // - 3개월치 지출 (A/B/C 골고루 + 미확정 3건)
-// - 퀘스트 5종 중 2종 완료
 // 리그·성향분석용 더미 사용자 200명은 3단계(리그·인사이트 구현)에서 전역 시드로 추가한다.
-import { inArray } from 'drizzle-orm';
 import { db } from '../db';
 import {
   allocations,
@@ -11,11 +9,9 @@ import {
   budgetMonths,
   exemptionClaims,
   expenses,
-  questProgress,
-  quests,
   users,
 } from '../db/schema';
-import { addDays, mondayOfWeeksAgo, weekOf, weekOfDateStr } from './week';
+import { addDays, mondayOfWeeksAgo, weekOfDateStr } from './week';
 import { nextTradingDay } from './portfolio/prices';
 import { SALARY_2026, TRANSPORT_CAP } from './constants';
 import { ACTIVE_WEIGHT_STORY } from './demo-story';
@@ -107,23 +103,6 @@ export async function createDemoUser(now: Date = new Date()): Promise<{ id: stri
       confirmedByUser: confirmed,
     })),
   );
-
-  // 퀘스트 2종 완료 상태 (RECORD_3, LEARN_1)
-  const questRows = await db
-    .select({ id: quests.id, code: quests.code })
-    .from(quests)
-    .where(inArray(quests.code, ['RECORD_3', 'LEARN_1']));
-  if (questRows.length > 0) {
-    await db.insert(questProgress).values(
-      questRows.map((q) => ({
-        userId: user.id,
-        questId: q.id,
-        weekOf: weekOf(now),
-        progress: q.code === 'RECORD_3' ? 3 : 1,
-        completedAt: now,
-      })),
-    );
-  }
 
   // 예산 봉투: 확정(잠금)된 이번 달 + 미확정 다음 달 (docs/SEED.md §8)
   const thisMonth = todayK.slice(0, 7);

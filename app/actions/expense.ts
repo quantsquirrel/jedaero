@@ -12,7 +12,6 @@ import { matchCategory } from '../../lib/budget';
 import { TRANSPORT_CAP, type HomeDistance } from '../../lib/constants';
 import { kstToday } from '../../lib/day-type';
 import { detectInjection } from '../../lib/filters/injection-filter';
-import { bumpQuest } from '../../lib/quests';
 import { getSessionUser } from '../../lib/session';
 
 export type AddExpenseState = { error?: string; ok?: boolean; notice?: string };
@@ -37,7 +36,6 @@ export async function addExpense(_prev: AddExpenseState, formData: FormData): Pr
     .insert(expenses)
     .values({ userId: user.id, occurredOn, amount, memo })
     .returning({ id: expenses.id });
-  await bumpQuest(user.id, 'RECORD_3', 1);
 
   // LLM 입력 필터 — 인젝션·개인정보 패턴이면 AI 호출 없이 미분류로 남긴다 (SPEC §5)
   let notice: string | undefined;
@@ -87,7 +85,6 @@ export async function confirmExpenseTier(id: string, tier: 'A' | 'B' | 'C'): Pro
     .update(expenses)
     .set({ tier, confirmedByUser: true, category: tier === 'B' ? matchCategory(row.memo) : null })
     .where(eq(expenses.id, id));
-  await bumpQuest(user.id, 'CONFIRM_AI', 1);
 
   // A계층 교통비 — home_distance 기반 표준 왕복 상한까지 자동 면제 인정 (SPEC §3-2)
   if (tier === 'A' && row.memo && TRANSPORT_RE.test(row.memo)) {
