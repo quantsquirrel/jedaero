@@ -2,14 +2,16 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MarketWeekCard } from '@/components/market-week-card';
 import { SEED_AMOUNT } from '@/lib/constants';
 import { currentDayType, currentRebalanceOpen } from '@/lib/day-context';
-import { daysUntilRebalance } from '@/lib/day-type';
+import { daysUntilRebalance, kstToday } from '@/lib/day-type';
 import { won } from '@/lib/format';
+import { computeMarketWeek } from '@/lib/market-week';
 import { getSessionUser } from '@/lib/session';
 
 // S3 홈 — 최상단은 "다음 편성까지". 전역 D-Day는 이 앱의 할 일이 아니므로 설정으로 옮긴다.
-// ★ 수익률은 여기 두지 않는다 (SPEC §6). 퀘스트·XP는 폐지했다.
+// ★ 수익률은 여기 두지 않는다 (SPEC §6). 평일 심사 메인이므로 시황(전선 등락)은 둔다.
 export default async function HomePage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
@@ -17,6 +19,7 @@ export default async function HomePage() {
   const dt = await currentDayType();
   const open = await currentRebalanceOpen();
   const dday = daysUntilRebalance();
+  const week = computeMarketWeek(kstToday());
 
   return (
     <main className="flex flex-col gap-4 px-5 py-8">
@@ -39,14 +42,34 @@ export default async function HomePage() {
         <CardContent className="text-sm leading-relaxed text-muted-foreground">
           {open ? (
             <p>
-              <b className="text-foreground">편성 조정·수익률 확인·리그</b>가 열려 있습니다. 마감은
-              일요일 21:00. 조정하지 않으면 기존 편성이 그대로 유지됩니다.
+              <b className="text-foreground">편성 조정 · 이번 주 변동 · 제대로 지수</b>가 열려
+              있습니다. 마감은 일요일 21:00. 조정하지 않으면 기존 편성이 그대로 유지됩니다.
             </p>
           ) : (
             <p>
-              시장을 읽고 계획을 세우는 날입니다. <b className="text-foreground">편성 조정은 주말에</b>{' '}
-              한 번 합니다.
+              전선이 어떻게 움직였는지 읽고, 편성 현황을 볼 수 있습니다.{' '}
+              <b className="text-foreground">편성을 바꾸는 창은 주말에 한 번</b> 열립니다.
             </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">오늘의 지형</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {week ? (
+            <MarketWeekCard
+              fromDate={week.fromDate}
+              toDate={week.toDate}
+              tradingDays={week.tradingDays}
+              moves={week.moves}
+              weightedPct={week.weightedPct}
+              variant="terrain"
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">아직 집계할 거래 구간이 없습니다.</p>
           )}
         </CardContent>
       </Card>
@@ -68,7 +91,6 @@ export default async function HomePage() {
           href="/portfolio"
           className="flex flex-col gap-1 rounded-xl border border-border p-4 transition-colors hover:border-muted-foreground/40"
         >
-          <span className="text-2xl">📊</span>
           <span className="font-semibold">포트폴리오</span>
           <span className="text-xs text-muted-foreground">6전선 편성</span>
         </Link>
@@ -76,15 +98,13 @@ export default async function HomePage() {
           href="/league"
           className="flex flex-col gap-1 rounded-xl border border-border p-4 transition-colors hover:border-muted-foreground/40"
         >
-          <span className="text-2xl">🏅</span>
-          <span className="font-semibold">리그</span>
-          <span className="text-xs text-muted-foreground">그룹 비교</span>
+          <span className="font-semibold">제대로 지수</span>
+          <span className="text-xs text-muted-foreground">주말에 비교</span>
         </Link>
         <Link
           href="/learn"
           className="flex flex-col gap-1 rounded-xl border border-border p-4 transition-colors hover:border-muted-foreground/40"
         >
-          <span className="text-2xl">📖</span>
           <span className="font-semibold">학습</span>
           <span className="text-xs text-muted-foreground">5단계 카드</span>
         </Link>
@@ -92,7 +112,6 @@ export default async function HomePage() {
           href="/groups"
           className="flex flex-col gap-1 rounded-xl border border-border p-4 transition-colors hover:border-muted-foreground/40"
         >
-          <span className="text-2xl">👥</span>
           <span className="font-semibold">그룹</span>
           <span className="text-xs text-muted-foreground">초대코드</span>
         </Link>

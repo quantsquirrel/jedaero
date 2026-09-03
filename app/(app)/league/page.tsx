@@ -33,13 +33,22 @@ export default async function LeaguePage({
   if (dt !== 'WEEKEND') {
     return (
       <main className="flex flex-col gap-4 px-5 py-8">
-        <h1 className="text-2xl font-bold">리그</h1>
+        <h1 className="text-2xl font-bold">제대로 지수</h1>
         <Card className="border-dashed">
-          <CardContent className="flex flex-col gap-1.5 py-5">
-            <p className="text-lg font-semibold">🔒 리그는 주말에 열립니다</p>
+          <CardContent className="flex flex-col gap-2 py-5">
+            <p className="text-lg font-semibold">비교는 주말에 한 번에 봅니다</p>
             <p className="text-sm text-muted-foreground">
-              장중에 보지 않는 훈련입니다. 비교도 주말에 한 번에 보세요.
+              짧은 구간의 점수 줄 세우기는 대개 운입니다. 평일에는 전선 등락과 내 편성을 읽고,
+              주말에 제대로 지수를 엽니다.
             </p>
+            <div className="mt-1 flex flex-col gap-1 text-sm">
+              <Link href="/learn" className="underline">
+                학습 · 전선 등락 →
+              </Link>
+              <Link href="/groups" className="underline">
+                그룹 (초대코드) →
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </main>
@@ -81,7 +90,7 @@ export default async function LeaguePage({
   return (
     <main className="flex flex-col gap-4 px-5 py-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">리그</h1>
+        <h1 className="text-2xl font-bold">제대로 지수</h1>
         <span className="text-xs text-muted-foreground">매주 월요일 리셋 · 누적 순위 없음</span>
       </div>
 

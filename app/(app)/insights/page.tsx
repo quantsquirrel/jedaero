@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { NarrativeButton, OptInGate, OptOutButton } from '@/components/insights-panel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,9 +23,15 @@ export default async function InsightsPage() {
       <main className="flex flex-col gap-4 px-5 py-8">
         <h1 className="text-2xl font-bold">성향 분석</h1>
         <Card className="border-dashed">
-          <CardContent className="flex flex-col gap-1.5 py-5">
-            <p className="text-lg font-semibold">🔒 성향 분석은 주말에 열립니다</p>
-            <p className="text-sm text-muted-foreground">비교도 장중에 하지 않는 훈련입니다.</p>
+          <CardContent className="flex flex-col gap-2 py-5">
+            <p className="text-lg font-semibold">비교 분석은 주말에 열립니다</p>
+            <p className="text-sm text-muted-foreground">
+              남과 나를 나란히 두는 화면도 평가 주기에 맞춥니다. 지금은 학습과 편성을 볼 수
+              있습니다.
+            </p>
+            <Link href="/learn" className="text-sm underline">
+              학습으로 →
+            </Link>
           </CardContent>
         </Card>
       </main>

@@ -21,7 +21,7 @@ export function ReviewForm() {
       </div>
       {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
       {state.ok ? (
-        <p className="text-sm text-emerald-400">기록됐습니다 — 회고 퀘스트 완료. (내용은 저장되지 않습니다)</p>
+        <p className="text-sm text-emerald-400">남겼습니다. 내용은 저장되지 않습니다.</p>
       ) : null}
 
       {state.reflection ? (

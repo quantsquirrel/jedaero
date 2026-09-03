@@ -8,7 +8,7 @@ import { completeOnboarding, type OnboardingState } from '@/app/actions/onboardi
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { POINT_UNIT, RESERVE, SALARY_2026, SEED_AMOUNT, THEMES, type Rank } from '@/lib/constants';
+import { POINT_UNIT, RESERVE, SEED_AMOUNT, THEMES, type Rank } from '@/lib/constants';
 import { pct, won } from '@/lib/format';
 import type { OperationStat } from '@/lib/portfolio/operations';
 import { cn } from '@/lib/utils';
@@ -82,10 +82,6 @@ export function OnboardingForm({ stats }: { stats: OperationStat[] }) {
             </select>
           </div>
         </div>
-        <p className="rounded-md bg-muted/50 px-3 py-2 text-sm">
-          월 봉급 <b>{won(SALARY_2026[rank])}</b>{' '}
-          <span className="text-xs text-muted-foreground">· 규칙 기반 자동 계산 (AI 아님)</span>
-        </p>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="enlistedAt">입대일</Label>
@@ -97,7 +93,7 @@ export function OnboardingForm({ stats }: { stats: OperationStat[] }) {
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="homeDistance">집까지 거리 (교통비 면제 상한 산정용)</Label>
+          <Label htmlFor="homeDistance">집까지 거리 (주소는 받지 않습니다)</Label>
           <select id="homeDistance" name="homeDistance" className={selectClass} defaultValue="MID">
             {DISTANCES.map((d) => (
               <option key={d.value} value={d.value}>

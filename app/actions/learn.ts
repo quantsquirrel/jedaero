@@ -38,7 +38,7 @@ export async function submitReview(_prev: ReviewState, formData: FormData): Prom
     return { error: '요청을 처리할 수 없습니다. 입력에 허용되지 않는 패턴이 포함되어 있습니다.' };
   }
 
-  // 회고 텍스트는 저장하지 않는다 (스키마에 저장 컬럼 없음). 퀘스트 완료만 기록.
+  // 회고 텍스트는 저장하지 않는다 (스키마에 저장 컬럼 없음). 되묻기만 돌려준다.
   revalidatePath('/learn');
   revalidatePath('/home');
 

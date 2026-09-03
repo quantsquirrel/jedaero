@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 const ITEMS = [
   { href: '/home', label: '홈' },
   { href: '/portfolio', label: '포트폴리오' },
-  { href: '/league', label: '리그' },
+  { href: '/league', label: '지수' },
   { href: '/learn', label: '학습' },
 ];
 

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { desc, eq } from 'drizzle-orm';
 import { LearnCardsView } from '@/components/learn-cards-view';
@@ -15,23 +14,20 @@ import { computeMarketWeek } from '@/lib/market-week';
 import { getSessionUser } from '@/lib/session';
 
 // S8 학습·회고 — 5단계 학습 카드는 기능과 1:1 페어링, 각 기능 화면에서 이리로 진입한다
-// 주간 브리핑(AI-4)은 주말에만 연다. 장중에 보지 않는 훈련이라는 같은 이유다 (SPEC §3-4).
+// 전선 등락(시황)은 평일에도 연다. 내 손익 가중과 AI-4 브리핑만 주말 (DESIGN-DECISIONS §5).
 export default async function LearnPage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
 
   const dt = await currentDayType();
 
-  let week = null;
-  if (dt === 'WEEKEND') {
-    const [latest] = await db
-      .select({ weights: allocations.weights })
-      .from(allocations)
-      .where(eq(allocations.userId, user.id))
-      .orderBy(desc(allocations.effectiveFrom))
-      .limit(1);
-    week = computeMarketWeek(kstToday(), (latest?.weights ?? {}) as Partial<Record<ThemeCode, number>>);
-  }
+  const [latest] = await db
+    .select({ weights: allocations.weights })
+    .from(allocations)
+    .where(eq(allocations.userId, user.id))
+    .orderBy(desc(allocations.effectiveFrom))
+    .limit(1);
+  const week = computeMarketWeek(kstToday(), (latest?.weights ?? {}) as Partial<Record<ThemeCode, number>>);
 
   return (
     <main className="flex flex-col gap-4 px-5 py-8">
@@ -47,24 +43,14 @@ export default async function LearnPage() {
           <CardTitle className="text-base">이번 주 6전선은 어떻게 움직였나</CardTitle>
         </CardHeader>
         <CardContent>
-          {dt !== 'WEEKEND' ? (
-            <div className="flex flex-col gap-2">
-              <p className="text-sm">🔒 장중에 보지 않는 훈련입니다. 주말에 한 번에 보세요.</p>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                주말에는 6전선 등락과 주간 브리핑이 열립니다. 학습 카드와 회고는 평일에도 그대로
-                쓸 수 있습니다.{' '}
-                <Link href="/learn#card-patience" className="underline">
-                  왜 매일 보면 안 되는가
-                </Link>
-              </p>
-            </div>
-          ) : week ? (
+          {week ? (
             <MarketWeekCard
               fromDate={week.fromDate}
               toDate={week.toDate}
               tradingDays={week.tradingDays}
               moves={week.moves}
               weightedPct={week.weightedPct}
+              variant={dt === 'WEEKEND' ? 'full' : 'terrain'}
             />
           ) : (
             <p className="text-sm text-muted-foreground">아직 집계할 거래 구간이 없습니다.</p>
@@ -74,7 +60,7 @@ export default async function LearnPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">주말 회고</CardTitle>
+          <CardTitle className="text-base">한 줄 회고</CardTitle>
         </CardHeader>
         <CardContent>
           <ReviewForm />

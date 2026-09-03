@@ -194,8 +194,8 @@ export default function LandingPage() {
                 시세를 볼 수 없는 환경은 약점이 아니라, 장기투자를 배우기에 가장 좋은 조건입니다.
               </Body>
               <Body>
-                평일에는 시장을 읽고 계획만 세웁니다. 실행은 주말에 한 번. 바꾸지 않기로 한 주도
-                그대로 기록됩니다.
+                평일에는 전선이 어떻게 움직였는지만 읽습니다. 실행은 주말에 한 번. 바꾸지 않기로
+                한 주도 그대로 기록됩니다.
               </Body>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -203,9 +203,9 @@ export default function LandingPage() {
                 <p className="text-xs font-semibold tracking-wider text-zinc-500">평일</p>
                 <p className="mt-3 text-lg font-semibold">읽고, 계획한다</p>
                 <ul className="mt-4 space-y-2 text-sm text-zinc-400">
-                  <li>시장 브리핑</li>
-                  <li>작전계획 작성</li>
-                  <li>다른 사람과 비교</li>
+                  <li>전선 등락을 읽는다</li>
+                  <li>학습 카드</li>
+                  <li>편성 현황 보기</li>
                 </ul>
               </Panel>
               <Panel className="border-amber-400/30 bg-amber-400/[0.04]">
@@ -213,8 +213,8 @@ export default function LandingPage() {
                 <p className="mt-3 text-lg font-semibold">한 번 실행한다</p>
                 <ul className="mt-4 space-y-2 text-sm text-zinc-400">
                   <li>편성 조정</li>
-                  <li>수익률 확인</li>
-                  <li>한 주 회고</li>
+                  <li>이번 주 변동</li>
+                  <li>제대로 지수</li>
                 </ul>
               </Panel>
             </div>
@@ -273,8 +273,8 @@ export default function LandingPage() {
                 오늘 시장이 어떻게 움직였는지 <span className="text-amber-400">한눈에</span>
               </SectionTitle>
               <Body>
-                들어오면 오늘의 지형이 먼저 보입니다. 내가 담은 전선을 중심으로 정리되기 때문에,
-                같은 시장이라도 사람마다 다른 순서로 읽힙니다.
+                들어오면 오늘의 지형이 먼저 보입니다. 전선별 등락은 규칙으로 계산합니다. 내 손익이
+                이번 주에 얼마나 흔들렸는지는 주말에 봅니다.
               </Body>
               <Body>
                 AI는 숫자를 지어내지 않습니다. 등락은 규칙으로 먼저 계산하고, AI는 그 숫자를 받아

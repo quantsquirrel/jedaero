@@ -1,7 +1,7 @@
 // ★ 부대 관련 컬럼이 하나도 없다는 점이 이 스키마의 핵심이다. 절대 추가하지 말 것. (C4)
 // ★ holdings 테이블·cash_balance 컬럼 없음 — 보유수량은 (비중 이력 × 일별 종가 × 현금흐름)으로
 //   요청 시점에 계산한다. 현금은 예비대(미배치 포인트)로 표현된다 — 축이 아니라 잔여다.
-// 논리 스키마 원본: SPEC.md §2 (테이블 15개 + 승인된 추가 1개 = 16개)
+// 논리 스키마 원본: SPEC.md §2. 테이블 10개 (ai_calls 포함). 가계부·퀘스트 테이블 없음.
 import {
   pgTable,
   uuid,
@@ -23,7 +23,7 @@ export const users = pgTable('users', {
   rank: text('rank').notNull(), // PRIVATE|PFC|CORPORAL|SERGEANT
   branch: text('branch').notNull(), // ARMY|NAVY|AIRFORCE|MARINE (복무기간 산정용)
   enlistedAt: date('enlisted_at').notNull(),
-  dischargeAt: date('discharge_at').notNull(), // 동기 코호트 키
+  dischargeAt: date('discharge_at').notNull(),
   homeDistance: text('home_distance').notNull(), // NEAR|MID|FAR|ISLAND (주소 원문 저장 금지)
   analyticsOptIn: boolean('analytics_opt_in').notNull().default(false), // AI-7 옵트인
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -120,7 +120,7 @@ export const settings = pgTable('settings', {
 export const aiCalls = pgTable('ai_calls', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
-  kind: text('kind').notNull(), // AI-1|AI-3|AI-4|AI-5|AI-7
+  kind: text('kind').notNull(), // AI-3|AI-4|AI-5|AI-7
   blocked: boolean('blocked').notNull().default(false), // 인젝션·rate limit 차단 여부
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });

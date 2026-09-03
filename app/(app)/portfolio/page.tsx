@@ -15,13 +15,14 @@ import { computeCurve, type WeightHistoryItem } from '@/lib/portfolio/engine';
 import { pricesUpTo } from '@/lib/portfolio/prices';
 import type { Details } from '@/lib/portfolio/details';
 import { reservePoints } from '@/lib/portfolio/weights';
+import { computeMarketWeek } from '@/lib/market-week';
 import { getSessionUser } from '@/lib/session';
 import { addDays, mondayOfWeeksAgo, weekOf } from '@/lib/week';
 import { cn } from '@/lib/utils';
 
 // S4 포트폴리오 — 사용자가 조작하는 유일한 대상: 6전선 포인트 편성
 // ★ 「매달 모았다면」 곡선은 가계부 제거와 함께 폐지됐다. 곡선은 전역(일시금) 하나뿐이다.
-// 평일: 수익률 마스킹 + 조정 잠금. 갭(비중 정보)은 항상 표시 (SPEC §3-6 g)
+// 평일: 누적 수익률 공개, 이번 주 변동은 주말. 조정은 주말만. 갭은 항상 표시 (DESIGN-DECISIONS §5)
 export default async function PortfolioPage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
@@ -41,11 +42,10 @@ export default async function PortfolioPage() {
       <main className="flex flex-col gap-4 px-5 py-8">
         <h1 className="text-2xl font-bold">포트폴리오</h1>
         <p className="text-sm text-muted-foreground">
-          아직 배분이 없습니다.{' '}
-          <Link href="/onboarding" className="underline">
-            온보딩에서 예시 작전을 골라
-          </Link>{' '}
-          시작해주세요.
+          아직 편성이 없습니다.{' '}
+          <Link href="/home" className="underline">
+            홈으로
+          </Link>
         </p>
       </main>
     );
@@ -88,60 +88,69 @@ export default async function PortfolioPage() {
 
   const deadlineIso = `${addDays(mondayOfWeeksAgo(new Date(), 0), 6)}T12:00:00Z`;
   const disabledReason = !open
-    ? '주말에만 조정할 수 있습니다. 평일에는 기록과 학습만 열려 있어요.'
+    ? '주말에만 조정할 수 있습니다. 평일에는 편성 현황과 학습이 열려 있어요.'
     : alreadyThisWeek
       ? '이번 주는 이미 조정했습니다. 조정하지 않아도 기존 편성이 그대로 유지됩니다.'
       : undefined;
+  const week = computeMarketWeek(kstToday(), targetWeights);
 
   return (
     <main className="flex flex-col gap-4 px-5 py-8">
       <h1 className="text-2xl font-bold">내 포트폴리오</h1>
 
-      {dt === 'WEEKEND' ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">평가액</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {lumpCurve.invested === 0 ? (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{dt === 'WEEKEND' ? '평가액' : '누적 수익률'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {lumpCurve.invested === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              첫 체결 대기 중 — {rows[0].effectiveFrom} 종가로 {won(SEED_AMOUNT)}이 배분됩니다.
+            </p>
+          ) : dt === 'WEEKEND' ? (
+            <div className="flex flex-col gap-1">
+              <p className="text-3xl font-bold tabular-nums">{won(lumpFinal)}</p>
               <p className="text-sm text-muted-foreground">
-                첫 체결 대기 중 — {rows[0].effectiveFrom} 종가로 {won(SEED_AMOUNT)}이 배분됩니다.
+                원금 {won(SEED_AMOUNT)} ·{' '}
+                <span className={lumpFinal >= SEED_AMOUNT ? 'text-emerald-400' : 'text-red-400'}>
+                  누적 {pct(lumpFinal / SEED_AMOUNT - 1, 2)}
+                </span>
               </p>
-            ) : (
-              <div className="flex flex-col gap-1">
-                <p className="text-3xl font-bold tabular-nums">{won(lumpFinal)}</p>
-                <p className="text-sm text-muted-foreground">
-                  원금 {won(SEED_AMOUNT)} ·{' '}
-                  <span className={lumpFinal >= SEED_AMOUNT ? 'text-emerald-400' : 'text-red-400'}>
-                    누적 {pct(lumpFinal / SEED_AMOUNT - 1, 2)}
+              {week ? (
+                <p className="text-sm">
+                  이번 주 내 편성 기준{' '}
+                  <span className={week.weightedPct >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                    {pct(week.weightedPct)}
                   </span>
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  일시금 곡선은 유입이 1회라 시간가중수익률(TWR)과 투입 대비 수익률이 같습니다.{' '}
-                  <Link href="/learn#card-twr" className="underline">
-                    두 수익률이 왜 다른가 →
-                  </Link>
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col gap-1.5 py-5">
-            <p className="text-lg font-semibold">🔒 수익률은 주말에 공개됩니다</p>
-            <p className="text-sm text-muted-foreground">
-              장중에 보지 않는 훈련입니다. 주말에 한 번에 보세요.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              접속·지출 기록·학습은 평일에도 언제나 가능합니다.{' '}
-              <Link href="/learn#card-patience" className="underline">
-                왜 매일 보면 안 되는가 →
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
-      )}
+              ) : null}
+              <p className="text-xs text-muted-foreground">
+                일시금 곡선은 유입이 1회라 시간가중수익률(TWR)과 투입 대비 수익률이 같습니다.{' '}
+                <Link href="/learn#card-twr" className="underline">
+                  두 수익률이 왜 다른가 →
+                </Link>
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <p
+                className={`text-3xl font-bold tabular-nums ${lumpFinal >= SEED_AMOUNT ? 'text-emerald-400' : 'text-red-400'}`}
+              >
+                {pct(lumpFinal / SEED_AMOUNT - 1, 2)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                평가액 {won(lumpFinal)} · 원금 {won(SEED_AMOUNT)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                시작 이후 전체입니다. 이번 주가 얼마나 흔들렸는지는 주말에 봅니다.{' '}
+                <Link href="/learn#card-patience" className="underline">
+                  매일 보는 숫자와 주 단위로 보는 숫자는 다르다 →
+                </Link>
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
