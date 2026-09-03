@@ -9,7 +9,7 @@ import { RESERVE, THEME_CODES } from '../constants';
 export type WeightHistoryItem = {
   effectiveFrom: string; // 체결 기준일 (그날 종가로 리밸런싱)
   weights: Record<string, number>; // 6전선, 합 100 이하. 나머지는 예비대(현금)다
-  details?: Record<string, Record<string, number>> | null; // 하위 비중. 없으면 동일가중
+  details?: Record<string, Record<string, number>> | null; // 전선별 하위 배치(포인트). 없으면 대표지수 추종
 };
 
 const BY_THEME: Record<string, string[]> = {};

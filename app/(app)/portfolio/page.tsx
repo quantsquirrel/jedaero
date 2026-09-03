@@ -13,6 +13,7 @@ import { kstToday } from '@/lib/day-type';
 import { pct, won } from '@/lib/format';
 import { computeCurve, type WeightHistoryItem } from '@/lib/portfolio/engine';
 import { pricesUpTo } from '@/lib/portfolio/prices';
+import type { Details } from '@/lib/portfolio/details';
 import { reservePoints } from '@/lib/portfolio/weights';
 import { getSessionUser } from '@/lib/session';
 import { addDays, mondayOfWeeksAgo, weekOf } from '@/lib/week';
@@ -204,7 +205,12 @@ export default async function PortfolioPage() {
               <DeadlineCountdown deadlineIso={deadlineIso} />
             )
           ) : null}
-          <WeightEditor initial={targetWeights} disabled={!open || alreadyThisWeek} disabledReason={disabledReason} />
+          <WeightEditor
+            initial={targetWeights}
+            initialDetails={(latest.details as Details | null) ?? null}
+            disabled={!open || alreadyThisWeek}
+            disabledReason={disabledReason}
+          />
         </CardContent>
       </Card>
 
