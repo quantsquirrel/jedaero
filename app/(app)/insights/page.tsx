@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { NarrativeButton, OptInGate, OptOutButton } from '@/components/insights-panel';
+import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { POINT_UNIT, RESERVE, THEMES, type Weights } from '@/lib/constants';
 import { currentDayType } from '@/lib/day-context';
@@ -12,7 +13,7 @@ import { allocations } from '@/db/schema';
 import { desc, eq } from 'drizzle-orm';
 
 // S9 성향 분석 (AI-7) — 옵트인 + 상호주의 + k-익명성.
-// 출력은 사실 서술 + 질문으로 끝난다. 조언·성향 라벨 없음 (C8, C10)
+// 하단 네비 없음. 지수 화면에서만 들어온다.
 export default async function InsightsPage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
@@ -21,16 +22,21 @@ export default async function InsightsPage() {
   if (dt !== 'WEEKEND') {
     return (
       <main className="flex flex-col gap-4 px-5 py-8">
-        <h1 className="text-2xl font-bold">성향 분석</h1>
+        <PageHeader
+          title="성향 분석"
+          description="남과 나를 나란히 두는 화면도 평가 주기에 맞춥니다."
+        />
         <Card className="border-dashed">
           <CardContent className="flex flex-col gap-2 py-5">
             <p className="text-lg font-semibold">비교 분석은 주말에 열립니다</p>
             <p className="text-sm text-muted-foreground">
-              남과 나를 나란히 두는 화면도 평가 주기에 맞춥니다. 지금은 학습과 편성을 볼 수
-              있습니다.
+              지금은 학습과 편성을 볼 수 있습니다. 주말이 되면 지수 화면에서 다시 엽니다.
             </p>
             <Link href="/learn" className="text-sm underline">
               학습으로 →
+            </Link>
+            <Link href="/league" className="text-sm underline">
+              지수로 →
             </Link>
           </CardContent>
         </Card>
@@ -38,12 +44,17 @@ export default async function InsightsPage() {
     );
   }
 
-  // 상호주의: 미동의 사용자에게는 비교 화면을 보여주지 않는다
   if (!user.analyticsOptIn) {
     return (
       <main className="flex flex-col gap-4 px-5 py-8">
-        <h1 className="text-2xl font-bold">성향 분석</h1>
+        <PageHeader
+          title="성향 분석"
+          description="동의한 사람만 비교를 봅니다. 거절하면 비교 화면도 없습니다."
+        />
         <OptInGate />
+        <Link href="/league" className="text-sm text-muted-foreground underline">
+          지수로 돌아가기 →
+        </Link>
       </main>
     );
   }
@@ -59,7 +70,10 @@ export default async function InsightsPage() {
 
   return (
     <main className="flex flex-col gap-4 px-5 py-8">
-      <h1 className="text-2xl font-bold">성향 분석</h1>
+      <PageHeader
+        title="성향 분석"
+        description="라벨을 붙이지 않습니다. 사실 서술과 질문으로 끝냅니다."
+      />
 
       {!data ? (
         <p className="text-sm text-muted-foreground">아직 배분 이력이 없습니다.</p>
@@ -79,7 +93,10 @@ export default async function InsightsPage() {
                 <div key={t.code} className="flex items-center gap-2 text-sm">
                   <span className="w-24 shrink-0">{t.name}</span>
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-primary" style={{ width: `${myWeights[t.code] ?? 0}%` }} />
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: `${myWeights[t.code] ?? 0}%` }}
+                    />
                   </div>
                   <span className="w-14 text-right font-mono text-xs tabular-nums">
                     {(myWeights[t.code] ?? 0) / POINT_UNIT}
@@ -87,7 +104,6 @@ export default async function InsightsPage() {
                   </span>
                 </div>
               ))}
-              {/* 예비대도 한 줄로. 미배치분이 화면에서 사라지면 방치가 선택으로 보이지 않는다 */}
               <div className="flex items-center gap-2 text-sm">
                 <span className="w-24 shrink-0">{RESERVE.name}</span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
@@ -133,9 +149,7 @@ export default async function InsightsPage() {
                 <CardTitle className="text-sm">④ 예비대</CardTitle>
               </CardHeader>
               <CardContent className="text-sm">
-                <p className="font-semibold tabular-nums">
-                  {data.stats.myCash / POINT_UNIT}포인트
-                </p>
+                <p className="font-semibold tabular-nums">{data.stats.myCash / POINT_UNIT}포인트</p>
                 <p className="text-xs text-muted-foreground">
                   코호트 중앙값 {Math.round(data.stats.cohortCashMedian)}%
                 </p>
@@ -158,13 +172,14 @@ export default async function InsightsPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               <div className="flex flex-col gap-1.5">
-                {buildFactSentences(data.stats, THEMES.find((t) => t.code === data.stats.myMaxTheme.code)?.name ?? '').map(
-                  (s, i) => (
-                    <p key={i} className="text-sm leading-relaxed">
-                      {s}
-                    </p>
-                  ),
-                )}
+                {buildFactSentences(
+                  data.stats,
+                  THEMES.find((t) => t.code === data.stats.myMaxTheme.code)?.name ?? '',
+                ).map((s, i) => (
+                  <p key={i} className="text-sm leading-relaxed">
+                    {s}
+                  </p>
+                ))}
               </div>
               <p className="text-[11px] text-muted-foreground">
                 위 문장은 규칙 기반 계산 결과입니다 (AI 아님). 아래 버튼은 같은 숫자를 생성형 AI가
@@ -175,6 +190,9 @@ export default async function InsightsPage() {
           </Card>
 
           <OptOutButton />
+          <Link href="/league" className="text-sm text-muted-foreground underline">
+            지수로 돌아가기 →
+          </Link>
         </>
       )}
     </main>
