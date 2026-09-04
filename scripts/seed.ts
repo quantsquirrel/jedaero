@@ -1,8 +1,9 @@
 // DB 시드 적재 (멱등). 실행: npm run seed
-// tickers·holidays·settings는 upsert, prices는 전체 교체.
+// tickers·holidays·settings는 upsert, prices와 더미 사용자는 전체 교체.
+import { randomUUID } from 'node:crypto';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { TICKERS } from '../db/seed/tickers';
 import { HOLIDAYS_KR } from '../db/seed/holidays';
@@ -65,7 +66,7 @@ async function main() {
 }
 
 // ---- 리그·성향분석용 더미 사용자 200명 (SPEC §7) ----
-// 합성 분포·결정론적(시드 고정)·멱등(고정 UUID upsert). 닉네임은 실명처럼 보이지 않게.
+// 합성 분포는 결정론적으로 유지하되, 쿠키 세션 자격증명인 users.id는 매번 새 UUID로 만든다.
 function mulberry32(seed: number) {
   let a = seed >>> 0;
   return () => {
@@ -78,7 +79,12 @@ function mulberry32(seed: number) {
 }
 
 const DUMMY_COUNT = 200;
-const dummyId = (i: number) => `00000000-0000-4000-8000-${String(100000000000 + i)}`;
+const DUMMY_IDS_KEY = 'seed_dummy_user_ids';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const LEGACY_DUMMY_IDS = Array.from(
+  { length: DUMMY_COUNT },
+  (_, i) => `00000000-0000-4000-8000-${String(100000000000 + i)}`,
+);
 const NICKS = ['해뜰날', '강철비', '초코우유', '별헤는밤', '든든적금', '월급지킴이', '산바람', '바다안개', '새벽별', '고요아침', '달빛산책', '구름과자'];
 
 // 포인트 20개를 무작위로 놓는다. 일부는 다 놓지 않아 예비대가 남는다 —
@@ -107,6 +113,19 @@ function shiftWeights(rng: () => number, base: Weights): Weights {
   return w;
 }
 
+async function storedDummyIds(): Promise<string[]> {
+  const rows = await db.select().from(schema.settings).where(eq(schema.settings.key, DUMMY_IDS_KEY)).limit(1);
+  if (!rows[0]) return [];
+  try {
+    const parsed: unknown = JSON.parse(rows[0].value);
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === 'string' && UUID_RE.test(value))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 async function seedDummyUsers() {
   const rng = mulberry32(20260907);
   const now = new Date();
@@ -125,7 +144,7 @@ async function seedDummyUsers() {
   const distances = ['NEAR', 'MID', 'FAR', 'ISLAND'];
 
   for (let i = 0; i < DUMMY_COUNT; i++) {
-    const id = dummyId(i);
+    const id = randomUUID();
     let dischargeMonth: string;
     if (i < 60) dischargeMonth = demoMonthA;
     else if (i < 120) dischargeMonth = demoMonthB;
@@ -174,15 +193,38 @@ async function seedDummyUsers() {
     }
   }
 
+  // 이전 실행과 구버전의 예측 가능한 더미 세션을 먼저 폐기한다. 중간 실패에 대비해 새 ID 목록은
+  // 삽입 전에 기록한다. 다음 실행이 남은 행을 다시 정리할 수 있다.
+  const staleIds = [...new Set([...(await storedDummyIds()), ...LEGACY_DUMMY_IDS])];
+  const ownedGroups = await db
+    .select({ id: schema.groups.id })
+    .from(schema.groups)
+    .where(inArray(schema.groups.ownerId, staleIds));
+  const ownedGroupIds = ownedGroups.map((group) => group.id);
+  if (ownedGroupIds.length > 0) {
+    await db.delete(schema.groupMembers).where(inArray(schema.groupMembers.groupId, ownedGroupIds));
+    await db.delete(schema.groups).where(inArray(schema.groups.id, ownedGroupIds));
+  }
+  await db.delete(schema.groupMembers).where(inArray(schema.groupMembers.userId, staleIds));
+  await db.delete(schema.drafts).where(inArray(schema.drafts.userId, staleIds));
+  await db.delete(schema.aiCalls).where(inArray(schema.aiCalls.userId, staleIds));
+  await db.delete(schema.weeklyScores).where(inArray(schema.weeklyScores.userId, staleIds));
+  await db.delete(schema.allocations).where(inArray(schema.allocations.userId, staleIds));
+  await db.delete(schema.users).where(inArray(schema.users.id, staleIds));
+
+  const ids = userRows.map((user) => user.id);
+  await db
+    .insert(schema.settings)
+    .values({ key: DUMMY_IDS_KEY, value: JSON.stringify(ids) })
+    .onConflictDoUpdate({ target: schema.settings.key, set: { value: sql`excluded.value` } });
+
   const CHUNK = 500;
   for (let i = 0; i < userRows.length; i += CHUNK) {
-    await db.insert(schema.users).values(userRows.slice(i, i + CHUNK)).onConflictDoNothing();
+    await db.insert(schema.users).values(userRows.slice(i, i + CHUNK));
   }
   for (let i = 0; i < allocRows.length; i += CHUNK) {
-    await db.insert(schema.allocations).values(allocRows.slice(i, i + CHUNK)).onConflictDoNothing();
+    await db.insert(schema.allocations).values(allocRows.slice(i, i + CHUNK));
   }
-  const ids = userRows.map((u) => u.id);
-  await db.delete(schema.weeklyScores).where(inArray(schema.weeklyScores.userId, ids));
   for (let i = 0; i < scoreRows.length; i += CHUNK) {
     await db.insert(schema.weeklyScores).values(scoreRows.slice(i, i + CHUNK));
   }

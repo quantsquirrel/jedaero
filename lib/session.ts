@@ -1,4 +1,5 @@
 // 익명 쿠키 세션 (SPEC §1-1). 회원가입·로그인 없음. 인증 라이브러리 없음.
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
@@ -9,13 +10,14 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 export type SessionUser = typeof users.$inferSelect;
 
-export async function getSessionUser(): Promise<SessionUser | null> {
+// 같은 서버 렌더 안에서 레이아웃·페이지가 중복 조회하지 않도록 요청 단위로 메모이즈한다.
+export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const store = await cookies();
   const id = store.get(USER_COOKIE)?.value;
   if (!id || !UUID_RE.test(id)) return null;
   const rows = await db.select().from(users).where(eq(users.id, id)).limit(1);
   return rows[0] ?? null;
-}
+});
 
 export const userCookieOptions = {
   httpOnly: true,

@@ -65,6 +65,7 @@ users (
   discharge_at      date NOT NULL,
   home_distance     text NOT NULL,        -- NEAR|MID|FAR|ISLAND (주소 원문 저장 금지)
   analytics_opt_in  boolean NOT NULL DEFAULT false,   -- AI-7
+  is_demo           boolean NOT NULL DEFAULT false,   -- /demo가 만든 체험 계정만 true
   created_at        timestamptz NOT NULL
 )
 

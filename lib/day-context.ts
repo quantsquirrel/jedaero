@@ -2,13 +2,16 @@
 // 판정은 항상 서버에서. 클라이언트 시계를 신뢰하지 않는다.
 import { cookies } from 'next/headers';
 import { dayType, isRebalanceOpen, type DayType } from './day-type';
+import { trustedDemoOverride } from './demo-override';
+import { getSessionUser } from './session';
 
 export const DEMO_DAY_COOKIE = 'demo_day';
 
 export async function demoOverride(): Promise<DayType | null> {
   const store = await cookies();
   const v = store.get(DEMO_DAY_COOKIE)?.value;
-  return v === 'WEEKDAY' || v === 'WEEKEND' ? v : null;
+  const user = await getSessionUser();
+  return trustedDemoOverride(v, user?.isDemo === true);
 }
 
 /** 데모 세션 여부 (토글 표시용) */

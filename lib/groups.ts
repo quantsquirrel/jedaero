@@ -2,6 +2,7 @@
 // ★ 부대 정보는 어디에도 쓰지 않는다 (C4). 그룹명은 AI-5 필터를 통과한 것만.
 // ★ 그룹 내 수익률은 비공개다. 부대 내 "얼마 벌었다" 자랑 문화(군기문란 리스크)를 차단한다.
 //   이 파일과 그룹 화면은 수익률 필드를 참조하지 않는다 (P1-10).
+import { randomInt } from 'node:crypto';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { groupMembers, groups, users, weeklyScores } from '../db/schema';
@@ -10,9 +11,10 @@ import { weekOf } from './week';
 
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // 혼동 문자 제외
 
+// 초대코드는 그룹 참여를 인가하는 유일한 비밀값이다. 예측 가능한 Math.random()을 쓰지 않는다.
 function randomInviteCode(): string {
   let out = '';
-  for (let i = 0; i < 6; i++) out += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+  for (let i = 0; i < 6; i++) out += CODE_CHARS[randomInt(CODE_CHARS.length)];
   return out;
 }
 

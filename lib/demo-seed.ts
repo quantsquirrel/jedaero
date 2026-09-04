@@ -22,6 +22,7 @@ export async function createDemoUser(now: Date = new Date()): Promise<{ id: stri
       enlistedAt: addDays(todayK, -430), // 약 14개월차
       dischargeAt: addDays(todayK, 120), // 전역 D-120
       homeDistance: 'FAR',
+      isDemo: true,
       // analytics_opt_in은 기본 false로 시작 — 시나리오 15(옵트인 동의 화면)를 시연하기 위해
     })
     .returning({ id: users.id });

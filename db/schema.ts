@@ -26,6 +26,8 @@ export const users = pgTable('users', {
   dischargeAt: date('discharge_at').notNull(),
   homeDistance: text('home_distance').notNull(), // NEAR|MID|FAR|ISLAND (주소 원문 저장 금지)
   analyticsOptIn: boolean('analytics_opt_in').notNull().default(false), // AI-7 옵트인
+  // /demo가 만든 체험 계정만 true. 클라이언트 입력으로 설정하지 말 것.
+  isDemo: boolean('is_demo').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
