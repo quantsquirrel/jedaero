@@ -3,9 +3,14 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { DEMO_DAY_COOKIE } from '../../lib/day-context';
+import { getSessionUser } from '../../lib/session';
 
-export async function setDemoDay(mode: 'WEEKDAY' | 'WEEKEND') {
-  if (mode !== 'WEEKDAY' && mode !== 'WEEKEND') return;
+export async function setDemoDay(
+  mode: 'WEEKDAY' | 'WEEKEND',
+): Promise<{ ok: true; mode: 'WEEKDAY' | 'WEEKEND' } | { ok: false; error: string }> {
+  if (mode !== 'WEEKDAY' && mode !== 'WEEKEND') return { ok: false, error: '올바르지 않은 화면입니다.' };
+  const user = await getSessionUser();
+  if (!user?.isDemo) return { ok: false, error: '데모 세션에서만 전환할 수 있습니다.' };
   const store = await cookies();
   store.set(DEMO_DAY_COOKIE, mode, {
     httpOnly: true,
@@ -15,4 +20,5 @@ export async function setDemoDay(mode: 'WEEKDAY' | 'WEEKEND') {
     path: '/',
   });
   revalidatePath('/', 'layout');
+  return { ok: true, mode };
 }

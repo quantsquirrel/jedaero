@@ -43,7 +43,7 @@ export async function submitReview(_prev: ReviewState, formData: FormData): Prom
   revalidatePath('/home');
 
   // AI-3 되묻기 — 이번 주 사실은 규칙 기반으로 모으고, LLM은 질문 하나만 되돌려준다.
-  // 실패해도 회고 자체는 이미 기록됐다. 되묻기는 규칙 기반 폴백으로 내려간다.
+  // 회고 원문은 저장하지 않는다. AI 실패 시 되묻기만 규칙 기반 폴백으로 내려간다.
   const facts = await collectReviewFacts(user.id);
   const result = await guardedAiCall(user.id, 'AI-3', () => generateReflection(text, facts));
   if ('ok' in result) return { ok: true, reflection: result.ok, source: 'ai' };

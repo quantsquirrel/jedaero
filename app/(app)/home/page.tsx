@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MarketWeekCard } from '@/components/market-week-card';
-import { SEED_AMOUNT } from '@/lib/constants';
+import { ReviewForm } from '@/components/review-form';
+import { SEED_AMOUNT, THEMES } from '@/lib/constants';
 import { currentDayType, currentRebalanceOpen } from '@/lib/day-context';
 import { daysUntilRebalance, kstToday } from '@/lib/day-type';
 import { pct, won } from '@/lib/format';
@@ -11,6 +12,7 @@ import { INDEX_LABELS } from '@/lib/jedaero-index';
 import { computeWeeklyScore } from '@/lib/league';
 import { computeMarketWeek } from '@/lib/market-week';
 import { portfolioSummary } from '@/lib/portfolio/summary';
+import { collectReviewFacts } from '@/lib/review-context';
 import { getSessionUser } from '@/lib/session';
 import { cn } from '@/lib/utils';
 
@@ -29,7 +31,21 @@ export default async function HomePage() {
   const me = await portfolioSummary(user.id);
   const week = computeMarketWeek(kstToday(), me.weights);
   const score = weekend ? await computeWeeklyScore(user) : null;
+  const reviewFacts = await collectReviewFacts(user.id);
   const parts = score ? [score.grown, score.spread, score.held] : [];
+  const leadingWeights = THEMES.map((theme) => ({
+    name: theme.name,
+    value: me.weights[theme.code] ?? 0,
+  }))
+    .filter((item) => item.value > 0)
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 2);
+  const allocationLabel = leadingWeights.length
+    ? leadingWeights.map((item) => `${item.name} ${item.value}%`).join(' · ')
+    : '예비대(현금성 자산) 100%';
+  const durationLabel = reviewFacts.changedThisWeek
+    ? `이번 주 ${reviewFacts.turnoverPp.toFixed(0)}%p 조정`
+    : `${reviewFacts.weeksUnchanged}주 유지`;
 
   return (
     <main className="flex flex-col gap-4 px-5 py-8">
@@ -48,7 +64,9 @@ export default async function HomePage() {
       {/* 내 편성 — 평일은 누적만, 주말은 평가액 + 이번 주 변동 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{weekend ? '내 편성 평가액' : '누적 수익률'}</CardTitle>
+          <CardTitle className="text-base">
+            {weekend ? '내 편성(목표 비중) 평가액' : '누적 수익률'}
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-1">
           {!me.hasAllocation ? (
@@ -123,7 +141,7 @@ export default async function HomePage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="market" className="scroll-mt-40">
         <CardHeader>
           <CardTitle className="text-base">오늘의 지형</CardTitle>
         </CardHeader>
@@ -140,6 +158,31 @@ export default async function HomePage() {
           ) : (
             <p className="text-sm text-muted-foreground">아직 집계할 거래 구간이 없습니다.</p>
           )}
+        </CardContent>
+      </Card>
+
+      <Card id="ai-coach" className="scroll-mt-40 border-amber-400/30">
+        <CardHeader>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="text-base">AI 행동 회고 코치</CardTitle>
+            <Badge variant="outline" className="border-amber-400/40 text-amber-300">
+              판단 보조
+            </Badge>
+          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            규칙으로 계산한 편성·유지·변동과 한 줄 회고를 연결해 행동 패턴을 짚고 질문 하나를
+            돌려줍니다.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ReviewForm
+            coachContext={{
+              allocation: allocationLabel,
+              duration: durationLabel,
+              weeklyMove: week ? pct(week.weightedPct) : '집계 전',
+              defaultReview: user.isDemo ? '이번 주 변동을 보며 편성을 바꾸고 싶은 마음이 들었다' : undefined,
+            }}
+          />
         </CardContent>
       </Card>
 

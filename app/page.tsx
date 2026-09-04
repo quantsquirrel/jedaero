@@ -112,12 +112,18 @@ export default function LandingPage() {
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_45%_at_50%_38%,rgba(245,158,11,0.09),transparent_70%)]"
         />
         <Reveal className="relative">
-          <p className="mb-7 inline-block rounded-full border border-zinc-800 px-3 py-1 text-xs text-zinc-400">
-            교육용 모의 서비스 · 실제 거래 없음
-          </p>
+          <div className="mb-7 flex flex-wrap justify-center gap-2 text-xs text-zinc-400">
+            {['군 장병 맞춤', '청년 자산형성·포용금융', 'AI 행동 회고 코치', '실거래·투자추천 없음'].map(
+              (label) => (
+                <span key={label} className="rounded-full border border-zinc-800 px-3 py-1">
+                  {label}
+                </span>
+              ),
+            )}
+          </div>
           <h1 className="text-6xl font-bold tracking-tight sm:text-8xl">제대로</h1>
           <p className="mx-auto mt-6 max-w-[34ch] text-pretty break-keep text-lg leading-relaxed text-zinc-400">
-            전역할 때 받게 될 목돈을, 복무 중에 미리 굴려보는 훈련.
+            전역 목돈을 미리 운용하고, AI 질문으로 내 판단 습관을 돌아보는 금융 훈련.
           </p>
         </Reveal>
 
@@ -125,9 +131,10 @@ export default function LandingPage() {
           <div className="flex flex-col gap-3">
             <Link
               href="/demo"
+              prefetch={false}
               className="group flex h-14 items-center justify-center rounded-xl bg-amber-400 text-base font-semibold text-zinc-950 shadow-lg shadow-amber-400/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 hover:shadow-xl hover:shadow-amber-400/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
-              데모 체험하기
+              3분 심사용 데모
             </Link>
             <Link
               href="/onboarding"
@@ -136,8 +143,8 @@ export default function LandingPage() {
               시작하기
             </Link>
           </div>
-          <p className="mt-4 text-xs text-zinc-600">
-            데모는 가입 없이 바로 들어갑니다
+          <p className="mt-4 text-xs leading-relaxed text-zinc-600">
+            가입 없이 시장 읽기 → AI 코치 → 주말 편성 → 제대로 지수 → AI 회고
           </p>
         </Reveal>
 
@@ -150,14 +157,43 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-5xl space-y-32 px-6 pb-32 sm:space-y-40">
+      <section className="mx-auto grid max-w-5xl gap-4 px-6 pb-24 md:grid-cols-2">
+        <Panel>
+          <Eyebrow>AI·데이터 안전장치</Eyebrow>
+          <h2 className="mt-3 text-xl font-bold">AI는 계산하지 않고, 해석하고 질문합니다</h2>
+          <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-400">
+            <li>수익률과 제대로 지수는 공개된 규칙으로 계산</li>
+            <li>LLM에는 편성, 유지 기간, 주간 변동, 한 줄 회고만 전달</li>
+            <li>회고 원문은 응답 뒤 저장하지 않고 폐기</li>
+            <li>군 소속 정보는 수집하지 않고 그룹은 익명 초대코드로 참여</li>
+          </ul>
+          <p className="mt-4 text-xs font-semibold text-amber-300">생성형 AI 제안 · 확정은 본인이 합니다</p>
+        </Panel>
+        <Panel>
+          <Eyebrow>재현 가능한 합성 데이터</Eyebrow>
+          <h2 className="mt-3 text-xl font-bold">같은 입력이면 같은 계산 결과가 나옵니다</h2>
+          <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+            심사용 가격·편성 이력과 산출 규칙을 고정해 결과를 다시 확인할 수 있습니다. 학습의 세
+            시나리오를 직접 전환해 한 전략이 언제나 이기는지 비교합니다.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2 text-xs text-zinc-300">
+            {['급락 후 회복', '주식·채권 동반 하락', '1년 후에도 미회복'].map((label) => (
+              <span key={label} className="rounded-full bg-zinc-800 px-2.5 py-1">
+                {label}
+              </span>
+            ))}
+          </div>
+        </Panel>
+      </section>
+
+      <div className="mx-auto max-w-5xl space-y-24 px-6 pb-32 sm:space-y-28">
         {/* ── 1. 시드 ─────────────────────────────── */}
         <Reveal>
           <Split>
             <div className="flex flex-col gap-5">
               <Eyebrow>훈련 시드</Eyebrow>
               <SectionTitle>
-                전역할 때 <span className="text-amber-400">2,000만원</span>을 받습니다
+                전역할 때 <span className="text-amber-400">2,020만원</span>을 받습니다
               </SectionTitle>
               <Body>
                 장병내일준비적금을 채우면 목돈이 손에 들어옵니다. 문제는 그 돈을 처음 만지는 날이
@@ -171,7 +207,7 @@ export default function LandingPage() {
             <Panel className="text-center">
               <p className="text-sm text-zinc-500">모의 시드</p>
               <p className="mt-2 font-mono text-5xl font-bold tabular-nums tracking-tight sm:text-6xl">
-                20,000,000
+                20,200,000
               </p>
               <p className="mt-1 text-sm text-zinc-500">원</p>
               <p className="mt-6 border-t border-zinc-800 pt-5 text-sm leading-relaxed text-zinc-400">
@@ -187,11 +223,11 @@ export default function LandingPage() {
             <div className="flex flex-col gap-5">
               <Eyebrow>훈련 규율</Eyebrow>
               <SectionTitle>
-                편성은 <span className="text-amber-400">주말에 한 번</span>만 정합니다
+                편성(목표 비중)은 <span className="text-amber-400">주말에 한 번</span>만 정합니다
               </SectionTitle>
               <Body>
-                병사가 휴대전화를 쓰는 시간과 증시가 열리는 시간은 1분도 겹치지 않습니다. 장중에
-                시세를 볼 수 없는 환경은 약점이 아니라, 장기투자를 배우기에 가장 좋은 조건입니다.
+                평일 일과 후 휴대전화 이용 환경에서는 국내 증시 장중 대응이 어렵습니다. 이 제약을
+                짧은 시세 반응보다 긴 호흡의 판단을 연습하는 조건으로 바꿉니다.
               </Body>
               <Body>
                 평일에는 전선이 어떻게 움직였는지만 읽습니다. 실행은 주말에 한 번. 바꾸지 않기로
@@ -227,7 +263,7 @@ export default function LandingPage() {
             <div className="flex flex-col gap-5">
               <Eyebrow>편성</Eyebrow>
               <SectionTitle>
-                6개 전선에 <span className="text-amber-400">포인트 20개</span>를 놓습니다
+                6개 전선(자산군)에 <span className="text-amber-400">포인트 20개</span>를 놓습니다
               </SectionTitle>
               <Body>
                 종목을 고르고 수량을 계산하는 대신, 포인트를 나눠 놓습니다. 몇 주를 몇 원에 살지가
@@ -235,7 +271,7 @@ export default function LandingPage() {
               </Body>
               <Body>
                 더 깊이 들어가고 싶으면 각 전선 안에서 반도체·바이오 같은 테마로 다시 나눌 수
-                있습니다. 놓지 않은 포인트는 예비대로 남습니다.
+                있습니다. 놓지 않은 포인트는 예비대(현금성 자산)로 남습니다.
               </Body>
             </div>
             <Panel>
@@ -393,16 +429,16 @@ export default function LandingPage() {
               성과가 나빴다는 실증에 근거합니다.
             </Body>
 
-            {/* 산정 근거 — 심사에서 읽히는 부분. 숨기지 않고 펼쳐 둔다 */}
-            <Panel className="!p-0 overflow-hidden">
-              <div className="border-b border-zinc-800 px-6 py-4">
-                <p className="text-sm font-semibold">무엇을 어떻게 계산했나</p>
+            {/* 산정 근거 — 핵심 설명은 남기되 상세 산식은 요청할 때만 연다. */}
+            <details className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60">
+              <summary className="cursor-pointer px-6 py-4">
+                <span className="text-sm font-semibold">계산 근거 자세히 보기</span>
                 <p className="mt-1 text-xs text-zinc-500">
                   세 축의 합이 {INDEX_MAX.grown + INDEX_MAX.spread + INDEX_MAX.held}점이고, 한 축만
                   밀어서는 만점이 나오지 않습니다. 한 곳에 몰아넣고 크게 벌어도 상한은{' '}
                   {INDEX_MAX.grown}점입니다.
                 </p>
-              </div>
+              </summary>
               <div className="divide-y divide-zinc-800">
                 {METHOD.map((m) => (
                   <div key={m.label} className="px-6 py-5">
@@ -444,7 +480,7 @@ export default function LandingPage() {
                   등수가 되기 때문입니다. 수익 금액도 어디에도 표시하지 않습니다.
                 </p>
               </div>
-            </Panel>
+            </details>
           </div>
         </Reveal>
 
@@ -460,9 +496,10 @@ export default function LandingPage() {
             <div className="flex w-full max-w-sm flex-col gap-3">
               <Link
                 href="/demo"
+                prefetch={false}
                 className="flex h-14 items-center justify-center rounded-xl bg-amber-400 text-base font-semibold text-zinc-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
               >
-                데모 체험하기
+                3분 심사용 데모
               </Link>
               <Link
                 href="/onboarding"

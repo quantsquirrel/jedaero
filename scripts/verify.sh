@@ -196,7 +196,7 @@ else
   fi
 fi
 
-# P0-13 데모 접근: /demo 200, 요일 토글 평일·주말 모두 200
+# P0-13 데모 접근: 재진입·요일 왕복에도 같은 사용자 쿠키 유지
 if [ ! -e app/demo/page.tsx ] && [ ! -e app/demo/route.ts ]; then
   report P0-13 FAIL "/demo 라우트 없음 (2단계)"
 elif [ "$BUILD_OK" != 1 ]; then
@@ -210,13 +210,22 @@ else
     sleep 0.5
   done
   if [ "$READY" = 1 ]; then
-    C1=$(curl -sL -o /dev/null -w '%{http_code}' http://localhost:3130/demo)
-    C2=$(curl -sL -o /dev/null -w '%{http_code}' -b 'demo_day=WEEKDAY' http://localhost:3130/demo)
-    C3=$(curl -sL -o /dev/null -w '%{http_code}' -b 'demo_day=WEEKEND' http://localhost:3130/demo)
-    if [ "$C1" = 200 ] && [ "$C2" = 200 ] && [ "$C3" = 200 ]; then
-      report P0-13 PASS "/demo 200, 토글 평일 200, 주말 200"
+    DEMO_JAR=$(mktemp)
+    C1=$(curl -sL -o /dev/null -w '%{http_code}' -c "$DEMO_JAR" -b "$DEMO_JAR" http://localhost:3130/demo)
+    USER1=$(awk '$6 == "user_id" {print $7}' "$DEMO_JAR")
+    C2=$(curl -sL -o /dev/null -w '%{http_code}' -c "$DEMO_JAR" -b "$DEMO_JAR" http://localhost:3130/demo)
+    USER2=$(awk '$6 == "user_id" {print $7}' "$DEMO_JAR")
+    ACTION_ID=$(node -e "const m=require('./.next/server/server-reference-manifest.json').node; process.stdout.write(Object.entries(m).find(([,v])=>v.exportedName==='setDemoDay')?.[0] ?? '')")
+    CW=$(curl -s -o /dev/null -w '%{http_code}' -c "$DEMO_JAR" -b "$DEMO_JAR" -X POST http://localhost:3130/home -H "Next-Action: $ACTION_ID" -H 'Accept: text/x-component' -H 'Content-Type: text/plain;charset=UTF-8' --data-binary '["WEEKEND"]')
+    WEEKEND_DAY=$(awk '$6 == "demo_day" {print $7}' "$DEMO_JAR")
+    WEEKEND_USER=$(awk '$6 == "user_id" {print $7}' "$DEMO_JAR")
+    CD=$(curl -s -o /dev/null -w '%{http_code}' -c "$DEMO_JAR" -b "$DEMO_JAR" -X POST http://localhost:3130/home -H "Next-Action: $ACTION_ID" -H 'Accept: text/x-component' -H 'Content-Type: text/plain;charset=UTF-8' --data-binary '["WEEKDAY"]')
+    WEEKDAY_DAY=$(awk '$6 == "demo_day" {print $7}' "$DEMO_JAR")
+    WEEKDAY_USER=$(awk '$6 == "user_id" {print $7}' "$DEMO_JAR")
+    if [ "$C1" = 200 ] && [ "$C2" = 200 ] && [ "$CW" = 200 ] && [ "$CD" = 200 ] && [ -n "$USER1" ] && [ "$USER1" = "$USER2" ] && [ "$USER2" = "$WEEKEND_USER" ] && [ "$WEEKEND_USER" = "$WEEKDAY_USER" ] && [ "$WEEKEND_DAY" = WEEKEND ] && [ "$WEEKDAY_DAY" = WEEKDAY ]; then
+      report P0-13 PASS "재진입·평일↔주말 전환 뒤 user_id 유지"
     else
-      report P0-13 FAIL "/demo $C1, 평일 $C2, 주말 $C3"
+      report P0-13 FAIL "demo=$C1/$C2 action=$CW/$CD user 유지=$([ "$USER1" = "$WEEKDAY_USER" ] && echo yes || echo no) day=$WEEKEND_DAY/$WEEKDAY_DAY"
     fi
   else
     report P0-13 FAIL "next start 기동 실패"

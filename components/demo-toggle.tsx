@@ -1,21 +1,43 @@
 'use client';
 // 데모 요일 전환 토글 — 심사자가 평일에 접속해도 주말 기능을 볼 수 있게 한다 (SPEC §7)
 // 토글만 있고 무엇이 열리는지 안 적으면, 심사 5일(전부 평일)에 제품의 절반이 안 보인다.
-import { useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { setDemoDay } from '@/app/actions/demo';
 import { cn } from '@/lib/utils';
 
 export function DemoToggle({ mode }: { mode: 'WEEKDAY' | 'WEEKEND' }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const weekday = mode === 'WEEKDAY';
+  const [shownMode, setShownMode] = useState(mode);
+  const [error, setError] = useState('');
+  useEffect(() => setShownMode(mode), [mode]);
+  const weekday = shownMode === 'WEEKDAY';
+
+  const switchTo = (target: 'WEEKDAY' | 'WEEKEND') => {
+    setError('');
+    startTransition(async () => {
+      const result = await setDemoDay(target);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setShownMode(result.mode);
+      router.refresh();
+    });
+  };
+
   const btn = (target: 'WEEKDAY' | 'WEEKEND', label: string) => (
     <button
       type="button"
-      disabled={pending || mode === target}
-      onClick={() => startTransition(() => setDemoDay(target))}
+      disabled={pending || shownMode === target}
+      onClick={() => switchTo(target)}
+      aria-pressed={shownMode === target}
       className={cn(
         'rounded-full px-3 py-1 text-xs font-semibold transition-colors',
-        mode === target ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+        shownMode === target
+          ? 'bg-primary text-primary-foreground'
+          : 'text-muted-foreground hover:text-foreground',
       )}
     >
       {label}
@@ -37,6 +59,10 @@ export function DemoToggle({ mode }: { mode: 'WEEKDAY' | 'WEEKEND' }) {
           ? '주말로 바꾸면 편성 조정 · 이번 주 변동 · 제대로 지수가 열립니다.'
           : '평일로 바꾸면 전선 등락과 오늘의 지형 요약이 열리고, 편성 조정은 잠깁니다.'}
       </p>
+      <p aria-live="polite" className="sr-only">
+        {pending ? '화면을 전환하는 중입니다.' : error || `${weekday ? '평일' : '주말'} 화면입니다.`}
+      </p>
+      {error ? <p className="text-[11px] text-rose-300">{error}</p> : null}
     </div>
   );
 }

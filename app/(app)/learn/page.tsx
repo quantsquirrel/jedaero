@@ -72,7 +72,7 @@ export default async function LearnPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="review" className="scroll-mt-40">
         <CardHeader>
           <CardTitle className="text-base">한 줄 회고</CardTitle>
         </CardHeader>
