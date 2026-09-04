@@ -53,8 +53,8 @@ export default async function GroupsPage() {
               </div>
             ))}
             <p className="text-xs text-muted-foreground">
-              이 화면에는 수익 금액도 등수도 없습니다. 제대로 지수는 불린 만큼(40) · 나눠 담은
-              만큼(30) · 버틴 만큼(30)을 합한 점수입니다.
+              이 화면에는 수익 금액도 등수도 없습니다. 제대로 지수는 위험을 이긴 성과(40) · 분산의 힘(30) ·
+              판단을 지킨 힘(30)을 합한 점수입니다.
             </p>
           </CardContent>
         </Card>

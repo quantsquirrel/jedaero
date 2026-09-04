@@ -1,4 +1,4 @@
-// P1-23: 제대로 지수 「버틴 만큼」 — 실제 주차를 분모로 쓰고 예비대 이동도 온전히 센다.
+// P1-23: 제대로 지수 「판단을 지킨 힘」 — 실제 주차를 분모로 쓰고 예비대 이동도 온전히 센다.
 import { jedaeroIndex } from '../../lib/jedaero-index';
 import { turnoverBetween, weeklyTurnover } from '../../lib/insights';
 import type { Weights } from '../../lib/constants';
@@ -27,7 +27,7 @@ const newScore = jedaeroIndex({
   weights: balanced,
   turnoverPct: newUser,
 });
-if (newScore.held !== 0) fail(`첫 편성 직후 버틴 만큼 ${newScore.held}점 (기대 0)`);
+if (newScore.held !== 0) fail(`첫 편성 직후 판단을 지킨 힘 ${newScore.held}점 (기대 0)`);
 
 const heldOneWeek = weeklyTurnover([{ weekOf: '2026-35', weights: onePoint }], '2026-36');
 if (heldOneWeek !== 0) fail(`한 주 유지한 편성의 회전율 ${heldOneWeek}%p (기대 0)`);

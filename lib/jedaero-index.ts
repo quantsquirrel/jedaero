@@ -1,8 +1,8 @@
 // 제대로 지수 (100점) — 리그의 점수 축. 순위 숫자는 표시하지 않는다.
 //
-// 40 : 불린 만큼    샤프 비율. 무위험수익률 = 0 (예비대가 곧 무위험 자산이므로)
-// 30 : 나눠 담은 만큼 유효 전선 수 = 1 / Σ(비중²)
-// 30 : 버틴 만큼    회전율의 역수
+// 40 : 위험을 이긴 성과    샤프 비율. 무위험수익률 = 0 (예비대가 곧 무위험 자산이므로)
+// 30 : 분산의 힘 유효 전선 수 = 1 / Σ(비중²)
+// 30 : 판단을 지킨 힘    회전율의 역수
 //
 // 배점 근거
 // - 수익률 하나만 보면 짧은 시즌의 1등은 대개 몰빵이다. 위험 대비로 나눠야 그 행동이 표창받지 않는다
@@ -78,7 +78,7 @@ export function jedaeroIndex(input: {
 
 /** 화면 라벨 — 어려운 말을 쓰지 않는다. 샤프·HHI·회전율·백분위는 밖으로 내보내지 않는다 */
 export const INDEX_LABELS = [
-  { key: 'grown', label: '불린 만큼', hint: '위험 대비 수익', max: INDEX_MAX.grown },
-  { key: 'spread', label: '나눠 담은 만큼', hint: '실질 몇 개에 나눴나', max: INDEX_MAX.spread },
-  { key: 'held', label: '버틴 만큼', hint: '몇 주 유지했나', max: INDEX_MAX.held },
+  { key: 'grown', label: '위험을 이긴 성과', hint: '위험 대비 수익', max: INDEX_MAX.grown },
+  { key: 'spread', label: '분산의 힘', hint: '실질 몇 개에 나눴나', max: INDEX_MAX.spread },
+  { key: 'held', label: '판단을 지킨 힘', hint: '몇 주 유지했나', max: INDEX_MAX.held },
 ] as const;

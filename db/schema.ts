@@ -97,9 +97,9 @@ export const weeklyScores = pgTable('weekly_scores', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
   weekOf: text('week_of').notNull(),
-  grown: real('grown'), // 불린 만큼 (40점 만점)
-  spread: real('spread'), // 나눠 담은 만큼 (30점 만점)
-  held: real('held'), // 버틴 만큼 (30점 만점)
+  grown: real('grown'), // 위험을 이긴 성과 (40점 만점)
+  spread: real('spread'), // 분산의 힘 (30점 만점)
+  held: real('held'), // 판단을 지킨 힘 (30점 만점)
   total: real('total'), // 제대로 지수 (100점 만점)
 });
 

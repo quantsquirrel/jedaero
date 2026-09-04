@@ -32,13 +32,13 @@ if (maxed.total > 100) fail(`총점 ${maxed.total} (상한 100)`);
 
 // 손실 구간은 0점이지 음수가 아니다
 const losing = jedaeroIndex({ annualReturn: -0.3, annualVol: 0.2, weights: w({ BOND: 100 }), turnoverPct: 0 });
-if (losing.grown !== 0) fail(`손실 구간 「불린 만큼」이 ${losing.grown}점 (기대 0)`);
+if (losing.grown !== 0) fail(`손실 구간 「위험을 이긴 성과」이 ${losing.grown}점 (기대 0)`);
 
 // 기록이 없으면 0점
 const empty = jedaeroIndex({ annualReturn: null, annualVol: null, weights: null, turnoverPct: null });
 if (empty.total !== 0) fail(`기록 없음이 ${empty.total}점 (기대 0)`);
 
-// 3.0 전선이면 「나눠 담은 만큼」이 만점 근처여야 한다
+// 3.0 전선이면 「분산의 힘」이 만점 근처여야 한다
 const three = jedaeroIndex({ annualReturn: null, annualVol: null, weights: w({ KR_STOCK: 33, US_STOCK: 33, BOND: 34 }), turnoverPct: null });
 if (three.spread < INDEX_MAX.spread * 0.85) fail(`3전선 균등이 ${three.spread}점 (기대 ${INDEX_MAX.spread} 근처)`);
 

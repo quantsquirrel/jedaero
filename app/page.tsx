@@ -65,16 +65,16 @@ const FRONTS = [
 ];
 
 const INDEX_ROWS = [
-  { label: '불린 만큼', hint: '위험 대비 수익', solo: 40, spread: 33, max: INDEX_MAX.grown },
-  { label: '나눠 담은 만큼', hint: '실질 몇 개에 나눴나', solo: 2, spread: 30, max: INDEX_MAX.spread },
-  { label: '버틴 만큼', hint: '몇 주 유지했나', solo: 8, spread: 30, max: INDEX_MAX.held },
+  { label: '위험을 이긴 성과', hint: '위험 대비 성과', solo: 40, spread: 33, max: INDEX_MAX.grown },
+  { label: '분산의 힘', hint: '실질 분산 정도', solo: 2, spread: 30, max: INDEX_MAX.spread },
+  { label: '판단을 지킨 힘', hint: '목표 비중 유지', solo: 8, spread: 30, max: INDEX_MAX.held },
 ];
 
 // 산정 근거 — ★ lib/jedaero-index.ts의 상수와 반드시 일치시킬 것.
 // 심사에서 읽히는 화면이므로 실제 계산과 어긋나면 그 자체가 결함이다.
 const METHOD = [
   {
-    label: '불린 만큼',
+    label: '위험을 이긴 성과',
     formula: '연환산 수익률 ÷ 연환산 변동성',
     full: `샤프 ${SHARPE_FULL} 이상이면 만점`,
     notes: [
@@ -83,7 +83,7 @@ const METHOD = [
     ],
   },
   {
-    label: '나눠 담은 만큼',
+    label: '분산의 힘',
     formula: '1 ÷ Σ(비중²)',
     full: `유효 전선 ${EFFECTIVE_FRONTS_FULL}개 이상이면 만점`,
     notes: [
@@ -92,7 +92,7 @@ const METHOD = [
     ],
   },
   {
-    label: '버틴 만큼',
+    label: '판단을 지킨 힘',
     formula: '주당 평균 변경폭 = Σ|Δ목표비중| ÷ 2',
     full: `0%p면 만점, ${TURNOVER_ZERO}%p면 0점`,
     notes: [
@@ -113,18 +113,26 @@ export default function LandingPage() {
         />
         <Reveal className="relative">
           <div className="mb-7 flex flex-wrap justify-center gap-2 text-xs text-zinc-400">
-            {['군 장병 맞춤', '청년 자산형성·포용금융', 'AI 행동 회고 코치', '실거래·투자추천 없음'].map(
-              (label) => (
-                <span key={label} className="rounded-full border border-zinc-800 px-3 py-1">
-                  {label}
-                </span>
-              ),
-            )}
+            {['군 장병 맞춤 금융교육', '교육용 모의 서비스 · 실제 거래 없음'].map((label) => (
+              <span key={label} className="rounded-full border border-zinc-800 px-3 py-1">
+                {label}
+              </span>
+            ))}
           </div>
-          <h1 className="text-6xl font-bold tracking-tight sm:text-8xl">제대로</h1>
-          <p className="mx-auto mt-6 max-w-[34ch] text-pretty break-keep text-lg leading-relaxed text-zinc-400">
-            전역 목돈을 미리 운용하고, AI 질문으로 내 판단 습관을 돌아보는 금융 훈련.
+          <p className="text-sm font-semibold tracking-[0.2em] text-amber-400">제대로 · JEDAERO</p>
+          <h1 className="mt-5 text-balance break-keep text-4xl font-bold leading-[1.16] tracking-tight sm:text-6xl">
+            전역 전, 첫 <span className="text-amber-400">2천만원</span>의 판단을 연습합니다
+          </h1>
+          <p className="mx-auto mt-6 max-w-[38ch] text-pretty break-keep text-lg leading-relaxed text-zinc-400">
+            전역할 때 받게 될 목돈을, 복무 중에 미리 굴려보는 모의투자 훈련.
           </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-x-3 gap-y-2 text-xs text-zinc-500">
+            <span>평일에는 읽고</span>
+            <span aria-hidden className="text-zinc-700">·</span>
+            <span>주말에 한 번 결정하고</span>
+            <span aria-hidden className="text-zinc-700">·</span>
+            <span>AI는 질문만 합니다</span>
+          </div>
         </Reveal>
 
         <Reveal delay={140} className="relative mt-12 w-full max-w-sm">
@@ -134,7 +142,7 @@ export default function LandingPage() {
               prefetch={false}
               className="group flex h-14 items-center justify-center rounded-xl bg-amber-400 text-base font-semibold text-zinc-950 shadow-lg shadow-amber-400/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 hover:shadow-xl hover:shadow-amber-400/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
-              3분 심사용 데모
+              3분 심사 데모 시작
             </Link>
             <Link
               href="/onboarding"
@@ -157,35 +165,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-5xl gap-4 px-6 pb-24 md:grid-cols-2">
-        <Panel>
-          <Eyebrow>AI·데이터 안전장치</Eyebrow>
-          <h2 className="mt-3 text-xl font-bold">AI는 계산하지 않고, 해석하고 질문합니다</h2>
-          <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-400">
-            <li>수익률과 제대로 지수는 공개된 규칙으로 계산</li>
-            <li>LLM에는 편성, 유지 기간, 주간 변동, 한 줄 회고만 전달</li>
-            <li>회고 원문은 응답 뒤 저장하지 않고 폐기</li>
-            <li>군 소속 정보는 수집하지 않고 그룹은 익명 초대코드로 참여</li>
-          </ul>
-          <p className="mt-4 text-xs font-semibold text-amber-300">생성형 AI 제안 · 확정은 본인이 합니다</p>
-        </Panel>
-        <Panel>
-          <Eyebrow>재현 가능한 합성 데이터</Eyebrow>
-          <h2 className="mt-3 text-xl font-bold">같은 입력이면 같은 계산 결과가 나옵니다</h2>
-          <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-            심사용 가격·편성 이력과 산출 규칙을 고정해 결과를 다시 확인할 수 있습니다. 학습의 세
-            시나리오를 직접 전환해 한 전략이 언제나 이기는지 비교합니다.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2 text-xs text-zinc-300">
-            {['급락 후 회복', '주식·채권 동반 하락', '1년 후에도 미회복'].map((label) => (
-              <span key={label} className="rounded-full bg-zinc-800 px-2.5 py-1">
-                {label}
-              </span>
-            ))}
-          </div>
-        </Panel>
-      </section>
-
       <div className="mx-auto max-w-5xl space-y-24 px-6 pb-32 sm:space-y-28">
         {/* ── 1. 시드 ─────────────────────────────── */}
         <Reveal>
@@ -193,7 +172,7 @@ export default function LandingPage() {
             <div className="flex flex-col gap-5">
               <Eyebrow>훈련 시드</Eyebrow>
               <SectionTitle>
-                전역할 때 <span className="text-amber-400">2,020만원</span>을 받습니다
+                전역할 때 <span className="text-amber-400">2,000만원</span>을 받습니다
               </SectionTitle>
               <Body>
                 장병내일준비적금을 채우면 목돈이 손에 들어옵니다. 문제는 그 돈을 처음 만지는 날이
@@ -207,7 +186,7 @@ export default function LandingPage() {
             <Panel className="text-center">
               <p className="text-sm text-zinc-500">모의 시드</p>
               <p className="mt-2 font-mono text-5xl font-bold tabular-nums tracking-tight sm:text-6xl">
-                20,200,000
+                20,000,000
               </p>
               <p className="mt-1 text-sm text-zinc-500">원</p>
               <p className="mt-6 border-t border-zinc-800 pt-5 text-sm leading-relaxed text-zinc-400">
@@ -343,35 +322,56 @@ export default function LandingPage() {
         <Reveal>
           <div className="flex flex-col gap-10">
             <div className="flex flex-col gap-5">
-              <Eyebrow>순위</Eyebrow>
+              <Eyebrow>제대로 지수</Eyebrow>
               <SectionTitle>
-                수익률 1등이 <span className="text-amber-400">1등이 아닙니다</span>
+                많이 번 결과보다 <span className="text-amber-400">제대로 결정한 힘</span>을 봅니다
               </SectionTitle>
               <Body>
-                한 종목에 몰아넣고 운이 좋으면 한 주 수익률은 1등이 됩니다. 그런데 그건 실력이
-                아니라 운이고, 다음 주에 그대로 돌려줍니다. 그래서 순위를 세 가지로 나눠서 봅니다.
+                한 번의 수익은 운일 수 있습니다. 제대로 지수는 위험을 감안한 성과, 분산의 구조,
+                판단을 지킨 일관성을 함께 봅니다. 그래서 한 곳에 몰아 크게 벌어도 1등이 되지 않습니다.
               </Body>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              {[
-                ['불린 만큼', `${INDEX_MAX.grown}점`, '수익을 위험으로 나눈 값. 많이 벌어도 크게 흔들렸다면 점수가 깎입니다.'],
-                ['나눠 담은 만큼', `${INDEX_MAX.spread}점`, '실질적으로 몇 개에 나눈 셈인지 계산합니다. 한 곳에 몰수록 낮습니다.'],
-                ['버틴 만큼', `${INDEX_MAX.held}점`, '편성을 얼마나 유지했는지. 자주 바꿀수록 낮습니다.'],
-              ].map(([t, p, d]) => (
-                <Panel key={t}>
-                  <div className="flex items-baseline justify-between">
-                    <p className="font-semibold">{t}</p>
-                    <p className="font-mono text-sm tabular-nums text-zinc-500">{p}</p>
+            <Panel className="border-amber-400/35 bg-amber-400/[0.045]">
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <p className="text-sm font-semibold text-amber-300">제대로 지수 산식</p>
+                <p className="font-mono text-sm tabular-nums text-zinc-500">총 100점</p>
+              </div>
+              <p className="mt-3 break-keep text-lg font-bold leading-relaxed text-zinc-100 sm:text-xl">
+                제대로 지수 = 위험을 이긴 성과 + 분산의 힘 + 판단을 지킨 힘
+              </p>
+              <div className="mt-6 grid items-stretch gap-3 sm:grid-cols-[1fr_auto_1fr_auto_1fr]">
+                {[
+                  [`${INDEX_MAX.grown}점`, '위험을 이긴 성과', '많이 벌었는가가 아니라, 흔들림까지 감안한 성과'],
+                  [`${INDEX_MAX.spread}점`, '분산의 힘', '실질적으로 몇 개의 자산군에 나누었는가'],
+                  [`${INDEX_MAX.held}점`, '판단을 지킨 힘', '처음 정한 목표 비중을 얼마나 지켰는가'],
+                ].map(([score, title, description], index) => (
+                  <div key={title} className="contents">
+                    {index > 0 ? (
+                      <span aria-hidden className="hidden self-center text-2xl text-amber-400/70 sm:block">
+                        +
+                      </span>
+                    ) : null}
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/45 px-4 py-4">
+                      <p className="font-mono text-2xl font-bold tabular-nums text-amber-400">{score}</p>
+                      <p className="mt-2 font-semibold text-zinc-100">{title}</p>
+                      <p className="mt-1.5 break-keep text-xs leading-relaxed text-zinc-500">{description}</p>
+                    </div>
                   </div>
-                  <p className="mt-3 break-keep text-sm leading-relaxed text-zinc-400">{d}</p>
-                </Panel>
-              ))}
-            </div>
+                ))}
+              </div>
+              <p className="mt-5 break-keep text-sm leading-relaxed text-zinc-300">
+                <span className="font-semibold text-amber-300">결과에 주는 점수는 40점뿐입니다.</span> 나머지 60점은
+                위험을 나누고, 처음의 판단을 지켜낸 과정에 줍니다.
+              </p>
+            </Panel>
 
             <Panel className="!p-0 overflow-hidden">
               <div className="border-b border-zinc-800 px-6 py-4">
-                <p className="text-sm font-semibold">같은 기간, 두 사람</p>
+                <p className="text-sm font-semibold">같은 기간, 두 개의 판단</p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  수익률이 앞선 편성이 반드시 더 높은 점수를 받지는 않습니다.
+                </p>
               </div>
               <div className="space-y-5 px-6 py-6">
                 {INDEX_ROWS.map((r) => (
@@ -410,7 +410,7 @@ export default function LandingPage() {
                 ))}
               </div>
               <div className="flex items-center justify-between border-t border-zinc-800 px-6 py-5">
-                <span className="text-sm font-semibold">제대로 지수</span>
+                <span className="text-sm font-semibold">제대로 지수 합계</span>
                 <span className="flex items-baseline gap-5 font-mono tabular-nums">
                   <span className="text-lg text-zinc-500">
                     {INDEX_ROWS.reduce((a, r) => a + r.solo, 0)}
@@ -423,10 +423,9 @@ export default function LandingPage() {
             </Panel>
 
             <Body>
-              수익률만 보면 몰빵이 다섯 배 앞섰지만, 위험까지 계산하면 거의 붙습니다. 거기에 나눠
-              담은 정도와 버틴 기간을 더하면 순위가 뒤집힙니다. 배점은 임의로 정하지 않았습니다 —
-              짧은 기간의 수익률 지표는 통계적으로 불안정하다는 연구와, 자주 거래한 개인투자자일수록
-              성과가 나빴다는 실증에 근거합니다.
+              수익률만 보면 한 곳에 몰아넣은 편성이 다섯 배 앞섰습니다. 그러나 위험까지 감안하면 차이가
+              줄고, 분산과 판단 유지를 더하면 결과가 뒤집힙니다. 배점은 임의가 아닙니다. 짧은 기간의
+              수익률은 통계적으로 불안정하고, 잦은 거래는 개인투자자의 성과를 갉아먹는다는 연구에 근거합니다.
             </Body>
 
             {/* 산정 근거 — 핵심 설명은 남기되 상세 산식은 요청할 때만 연다. */}
@@ -468,7 +467,7 @@ export default function LandingPage() {
                   </li>
                   <li className="break-keep">
                     Barber &amp; Odean (2000), <i>Trading Is Hazardous to Your Wealth</i> — 자주
-                    거래한 개인투자자일수록 성과가 나빴습니다. 「버틴 만큼」에 30점을 둔 이유입니다.
+                    거래한 개인투자자일수록 성과가 나빴습니다. 「판단을 지킨 힘」에 30점을 둔 이유입니다.
                   </li>
                   <li className="break-keep">
                     Benartzi &amp; Thaler (1995), 근시안적 손실회피 — 평가 주기가 투자 기간과
@@ -481,6 +480,67 @@ export default function LandingPage() {
                 </p>
               </div>
             </details>
+          </div>
+        </Reveal>
+
+        {/* ── 5-B. 신뢰 설계 — 지수 뒤에 둔다. 방어가 아니라 설계 역량으로 읽혀야 한다 */}
+        <Reveal>
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-5">
+              <Eyebrow>신뢰 설계</Eyebrow>
+              <SectionTitle>
+                신뢰는 문구가 아니라 <span className="text-amber-400">구조</span>로 만듭니다
+              </SectionTitle>
+              <Body>
+                숫자는 공개된 규칙이 계산하고, AI는 그 숫자를 정리해 질문만 돌려주며, 확정은 사람이 주말에
+                한 번 합니다. 이 경계는 안내 문구가 아니라 코드가 강제합니다.
+              </Body>
+            </div>
+
+            <Panel className="!p-0 overflow-hidden">
+              <div className="grid divide-y divide-zinc-800 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                {[
+                  ['규칙', '계산', '수익률, 제대로 지수, 전선 등락을 공개된 규칙으로 계산합니다.'],
+                  ['AI', '해석과 질문', '규칙이 만든 숫자를 읽기 좋게 정리하고 되묻습니다. 숫자를 만들지 않습니다.'],
+                  ['사람', '확정', '주말에 한 번, 본인이 편성을 확정합니다. AI가 대신 확정하지 않습니다.'],
+                ].map(([who, role, description]) => (
+                  <div key={who} className="px-6 py-5">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-400/80">{who}</p>
+                    <p className="mt-2 font-semibold text-zinc-100">{role}</p>
+                    <p className="mt-2 break-keep text-sm leading-relaxed text-zinc-400">{description}</p>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Panel>
+                <Eyebrow>AI·데이터 안전장치</Eyebrow>
+                <h2 className="mt-3 text-xl font-bold">AI는 계산하지 않고, 해석하고 질문합니다</h2>
+                <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-400">
+                  <li>수익률과 제대로 지수는 공개된 규칙으로 계산</li>
+                  <li>LLM에는 편성, 유지 기간, 주간 변동, 한 줄 회고만 전달</li>
+                  <li>회고 원문은 응답 뒤 저장하지 않고 폐기</li>
+                  <li>군 소속 정보는 수집하지 않고 그룹은 익명 초대코드로 참여</li>
+                </ul>
+                <p className="mt-4 text-xs font-semibold text-amber-300">생성형 AI 제안 · 확정은 본인이 합니다</p>
+              </Panel>
+              <Panel>
+                <Eyebrow>재현 가능한 합성 데이터</Eyebrow>
+                <h2 className="mt-3 text-xl font-bold">같은 입력이면 같은 계산 결과가 나옵니다</h2>
+                <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+                  심사용 가격·편성 이력과 산출 규칙을 고정해 결과를 다시 확인할 수 있습니다. 학습의 세
+                  시나리오를 직접 전환해 한 전략이 언제나 이기는지 비교합니다.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs text-zinc-300">
+                  {['급락 후 회복', '주식·채권 동반 하락', '1년 후에도 미회복'].map((label) => (
+                    <span key={label} className="rounded-full bg-zinc-800 px-2.5 py-1">
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </Panel>
+            </div>
           </div>
         </Reveal>
 
@@ -499,7 +559,7 @@ export default function LandingPage() {
                 prefetch={false}
                 className="flex h-14 items-center justify-center rounded-xl bg-amber-400 text-base font-semibold text-zinc-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
               >
-                3분 심사용 데모
+                3분 심사 데모 시작
               </Link>
               <Link
                 href="/onboarding"
