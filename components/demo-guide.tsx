@@ -17,9 +17,9 @@ export function DemoGuide() {
           <li key={step.label}>
             <Link
               href={step.href}
-              className="flex min-h-12 flex-col rounded-md border border-border px-1.5 py-1.5 text-[10px] leading-tight text-muted-foreground hover:border-amber-400/50 hover:text-foreground"
+              className="flex min-h-12 flex-col rounded-md border border-border px-1.5 py-1.5 text-[10px] leading-tight text-muted-foreground hover:border-primary/50 hover:text-foreground"
             >
-              <span className="font-mono text-amber-400">{i + 1}</span>
+              <span className="font-mono text-primary">{i + 1}</span>
               <span>{step.label}</span>
             </Link>
           </li>

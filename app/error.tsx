@@ -19,13 +19,13 @@ export default function RouteError({
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-6 py-12 text-zinc-100">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-6 py-12 text-foreground">
       <div className="flex flex-col gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400/80">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">
           화면을 불러오지 못했습니다
         </p>
         <h1 className="text-2xl font-bold tracking-tight">잠시 연결이 끊겼습니다</h1>
-        <p className="break-keep text-sm leading-relaxed text-zinc-400">
+        <p className="break-keep text-sm leading-relaxed text-muted-foreground">
           데이터 저장소와의 연결이 잠깐 흔들렸을 수 있습니다. 이 서비스는 교육용 모의 훈련이라
           실제 거래·주문·결제가 일어나지 않으며, 지금 오류로 잃는 것은 없습니다.
         </p>
@@ -35,25 +35,25 @@ export default function RouteError({
         <button
           type="button"
           onClick={() => reset()}
-          className="flex h-12 items-center justify-center rounded-xl bg-amber-400 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-300"
+          className="flex h-12 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
         >
           다시 시도
         </button>
         <Link
           href="/demo"
-          className="flex h-12 items-center justify-center rounded-xl border border-zinc-700 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-900"
+          className="flex h-12 items-center justify-center rounded-xl border border-input text-sm font-semibold text-foreground transition-colors hover:border-muted-foreground/60 hover:bg-card"
         >
           데모로 다시 들어가기
         </Link>
         <Link
           href="/"
-          className="flex h-12 items-center justify-center rounded-xl text-sm text-zinc-400 underline-offset-4 hover:underline"
+          className="flex h-12 items-center justify-center rounded-xl text-sm text-muted-foreground underline-offset-4 hover:underline"
         >
           처음 화면으로
         </Link>
       </div>
 
-      <p className="text-[11px] leading-relaxed text-zinc-600">
+      <p className="text-[11px] leading-relaxed text-faint/70">
         같은 화면이 계속 나오면 잠시 뒤 다시 열어 주세요.
         {error.digest ? (
           <>

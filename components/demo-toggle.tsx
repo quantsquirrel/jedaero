@@ -44,9 +44,9 @@ export function DemoToggle({ mode }: { mode: 'WEEKDAY' | 'WEEKEND' }) {
     </button>
   );
   return (
-    <div className="flex flex-col gap-1.5 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2.5">
+    <div className="flex flex-col gap-1.5 border-b border-primary/30 bg-primary/10 px-4 py-2.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-medium text-amber-300">
+        <span className="text-xs font-medium text-primary/90">
           {weekday ? '데모 · 지금은 평일 화면' : '데모 · 지금은 주말 화면'}
         </span>
         <div className="flex items-center gap-1 rounded-full border border-border bg-background p-0.5">
@@ -54,7 +54,7 @@ export function DemoToggle({ mode }: { mode: 'WEEKDAY' | 'WEEKEND' }) {
           {btn('WEEKEND', '주말')}
         </div>
       </div>
-      <p className="text-[11px] leading-relaxed text-amber-200/80">
+      <p className="text-[11px] leading-relaxed text-primary/70">
         {weekday
           ? '주말로 바꾸면 편성 조정 · 이번 주 변동 · 제대로 지수가 열립니다.'
           : '평일로 바꾸면 전선 등락과 오늘의 지형 요약이 열리고, 편성 조정은 잠깁니다.'}
@@ -62,7 +62,7 @@ export function DemoToggle({ mode }: { mode: 'WEEKDAY' | 'WEEKEND' }) {
       <p aria-live="polite" className="sr-only">
         {pending ? '화면을 전환하는 중입니다.' : error || `${weekday ? '평일' : '주말'} 화면입니다.`}
       </p>
-      {error ? <p className="text-[11px] text-rose-300">{error}</p> : null}
+      {error ? <p className="text-[11px] text-down">{error}</p> : null}
     </div>
   );
 }

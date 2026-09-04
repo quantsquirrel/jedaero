@@ -31,7 +31,7 @@ export function GroupForms() {
           지어주세요.
         </p>
         {createState.error ? <p className="text-sm text-destructive">{createState.error}</p> : null}
-        {createState.ok ? <p className="text-sm text-emerald-400">그룹이 만들어졌습니다.</p> : null}
+        {createState.ok ? <p className="text-sm text-up">그룹이 만들어졌습니다.</p> : null}
       </form>
 
       <form action={joinAction} className="flex flex-col gap-2">
@@ -43,7 +43,7 @@ export function GroupForms() {
           </Button>
         </div>
         {joinState.error ? <p className="text-sm text-destructive">{joinState.error}</p> : null}
-        {joinState.ok ? <p className="text-sm text-emerald-400">참여했습니다.</p> : null}
+        {joinState.ok ? <p className="text-sm text-up">참여했습니다.</p> : null}
       </form>
     </div>
   );

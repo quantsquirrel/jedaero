@@ -40,12 +40,12 @@ function Sparkline({
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="h-[88px] w-full" role="img" aria-label="구간 평가액 곡선">
-      <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} className="stroke-zinc-800" strokeWidth="1" />
+      <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} className="stroke-border" strokeWidth="1" />
       {overlay ? (
         <polyline
           fill="none"
           points={line(overlay)}
-          className="stroke-zinc-600"
+          className="stroke-faint"
           strokeWidth="1.5"
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -54,12 +54,12 @@ function Sparkline({
       <polyline
         fill="none"
         points={line(values)}
-        className="stroke-amber-400/80"
+        className="stroke-primary/80"
         strokeWidth="2"
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      <circle cx={tx} cy={ty} r="3.5" className="fill-amber-400" />
+      <circle cx={tx} cy={ty} r="3.5" className="fill-primary" />
     </svg>
   );
 }
@@ -79,22 +79,22 @@ export function DrillDeck({ items, hasAllocation }: { items: DrillDeckItem[]; ha
 
   return (
     <section id="drill" className="scroll-mt-40">
-      <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
         <div className="flex flex-col gap-3 px-5 pt-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-400/80">도상훈련</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">도상훈련</p>
               <h2 className="mt-1 text-lg font-bold tracking-tight">지금 편성이면, 그 지형은</h2>
             </div>
-            <span className="shrink-0 rounded-full border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-400">
+            <span className="shrink-0 rounded-full border border-input px-2.5 py-1 text-[11px] text-muted-foreground">
               교육용 과거 지형
             </span>
           </div>
-          <p className="text-sm leading-relaxed text-zinc-400">
+          <p className="text-sm leading-relaxed text-muted-foreground">
             예측이 아닙니다. 지금 포인트를 과거 한 해에 그대로 넣어 본 결과입니다.
           </p>
           {!hasAllocation ? (
-            <p className="text-xs leading-relaxed text-zinc-500">
+            <p className="text-xs leading-relaxed text-faint">
               아직 편성이 없어 전액 예비대로 둡니다. 포트폴리오에서 포인트를 놓으면 이 숫자가 바뀝니다.
             </p>
           ) : null}
@@ -111,8 +111,8 @@ export function DrillDeck({ items, hasAllocation }: { items: DrillDeckItem[]; ha
                 className={cn(
                   'rounded-xl px-2 py-2.5 text-center text-[12px] font-semibold leading-snug break-keep transition-colors',
                   on
-                    ? 'bg-amber-400 text-zinc-950'
-                    : 'text-zinc-400 hover:bg-zinc-800/80 hover:text-zinc-200',
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-secondary/80 hover:text-foreground',
                 )}
               >
                 {s.title}
@@ -122,33 +122,33 @@ export function DrillDeck({ items, hasAllocation }: { items: DrillDeckItem[]; ha
         </div>
 
         <div className="mt-5 px-5">
-          <p className="text-[11px] tabular-nums text-zinc-500">
+          <p className="text-[11px] tabular-nums text-faint">
             {scenario.fromDate} ~ {scenario.toDate}
           </p>
-          <p className="mt-1 text-sm leading-relaxed text-zinc-400">{scenario.lesson}</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{scenario.lesson}</p>
         </div>
 
         <div className="mt-5 px-5">
-          <p className="text-xs text-zinc-500">구간 끝 평가액</p>
-          <p className="mt-1 font-mono text-[2rem] font-bold leading-none tracking-tight text-amber-400 tabular-nums">
+          <p className="text-xs text-faint">구간 끝 평가액</p>
+          <p className="mt-1 font-mono text-[2rem] font-bold leading-none tracking-tight text-primary tabular-nums">
             {won(current.mine.endValue)}
           </p>
-          <p className="mt-1 font-mono text-sm tabular-nums text-zinc-500">{pct(endRet)}</p>
+          <p className="mt-1 font-mono text-sm tabular-nums text-faint">{pct(endRet)}</p>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3 px-5">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 px-3 py-3">
-            <p className="text-[11px] text-zinc-500">가장 쪼그라든 금액</p>
+          <div className="rounded-xl border border-border bg-background/50 px-3 py-3">
+            <p className="text-[11px] text-faint">가장 쪼그라든 금액</p>
             <p className="mt-1 font-mono text-lg font-semibold tabular-nums tracking-tight">
               {won(current.mine.troughValue)}
             </p>
-            <p className="mt-0.5 font-mono text-xs tabular-nums text-zinc-500">{pct(current.mine.mdd)}</p>
+            <p className="mt-0.5 font-mono text-xs tabular-nums text-faint">{pct(current.mine.mdd)}</p>
           </div>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 px-3 py-3">
-            <p className="text-[11px] text-zinc-500">저점까지</p>
+          <div className="rounded-xl border border-border bg-background/50 px-3 py-3">
+            <p className="text-[11px] text-faint">저점까지</p>
             <p className="mt-1 font-mono text-lg font-semibold tabular-nums tracking-tight">
               {current.mine.troughTradingDays}
-              <span className="ml-0.5 text-sm font-medium text-zinc-500">영업일</span>
+              <span className="ml-0.5 text-sm font-medium text-faint">영업일</span>
             </p>
           </div>
         </div>
@@ -168,8 +168,8 @@ export function DrillDeck({ items, hasAllocation }: { items: DrillDeckItem[]; ha
             className={cn(
               'mt-1 w-full rounded-xl border py-2.5 text-sm font-medium transition-colors',
               compare
-                ? 'border-amber-400/40 bg-amber-400/10 text-amber-200'
-                : 'border-zinc-800 text-zinc-300 hover:border-zinc-600',
+                ? 'border-primary/40 bg-primary/10 text-primary/80'
+                : 'border-border text-foreground hover:border-muted-foreground/40',
             )}
           >
             {compare ? `${allianceName}과 겹쳐 보는 중` : `${allianceName}과 나란히 보기`}
@@ -179,20 +179,20 @@ export function DrillDeck({ items, hasAllocation }: { items: DrillDeckItem[]; ha
         {compare ? (
           <div className="mt-3 grid grid-cols-2 gap-3 px-5 text-sm">
             <div>
-              <p className="text-[11px] text-amber-400/80">내 편성</p>
+              <p className="text-[11px] text-primary/80">내 편성</p>
               <p className="mt-0.5 font-mono tabular-nums">{won(current.mine.endValue)}</p>
             </div>
             <div>
-              <p className="text-[11px] text-zinc-500">{allianceName}</p>
-              <p className="mt-0.5 font-mono tabular-nums text-zinc-400">{won(current.alliance.endValue)}</p>
+              <p className="text-[11px] text-faint">{allianceName}</p>
+              <p className="mt-0.5 font-mono tabular-nums text-muted-foreground">{won(current.alliance.endValue)}</p>
             </div>
           </div>
         ) : null}
 
-        <div className="mt-5 space-y-2 border-t border-zinc-800 px-5 py-4">
-          <p className="text-[13px] leading-relaxed text-zinc-500">{scenario.caption}</p>
+        <div className="mt-5 space-y-2 border-t border-border px-5 py-4">
+          <p className="text-[13px] leading-relaxed text-faint">{scenario.caption}</p>
           {scenario.caption !== scenario.sharedCaption ? (
-            <p className="text-[13px] leading-relaxed text-zinc-600">{scenario.sharedCaption}</p>
+            <p className="text-[13px] leading-relaxed text-faint/70">{scenario.sharedCaption}</p>
           ) : null}
         </div>
       </div>

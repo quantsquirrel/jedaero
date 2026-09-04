@@ -61,10 +61,10 @@ export function DraftEditor({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3.5 text-left transition-colors hover:border-zinc-600"
+        className="flex w-full items-center justify-between rounded-xl border border-border bg-card/60 px-4 py-3.5 text-left transition-colors hover:border-muted-foreground/40"
       >
         <span>
-          <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-400/80">
+          <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">
             명령하달 · 선택
           </span>
           <span className="mt-0.5 block font-semibold">이번 주 초안 남기기</span>
@@ -78,15 +78,15 @@ export function DraftEditor({
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40">
+    <section className="overflow-hidden rounded-xl border border-border bg-card/60">
       <div className="flex items-start justify-between gap-3 px-4 pt-4">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-400/80">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">
             명령하달 · 선택
           </p>
           <h3 className="mt-1 font-semibold">이번 주 초안</h3>
         </div>
-        <span className="shrink-0 rounded-full border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-400">
+        <span className="shrink-0 rounded-full border border-input px-2.5 py-1 text-[11px] text-muted-foreground">
           아직 실행되지 않은 메모
         </span>
       </div>
@@ -132,7 +132,7 @@ export function DraftEditor({
           );
         })}
 
-        <div className="flex items-center justify-between gap-3 border-t border-zinc-800 pt-2.5">
+        <div className="flex items-center justify-between gap-3 border-t border-border pt-2.5">
           <span className="text-sm text-muted-foreground">{RESERVE.name}</span>
           <span className="font-mono text-sm tabular-nums text-muted-foreground">
             {reserve}
@@ -153,7 +153,7 @@ export function DraftEditor({
           placeholder="비워 두어도 저장됩니다."
           className="w-full resize-none rounded-lg border border-input bg-input/25 px-3.5 py-2.5 text-base outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
         />
-        <span className="self-end font-mono text-[11px] tabular-nums text-zinc-600">
+        <span className="self-end font-mono text-[11px] tabular-nums text-faint/70">
           {note.length}/{NOTE_MAX}
         </span>
       </div>
@@ -161,7 +161,7 @@ export function DraftEditor({
       {result.error ? (
         <p className="px-4 pt-2 text-sm text-destructive">{result.error}</p>
       ) : result.ok ? (
-        <p className="px-4 pt-2 text-sm text-emerald-400">{result.ok}</p>
+        <p className="px-4 pt-2 text-sm text-up">{result.ok}</p>
       ) : null}
 
       <div className="flex gap-2 px-4 pb-4 pt-3">
@@ -179,7 +179,7 @@ export function DraftEditor({
         )}
       </div>
 
-      <p className={cn('px-4 pb-4 text-[11px] leading-relaxed text-zinc-600')}>
+      <p className={cn('px-4 pb-4 text-[11px] leading-relaxed text-faint/70')}>
         초안은 편성이 아닙니다. 이번 주 편성은 주말에 편성기에서 확정합니다.
       </p>
     </section>

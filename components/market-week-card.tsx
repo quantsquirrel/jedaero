@@ -4,6 +4,7 @@
 import { useState, useTransition } from 'react';
 import { generateBriefingAction, generateWeekdayBriefingAction } from '@/app/actions/briefing';
 import { AiNotice } from '@/components/ai-notice';
+import { SourceChip } from '@/components/source-chip';
 import { FrontTerrain } from '@/components/front-terrain';
 import { Button } from '@/components/ui/button';
 import { pct } from '@/lib/format';
@@ -55,7 +56,7 @@ export function MarketWeekCard({
         {variant === 'full' ? (
           <p className="text-sm">
             내 비중으로 가중하면{' '}
-            <b className={cn(weightedPct >= 0 ? 'text-emerald-400' : 'text-rose-400')}>{pct(weightedPct)}</b>
+            <b className={cn(weightedPct >= 0 ? 'text-up' : 'text-down')}>{pct(weightedPct)}</b>
           </p>
         ) : (
           <p className="text-sm text-muted-foreground">전선이 얼마나 움직였는지만 봅니다. 내 손익은 주말에.</p>
@@ -78,14 +79,14 @@ export function MarketWeekCard({
               <span className="relative h-3 flex-1 overflow-hidden rounded-sm bg-muted/40">
                 <span className="absolute inset-y-0 left-1/2 w-px bg-border" />
                 <span
-                  className={cn('absolute inset-y-0 rounded-sm', up ? 'bg-emerald-500/70' : 'bg-rose-500/70')}
+                  className={cn('absolute inset-y-0 rounded-sm', up ? 'bg-up/70' : 'bg-down/70')}
                   style={up ? { left: '50%', width: `${width}%` } : { right: '50%', width: `${width}%` }}
                 />
               </span>
               <span
                 className={cn(
                   'w-16 shrink-0 text-right font-mono text-xs tabular-nums',
-                  up ? 'text-emerald-400' : 'text-rose-400',
+                  up ? 'text-up' : 'text-down',
                 )}
               >
                 {pct(m.changePct)}
@@ -103,13 +104,11 @@ export function MarketWeekCard({
         {result.error ? <p className="text-sm text-destructive">{result.error}</p> : null}
 
         {result.briefing ? (
-          <div className="flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
+          <div className="flex flex-col gap-2 rounded-xl border border-border bg-background/40 p-3">
             {result.source === 'ai' ? (
               <AiNotice />
             ) : (
-              <span className="inline-flex w-fit items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-300">
-                규칙 기반 요약 · 생성형 AI 아님
-              </span>
+              <SourceChip kind="rule" label="규칙 기반 요약 · 생성형 AI 아님" />
             )}
             {result.notice ? <p className="text-xs text-muted-foreground">{result.notice}</p> : null}
             <p className="text-sm leading-relaxed">{result.briefing.summary}</p>

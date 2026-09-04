@@ -5,6 +5,7 @@ import { DeadlineCountdown } from '@/components/deadline-countdown';
 import { DraftEditor } from '@/components/draft-editor';
 import { PageHeader } from '@/components/page-header';
 import { RevertButton } from '@/components/revert-button';
+import { SourceChip } from '@/components/source-chip';
 import { WeightEditor } from '@/components/weight-editor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
@@ -148,14 +149,14 @@ export default async function PortfolioPage() {
             <p className="text-3xl font-bold tabular-nums">{won(lumpFinal)}</p>
             <p className="text-sm text-muted-foreground">
               원금 {won(SEED_AMOUNT)} ·{' '}
-              <span className={lumpFinal >= SEED_AMOUNT ? 'text-emerald-400' : 'text-red-400'}>
+              <span className={lumpFinal >= SEED_AMOUNT ? 'text-up' : 'text-down'}>
                 누적 {pct(lumpFinal / SEED_AMOUNT - 1, 2)}
               </span>
             </p>
             {week ? (
               <p className="text-sm">
                 이번 주 내 편성 기준{' '}
-                <span className={week.weightedPct >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                <span className={week.weightedPct >= 0 ? 'text-up' : 'text-down'}>
                   {pct(week.weightedPct)}
                 </span>
               </p>
@@ -170,7 +171,7 @@ export default async function PortfolioPage() {
         ) : (
           <div className="flex flex-col gap-1">
             <p
-              className={`text-3xl font-bold tabular-nums ${lumpFinal >= SEED_AMOUNT ? 'text-emerald-400' : 'text-red-400'}`}
+              className={`text-3xl font-bold tabular-nums ${lumpFinal >= SEED_AMOUNT ? 'text-up' : 'text-down'}`}
             >
               {pct(lumpFinal / SEED_AMOUNT - 1, 2)}
             </p>
@@ -204,7 +205,7 @@ export default async function PortfolioPage() {
             <span
               className={cn(
                 'w-16 text-right font-mono text-xs tabular-nums',
-                g.gap === 0 ? 'text-muted-foreground' : g.gap > 0 ? 'text-emerald-400' : 'text-red-400',
+                g.gap === 0 ? 'text-muted-foreground' : g.gap > 0 ? 'text-up' : 'text-down',
               )}
             >
               {g.gap > 0 ? '+' : ''}
@@ -261,9 +262,7 @@ export default async function PortfolioPage() {
           <CardTitle className="text-base">초안과 확정</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
-          <span className="inline-flex w-fit items-center rounded-full border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-400">
-            규칙 기반 · 생성형 AI 아님
-          </span>
+          <SourceChip kind="rule" label="규칙 기반 비교 · 생성형 AI 아님" />
           <p className="text-sm leading-relaxed">{compareDraft(draft.weights, targetWeights).sentence}</p>
           {draft.note ? (
             <p className="text-xs leading-relaxed text-muted-foreground">평일에 적은 한 줄 — “{draft.note}”</p>
@@ -322,7 +321,7 @@ function KeepNotice() {
   return (
     <div className="flex flex-col gap-1 rounded-md border border-border bg-muted/40 px-3 py-2">
       <p className="text-sm font-medium">마감: 매주 일요일 21:00 (KST)</p>
-      <p className="text-sm font-medium text-emerald-300">
+      <p className="text-sm font-medium text-up">
         조정하지 않으면 기존 편성이 그대로 유지됩니다.
       </p>
     </div>

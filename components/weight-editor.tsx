@@ -8,6 +8,8 @@
 //   2포인트 이상 놓인 전선에서만 열린다 — 1포인트는 쪼갤 수 없다.
 import { useState, useTransition } from 'react';
 import { saveAllocation } from '@/app/actions/allocation';
+import { PointTray } from '@/components/point-tray';
+import { SourceChip } from '@/components/source-chip';
 import { Button } from '@/components/ui/button';
 import { POINT_UNIT, RESERVE, THEMES, TOTAL_POINTS, type ThemeCode, type Weights } from '@/lib/constants';
 import {
@@ -85,10 +87,15 @@ export function WeightEditor({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">
-        포인트 <span className="font-mono tabular-nums">{TOTAL_POINTS}</span>개를 여섯 전선에
-        나눠 놓습니다. 1포인트 = {POINT_UNIT}%.
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          포인트 <span className="font-mono tabular-nums">{TOTAL_POINTS}</span>개를 여섯 전선에
+          나눠 놓습니다. 1포인트 = {POINT_UNIT}%.
+        </p>
+        <SourceChip kind="human" className="shrink-0" />
+      </div>
+
+      <PointTray placed={TOTAL_POINTS - reserve} />
 
       {THEMES.map((t) => {
         const pt = pointsOf(weights, t.code);
@@ -200,8 +207,8 @@ export function WeightEditor({
 
       {/* 명령하달 초안 — «자동 적용 금지». 불러오는 것 자체가 명령이 되면 안 된다 (잠금 문서 §1) */}
       {draft ? (
-        <div className="flex flex-col gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2.5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-400/80">
+        <div className="flex flex-col gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
             평일에 남긴 초안
           </p>
           <div className="flex flex-col gap-1">
@@ -217,7 +224,7 @@ export function WeightEditor({
                   <span
                     className={cn(
                       'w-10 text-right font-mono tabular-nums',
-                      now === d ? 'text-muted-foreground' : 'text-amber-300',
+                      now === d ? 'text-muted-foreground' : 'text-primary/90',
                     )}
                   >
                     {now === d ? '같음' : `${now > d ? '+' : ''}${now - d}p`}
@@ -227,7 +234,7 @@ export function WeightEditor({
             })}
           </div>
           {draft.note ? (
-            <p className="border-t border-amber-500/20 pt-2 text-xs leading-relaxed text-amber-200/80">
+            <p className="border-t border-primary/20 pt-2 text-xs leading-relaxed text-primary/70">
               “{draft.note}”
             </p>
           ) : null}
@@ -273,7 +280,7 @@ export function WeightEditor({
         <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">{disabledReason}</p>
       ) : null}
       {result.error ? <p className="text-sm text-destructive">{result.error}</p> : null}
-      {result.ok ? <p className="text-sm text-emerald-400">{result.ok}</p> : null}
+      {result.ok ? <p className="text-sm text-up">{result.ok}</p> : null}
 
       <Button
         type="button"

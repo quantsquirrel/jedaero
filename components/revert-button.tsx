@@ -23,7 +23,7 @@ export function RevertButton({ target, disabled }: { target: Weights; disabled: 
         {pending ? '확정 중…' : '목표대로 되돌리기'}
       </Button>
       {msg.error ? <p className="text-xs text-destructive">{msg.error}</p> : null}
-      {msg.ok ? <p className="text-xs text-emerald-400">{msg.ok}</p> : null}
+      {msg.ok ? <p className="text-xs text-up">{msg.ok}</p> : null}
     </div>
   );
 }
