@@ -151,7 +151,7 @@ export function DraftEditor({
           onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX))}
           rows={2}
           placeholder="비워 두어도 저장됩니다."
-          className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-sm outline-none placeholder:text-zinc-600 focus-visible:border-amber-400/50"
+          className="w-full resize-none rounded-lg border border-input bg-input/25 px-3.5 py-2.5 text-base outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
         />
         <span className="self-end font-mono text-[11px] tabular-nums text-zinc-600">
           {note.length}/{NOTE_MAX}

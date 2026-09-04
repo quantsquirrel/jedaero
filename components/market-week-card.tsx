@@ -96,7 +96,7 @@ export function MarketWeekCard({
       </ul>
 
       <div className="flex flex-col gap-2">
-        <Button type="button" variant="outline" disabled={pending} onClick={run} className="h-10">
+        <Button type="button" variant="outline" disabled={pending} onClick={run}>
           {pending ? '생성 중…' : variant === 'full' ? 'AI 주간 브리핑 받기' : '오늘의 지형 요약'}
         </Button>
 
