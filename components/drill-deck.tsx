@@ -78,7 +78,7 @@ export function DrillDeck({ items, hasAllocation }: { items: DrillDeckItem[]; ha
   }, [current]);
 
   return (
-    <section id="drill" className="scroll-mt-20">
+    <section id="drill" className="scroll-mt-40">
       <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60">
         <div className="flex flex-col gap-3 px-5 pt-5">
           <div className="flex items-start justify-between gap-3">

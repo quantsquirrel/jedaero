@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { JobLinks } from '@/components/job-links';
 import { MarketWeekCard } from '@/components/market-week-card';
+import { PageHeader } from '@/components/page-header';
 import { ReviewForm } from '@/components/review-form';
 import { SEED_AMOUNT, THEMES } from '@/lib/constants';
 import { currentDayType, currentRebalanceOpen } from '@/lib/day-context';
@@ -16,9 +18,9 @@ import { collectReviewFacts } from '@/lib/review-context';
 import { getSessionUser } from '@/lib/session';
 import { cn } from '@/lib/utils';
 
-// S3 홈 — 최상단은 "다음 편성까지". 전역 D-Day는 이 앱의 할 일이 아니므로 설정으로 옮긴다.
+// S3 홈 — 브리핑룸. 「지금 어디에 있나 / 오늘 무엇을 하나」만 둔다.
+// 하단 네비와 같은 화면을 다시 깔지 않는다. 그룹만 네비 밖이라 여기서 연다.
 // ★ 지표 교체 (DESIGN-DECISIONS §5): 평일에는 누적(느린 숫자)만, 주말에 평가액·이번 주 변동·제대로 지수.
-//   숫자를 감추는 것이 아니라 «기간에 맞는 지표»를 보여주는 것이다. 편성 조정 잠금과는 별개다.
 export default async function HomePage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
@@ -47,19 +49,52 @@ export default async function HomePage() {
     ? `이번 주 ${reviewFacts.turnoverPp.toFixed(0)}%p 조정`
     : `${reviewFacts.weeksUnchanged}주 유지`;
 
+  const jobs = open
+    ? [
+        { href: '/portfolio', label: '편성 조정', hint: '포인트 20개 · 이번 주 한 번', primary: true },
+        { href: '/league', label: '제대로 지수', hint: '세 축으로 함께 보기' },
+        { href: '#ai-coach', label: '한 줄 회고', hint: '사실 + 질문 하나' },
+      ]
+    : [
+        { href: '#market', label: '오늘의 지형', hint: '전선 등락 · 내 손익 가중은 주말에' },
+        { href: '/portfolio', label: '명령하달 초안', hint: '실행되지 않는 메모. 안 적어도 됩니다' },
+        { href: '/learn#drill', label: '도상훈련', hint: '지금 편성을 과거 지형에 넣기' },
+      ];
+
   return (
     <main className="flex flex-col gap-4 px-5 py-8">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">{user.nickname}님</p>
-          <h1 className="mt-0.5 text-3xl font-bold tracking-tight">
-            {open ? '지금 편성할 수 있습니다' : `다음 편성까지 D-${dday}`}
-          </h1>
-        </div>
-        <Badge variant="outline" className="shrink-0">
-          {weekend ? '주말·휴일' : '평일'}
-        </Badge>
-      </div>
+      <PageHeader
+        kicker={`${user.nickname}님`}
+        title={open ? '지금 편성할 수 있습니다' : `다음 편성까지 D-${dday}`}
+        badge={
+          <Badge variant="outline" className="shrink-0">
+            {weekend ? '주말·휴일' : '평일'}
+          </Badge>
+        }
+      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">오늘 할 수 있는 일</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <JobLinks
+            items={jobs}
+            footnote={
+              open ? (
+                <>
+                  마감은 일요일 21:00. <b className="text-foreground">조정하지 않으면 기존 편성이 그대로 유지됩니다.</b>
+                </>
+              ) : (
+                <>
+                  전선이 어떻게 움직였는지 읽고, 편성 현황을 볼 수 있습니다.{' '}
+                  <b className="text-foreground">편성을 바꾸는 창은 주말에 한 번</b> 열립니다.
+                </>
+              )
+            }
+          />
+        </CardContent>
+      </Card>
 
       {/* 내 편성 — 평일은 누적만, 주말은 평가액 + 이번 주 변동 */}
       <Card>
@@ -122,25 +157,6 @@ export default async function HomePage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">오늘 할 수 있는 일</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm leading-relaxed text-muted-foreground">
-          {open ? (
-            <p>
-              <b className="text-foreground">편성 조정 · 이번 주 변동 · 제대로 지수</b>가 열려
-              있습니다. 마감은 일요일 21:00. 조정하지 않으면 기존 편성이 그대로 유지됩니다.
-            </p>
-          ) : (
-            <p>
-              전선이 어떻게 움직였는지 읽고, 편성 현황을 볼 수 있습니다.{' '}
-              <b className="text-foreground">편성을 바꾸는 창은 주말에 한 번</b> 열립니다.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
       <Card id="market" className="scroll-mt-40">
         <CardHeader>
           <CardTitle className="text-base">오늘의 지형</CardTitle>
@@ -180,19 +196,21 @@ export default async function HomePage() {
               allocation: allocationLabel,
               duration: durationLabel,
               weeklyMove: week ? pct(week.weightedPct) : '집계 전',
-              defaultReview: user.isDemo ? '이번 주 변동을 보며 편성을 바꾸고 싶은 마음이 들었다' : undefined,
+              defaultReview: user.isDemo
+                ? '이번 주 변동을 보며 편성을 바꾸고 싶은 마음이 들었다'
+                : undefined,
             }}
           />
         </CardContent>
       </Card>
 
-      {/* 제대로 지수 — 주말에만. 짧은 구간의 줄 세우기는 대개 운이다 */}
+      {/* 제대로 지수 — 주말에만 숫자. 평일은 잠긴 이유를 한 덩어리로. */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between text-base">
             <span>제대로 지수</span>
             <Link href="/league" className="text-xs font-normal text-muted-foreground underline">
-              자세히 →
+              {weekend ? '자세히 →' : '지수 화면 →'}
             </Link>
           </CardTitle>
         </CardHeader>
@@ -237,48 +255,17 @@ export default async function HomePage() {
       </Card>
 
       <Link
-        href="/learn#drill"
-        className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3.5 transition-colors hover:border-zinc-600"
+        href="/groups"
+        className="flex items-center justify-between rounded-xl border border-border px-4 py-3.5 transition-colors hover:border-muted-foreground/40"
       >
         <span>
-          <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-400/80">
-            도상훈련
+          <span className="block font-semibold">그룹</span>
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            하단 메뉴 밖 · 초대코드로 「우리 그룹」 비교
           </span>
-          <span className="mt-0.5 block font-semibold">지금 편성을 과거 지형에 넣어보기</span>
         </span>
-        <span className="text-sm text-muted-foreground">학습 →</span>
+        <span className="text-sm text-muted-foreground">→</span>
       </Link>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Link
-          href="/portfolio"
-          className="flex flex-col gap-1 rounded-xl border border-border p-4 transition-colors hover:border-muted-foreground/40"
-        >
-          <span className="font-semibold">포트폴리오</span>
-          <span className="text-xs text-muted-foreground">6전선 편성</span>
-        </Link>
-        <Link
-          href="/league"
-          className="flex flex-col gap-1 rounded-xl border border-border p-4 transition-colors hover:border-muted-foreground/40"
-        >
-          <span className="font-semibold">제대로 지수</span>
-          <span className="text-xs text-muted-foreground">함께 보기</span>
-        </Link>
-        <Link
-          href="/learn"
-          className="flex flex-col gap-1 rounded-xl border border-border p-4 transition-colors hover:border-muted-foreground/40"
-        >
-          <span className="font-semibold">학습</span>
-          <span className="text-xs text-muted-foreground">5단계 카드</span>
-        </Link>
-        <Link
-          href="/groups"
-          className="flex flex-col gap-1 rounded-xl border border-border p-4 transition-colors hover:border-muted-foreground/40"
-        >
-          <span className="font-semibold">그룹</span>
-          <span className="text-xs text-muted-foreground">초대코드</span>
-        </Link>
-      </div>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
         모의 시드 {won(SEED_AMOUNT)}은 전원 동일한 훈련용 기준 금액입니다. 결과를 가르는 것은

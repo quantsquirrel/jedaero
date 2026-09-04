@@ -9,8 +9,7 @@ export default function NotFound() {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400/80">404</p>
         <h1 className="text-2xl font-bold tracking-tight">이 주소에는 화면이 없습니다</h1>
         <p className="break-keep text-sm leading-relaxed text-zinc-400">
-          제대로는 홈 · 포트폴리오 · 지수 · 학습 · 그룹 다섯 화면으로 이루어져 있습니다. 데모로
-          들어가면 하단 메뉴에서 모두 열립니다.
+          제대로는 홈 · 포트폴리오 · 지수 · 학습이 하단 메뉴입니다. 그룹은 홈과 지수에서 엽니다.
         </p>
       </div>
       <div className="flex flex-col gap-3">

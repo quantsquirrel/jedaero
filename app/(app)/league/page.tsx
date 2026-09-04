@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { asc, eq } from 'drizzle-orm';
+import { JobLinks } from '@/components/job-links';
+import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
 import { allocations } from '@/db/schema';
@@ -17,8 +19,6 @@ import { getSessionUser } from '@/lib/session';
 import { cn } from '@/lib/utils';
 
 // S7 리그 — 「제대로 지수」로 겨룬다. 주간 시즌제, 누적 순위 없음 (C7)
-// ★ 등수 숫자를 표시하지 않는다. 목록 정렬도 가입순이다 — 정렬이 곧 등수이기 때문이다.
-// ★ 비교 집단은 코호트가 아니라 사용자가 아는 집단이다: 우리 그룹 / 같은 군종 / 같은 계급
 const SCOPES: BoardScope[] = ['GROUP', 'BRANCH', 'RANK'];
 
 export default async function LeaguePage({
@@ -33,24 +33,36 @@ export default async function LeaguePage({
   if (dt !== 'WEEKEND') {
     return (
       <main className="flex flex-col gap-4 px-5 py-8">
-        <h1 className="text-2xl font-bold">제대로 지수</h1>
+        <PageHeader
+          title="제대로 지수"
+          description="비교는 주말에 한 번에 봅니다. 평일에는 무엇을 재는지와 그룹만 준비합니다."
+        />
         <Card className="border-dashed">
-          <CardContent className="flex flex-col gap-2 py-5">
+          <CardContent className="flex flex-col gap-3 py-5">
             <p className="text-lg font-semibold">비교는 주말에 한 번에 봅니다</p>
-            <p className="text-sm text-muted-foreground">
-              짧은 구간의 점수 줄 세우기는 대개 운입니다. 평일에는 전선 등락과 내 편성을 읽고,
-              주말에 제대로 지수를 엽니다.
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              짧은 구간의 점수 줄 세우기는 대개 운입니다. 세 축은 그대로 두고, 숫자는 주말에
+              엽니다.
             </p>
-            <div className="mt-1 flex flex-col gap-1 text-sm">
-              <Link href="/learn" className="underline">
-                학습 · 전선 등락 →
-              </Link>
-              <Link href="/groups" className="underline">
-                그룹 (초대코드) →
-              </Link>
-            </div>
+            <ul className="flex flex-col gap-2">
+              {INDEX_LABELS.map((row) => (
+                <li key={row.key} className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="font-medium">{row.label}</span>
+                  <span className="text-right text-xs text-muted-foreground">
+                    {row.max}점 · {row.hint}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
+        <JobLinks
+          items={[
+            { href: '/groups', label: '그룹', hint: '주말 「우리 그룹」 비교의 자리. 초대코드' },
+            { href: '/learn', label: '학습 · 전선 등락', hint: '평일에 열려 있는 읽을거리' },
+          ]}
+          footnote="성향 분석도 주말에 지수 화면에서 엽니다."
+        />
       </main>
     );
   }
@@ -63,7 +75,6 @@ export default async function LeaguePage({
   const mine = await computeAndStoreWeeklyScore(user);
   const list = await board(user, scope);
 
-  // 함께 표시할 위험 지표 — 전역(일시금) 곡선 기준
   const allocs = await db
     .select()
     .from(allocations)
@@ -79,7 +90,9 @@ export default async function LeaguePage({
       weights: a.weights as Record<string, number>,
       details: (a.details as Record<string, Record<string, number>> | null) ?? null,
     }));
-    const { values } = computeCurve(dates, series, history, { [allocs[0].effectiveFrom]: SEED_AMOUNT });
+    const { values } = computeCurve(dates, series, history, {
+      [allocs[0].effectiveFrom]: SEED_AMOUNT,
+    });
     vol = annualizedVol(values);
     mdd = maxDrawdown(values);
     fronts = effectiveFronts(allocs[allocs.length - 1].weights as Weights);
@@ -89,14 +102,14 @@ export default async function LeaguePage({
 
   return (
     <main className="flex flex-col gap-4 px-5 py-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">제대로 지수</h1>
-        <span className="text-xs text-muted-foreground">매주 월요일 리셋 · 누적 순위 없음</span>
-      </div>
+      <PageHeader
+        title="제대로 지수"
+        description="등수는 없습니다. 매주 월요일 리셋 · 누적 순위 없음."
+      />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">제대로 지수</CardTitle>
+          <CardTitle className="text-base">내 점수</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 text-sm">
           {mine.hasHistory ? (
@@ -175,7 +188,7 @@ export default async function LeaguePage({
           {list.entries.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {scope === 'GROUP'
-                ? '아직 속한 그룹이 없습니다. 초대코드로 들어가거나 만들 수 있습니다.'
+                ? '아직 속한 그룹이 없습니다. 아래 그룹에서 초대코드로 들어가거나 만들 수 있습니다.'
                 : '아직 집계할 인원이 없습니다.'}
             </p>
           ) : (
@@ -209,24 +222,21 @@ export default async function LeaguePage({
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Link
-          href="/groups"
-          className="flex flex-col gap-1 rounded-xl border border-border p-4 transition-colors hover:border-muted-foreground/40"
-        >
-          <span className="text-2xl">👥</span>
-          <span className="font-semibold">그룹</span>
-          <span className="text-xs text-muted-foreground">초대코드 · 최대 30명</span>
-        </Link>
-        <Link
-          href="/insights"
-          className="flex flex-col gap-1 rounded-xl border border-border p-4 transition-colors hover:border-muted-foreground/40"
-        >
-          <span className="text-2xl">🔍</span>
-          <span className="font-semibold">성향 분석</span>
-          <span className="text-xs text-muted-foreground">코호트 분포 비교 (옵트인)</span>
-        </Link>
-      </div>
+      <JobLinks
+        items={[
+          {
+            href: '/groups',
+            label: '그룹',
+            hint: '초대코드 · 최대 30명. 「우리 그룹」 탭의 자리',
+            primary: scope === 'GROUP' && list.entries.length === 0,
+          },
+          {
+            href: '/insights',
+            label: '성향 분석',
+            hint: '코호트 분포 비교 · 옵트인 후에만',
+          },
+        ]}
+      />
     </main>
   );
 }

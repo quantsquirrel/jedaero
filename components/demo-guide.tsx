@@ -5,7 +5,7 @@ const STEPS = [
   { label: 'AI 코치', href: '/home#ai-coach' },
   { label: '주말 편성', href: '/portfolio' },
   { label: '제대로 지수', href: '/league' },
-  { label: 'AI 회고', href: '/learn#review' },
+  { label: '도상훈련', href: '/learn#drill' },
 ] as const;
 
 export function DemoGuide() {
@@ -26,7 +26,7 @@ export function DemoGuide() {
         ))}
       </ol>
       <p className="mt-1.5 text-[10px] leading-relaxed text-muted-foreground">
-        2단계 뒤 위 토글을 주말로 바꾸면 3~5단계가 열립니다.
+        1~2는 평일, 3~4는 위 토글을 주말로. 5 도상훈련은 요일과 무관합니다.
       </p>
     </details>
   );
