@@ -2,6 +2,7 @@
 // 표시 5개 축: 전선 편성 / 집중도(최대비중·HHI) / 회전율(주당 변경폭) / 예비대 / 변동성
 // 출력은 사실 서술 + 질문으로 끝난다 (C8, C10). 조언·추천 금지.
 import { THEME_CODES, type ThemeCode, type Weights } from './constants';
+import { weeksBetween } from './week';
 
 /** 상호주의: 내 데이터를 주지 않으면 남의 데이터로 만든 분석도 보지 않는다 */
 export function needsOptIn(u: { analyticsOptIn: boolean }): boolean {
@@ -35,16 +36,33 @@ export function hhi(w: Weights): number {
   return THEME_CODES.reduce((s, c) => s + ((w[c] ?? 0) / 100) ** 2, 0);
 }
 
-/** 회전율: 연속 결정 간 변경폭(Σ|Δw|/2)의 평균. 결정이 1개 이하면 0 */
-export function turnover(history: Weights[]): number {
-  if (history.length < 2) return 0;
+/** 두 목표 편성 사이의 회전율. 예비대도 포트폴리오의 한 몫으로 포함한다. */
+export function turnoverBetween(a: Weights, b: Weights): number {
+  let delta = Math.abs(reserveWeight(b) - reserveWeight(a));
+  for (const c of THEME_CODES) delta += Math.abs((b[c] ?? 0) - (a[c] ?? 0));
+  return delta / 2;
+}
+
+export type WeeklyWeight = { weekOf: string; weights: Weights };
+
+/**
+ * 주당 평균 목표 변경폭. 행이 없는 주는 목표 유지(변경폭 0)로 분모에 포함한다.
+ * 첫 편성 주에는 관찰 구간이 없으므로 null이다. 0은 실제로 한 주 이상 유지했을 때만 반환한다.
+ */
+export function weeklyTurnover(history: WeeklyWeight[], currentWeek: string): number | null {
+  const rows = [...history]
+    .filter((row) => weeksBetween(row.weekOf, currentWeek) >= 0)
+    .sort((a, b) => a.weekOf.localeCompare(b.weekOf));
+  if (rows.length === 0) return null;
+
+  const elapsedWeeks = weeksBetween(rows[0].weekOf, currentWeek);
+  if (elapsedWeeks < 1) return null;
+
   let total = 0;
-  for (let i = 1; i < history.length; i++) {
-    let d = 0;
-    for (const c of THEME_CODES) d += Math.abs((history[i][c] ?? 0) - (history[i - 1][c] ?? 0));
-    total += d / 2;
+  for (let i = 1; i < rows.length; i++) {
+    total += turnoverBetween(rows[i - 1].weights, rows[i].weights);
   }
-  return total / (history.length - 1);
+  return total / elapsedWeeks;
 }
 
 /** 곡선 일간 수익률의 연환산 변동성 */

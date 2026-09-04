@@ -5,7 +5,8 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { allocations } from '../db/schema';
 import { THEME_CODES, type Weights } from './constants';
-import { weekOf } from './week';
+import { turnoverBetween } from './insights';
+import { weekOf, weeksBetween } from './week';
 
 export type ReviewFacts = {
   weekOf: string;
@@ -16,13 +17,6 @@ export type ReviewFacts = {
   /** 이번 주 편성에서 어느 전선에도 놓지 않은 몫 (%) */
   reservePct: number;
 };
-
-/** 두 배분 사이의 회전율(%p). Σ|Δ| ÷ 2 — 한쪽이 늘면 다른 쪽이 줄기 때문에 반으로 나눈다 */
-export function turnover(a: Weights, b: Weights): number {
-  let sum = 0;
-  for (const c of THEME_CODES) sum += Math.abs((b[c] ?? 0) - (a[c] ?? 0));
-  return sum / 2;
-}
 
 export async function collectReviewFacts(userId: string): Promise<ReviewFacts> {
   const now = new Date();
@@ -38,15 +32,13 @@ export async function collectReviewFacts(userId: string): Promise<ReviewFacts> {
   const n = allocRows.length;
   const turnoverPp =
     changedThisWeek && n >= 2
-      ? turnover(allocRows[n - 2].weights as Weights, allocRows[n - 1].weights as Weights)
+      ? turnoverBetween(allocRows[n - 2].weights as Weights, allocRows[n - 1].weights as Weights)
       : 0;
 
   // 마지막 조정 이후 몇 주가 지났나 — 아무것도 안 한 것도 유효한 선택이므로 사실로 보여준다
   let weeksUnchanged = 0;
   if (!changedThisWeek && n > 0) {
-    const [y, w] = thisWeek.split('-').map(Number);
-    const [ly, lw] = allocRows[n - 1].weekOf.split('-').map(Number);
-    weeksUnchanged = Math.max(0, (y - ly) * 52 + (w - lw));
+    weeksUnchanged = Math.max(0, weeksBetween(allocRows[n - 1].weekOf, thisWeek));
   }
 
   const latest = n > 0 ? (allocRows[n - 1].weights as Weights) : null;

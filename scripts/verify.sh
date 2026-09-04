@@ -308,6 +308,7 @@ run_check P1-19 scripts/checks/p1-19-weekday-briefing.ts
 run_check P1-20 scripts/checks/p1-20-krx-map.ts
 run_check P1-21 scripts/checks/p1-21-number-guard.ts
 run_check P1-22 scripts/checks/p1-22-drafts.ts
+run_check P1-23 scripts/checks/p1-23-weekly-turnover.ts
 
 # ---------- 요약 ----------
 echo '---'

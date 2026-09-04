@@ -9,7 +9,7 @@ import { db } from '../db';
 import { allocations, groupMembers, users, weeklyScores } from '../db/schema';
 import { SEED_AMOUNT, type Weights } from './constants';
 import { kstToday } from './day-type';
-import { annualizedVol, turnover } from './insights';
+import { annualizedVol, weeklyTurnover } from './insights';
 import { jedaeroIndex, type IndexParts } from './jedaero-index';
 import { computeCurve, type WeightHistoryItem } from './portfolio/engine';
 import { pricesUpTo } from './portfolio/prices';
@@ -20,7 +20,7 @@ export type WeeklyScore = IndexParts & { hasHistory: boolean };
 
 /** 배분 이력으로 제대로 지수의 세 축을 계산한다. DB 쓰기는 하지 않는다. */
 function scoreFromAllocations(
-  allocs: { effectiveFrom: string; weights: unknown; details: unknown }[],
+  allocs: { weekOf: string; effectiveFrom: string; weights: unknown; details: unknown }[],
   today: string,
 ): WeeklyScore {
   if (allocs.length === 0) {
@@ -41,12 +41,12 @@ function scoreFromAllocations(
   const annualReturn =
     first > 0 && tradingDays > 1 ? (last / first) ** (252 / tradingDays) - 1 : null;
 
-  const weightsHistory = allocs.map((a) => a.weights as Weights);
+  const weightsHistory = allocs.map((a) => ({ weekOf: a.weekOf, weights: a.weights as Weights }));
   const parts = jedaeroIndex({
     annualReturn,
     annualVol: annualizedVol(values),
-    weights: weightsHistory[weightsHistory.length - 1],
-    turnoverPct: turnover(weightsHistory),
+    weights: weightsHistory[weightsHistory.length - 1].weights,
+    turnoverPct: weeklyTurnover(weightsHistory, weekOf(new Date(`${today}T12:00:00+09:00`))),
   });
   return { ...parts, hasHistory: true };
 }

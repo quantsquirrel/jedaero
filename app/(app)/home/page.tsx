@@ -24,7 +24,7 @@ export default async function HomePage() {
   const dt = await currentDayType();
   const weekend = dt === 'WEEKEND';
   const open = await currentRebalanceOpen();
-  const dday = daysUntilRebalance();
+  const dday = daysUntilRebalance(new Date(), dt);
 
   const me = await portfolioSummary(user.id);
   const week = computeMarketWeek(kstToday(), me.weights);

@@ -28,8 +28,9 @@ export function dayType(now: Date): DayType {
  * 다음 편성 창까지 남은 일수. 오늘이 이미 편성 창(주말·공휴일)이면 0.
  * 홈 화면의 "다음 편성까지 D-n"에 쓴다 — 전역 D-Day를 대신한다.
  */
-export function daysUntilRebalance(now: Date = new Date()): number {
-  for (let d = 0; d < 8; d += 1) {
+export function daysUntilRebalance(now: Date = new Date(), currentType: DayType = dayType(now)): number {
+  if (currentType === 'WEEKEND') return 0;
+  for (let d = 1; d < 8; d += 1) {
     const probe = new Date(now.getTime() + d * 86_400_000);
     if (dayType(probe) === 'WEEKEND') return d;
   }
