@@ -119,11 +119,11 @@ export default function LandingPage() {
               </span>
             ))}
           </div>
-          <p className="text-sm font-semibold tracking-[0.2em] text-amber-400">제대로 · JEDAERO</p>
-          <h1 className="mt-5 text-balance break-keep text-4xl font-bold leading-[1.16] tracking-tight sm:text-6xl">
+          <h1 className="text-6xl font-bold tracking-tight sm:text-8xl">제대로</h1>
+          <p className="mx-auto mt-6 max-w-[24ch] text-balance break-keep text-2xl font-bold leading-snug tracking-tight text-zinc-100 sm:text-3xl">
             전역 전, 첫 <span className="text-amber-400">2천만원</span>의 판단을 연습합니다
-          </h1>
-          <p className="mx-auto mt-6 max-w-[38ch] text-pretty break-keep text-lg leading-relaxed text-zinc-400">
+          </p>
+          <p className="mx-auto mt-4 max-w-[38ch] text-pretty break-keep text-base leading-relaxed text-zinc-400 sm:text-lg">
             전역할 때 받게 될 목돈을, 복무 중에 미리 굴려보는 모의투자 훈련.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-x-3 gap-y-2 text-xs text-zinc-500">
