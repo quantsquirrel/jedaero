@@ -1,5 +1,5 @@
 'use server';
-// 6축 비중 조정 확정 (SPEC §3-5)
+// 전선 편성 확정 (SPEC §3-5)
 // 주말·공휴일만, 주 1회, 일요일 21:00 마감, 체결은 다음 거래일 종가.
 // 주 1회는 UNIQUE(user_id, week_of)가 DB에서 최종 강제한다.
 import { revalidatePath } from 'next/cache';
@@ -8,6 +8,7 @@ import { db } from '../../db';
 import { allocations } from '../../db/schema';
 import { currentRebalanceOpen } from '../../lib/day-context';
 import { kstToday } from '../../lib/day-type';
+import { isValidDetails, normalizeDetails, type Details } from '../../lib/portfolio/details';
 import { nextTradingDay } from '../../lib/portfolio/prices';
 import { isValidWeights } from '../../lib/portfolio/weights';
 import { getSessionUser } from '../../lib/session';
@@ -15,12 +16,19 @@ import { weekOf } from '../../lib/week';
 
 export type SaveAllocationResult = { ok: true; effectiveFrom: string } | { error: string };
 
-export async function saveAllocation(weights: Record<string, number>): Promise<SaveAllocationResult> {
+export async function saveAllocation(
+  weights: Record<string, number>,
+  details?: Details | null,
+): Promise<SaveAllocationResult> {
   const user = await getSessionUser();
   if (!user) return { error: '세션이 없습니다. 처음 화면에서 다시 시작해주세요.' };
 
   if (!(await currentRebalanceOpen())) return { error: '주말에만 조정할 수 있습니다.' };
-  if (!isValidWeights(weights)) return { error: '비중 합계가 100이 아닙니다.' };
+  if (!isValidWeights(weights)) return { error: '편성 값이 올바르지 않습니다. 포인트는 20개를 넘을 수 없습니다.' };
+  // 클라이언트 값을 믿지 않는다. 하위 합계가 상위 포인트와 정확히 같아야 한다
+  if (!isValidDetails(details ?? null, weights)) {
+    return { error: '하위 배치가 상위 포인트와 맞지 않습니다.' };
+  }
 
   const week = weekOf(new Date());
   const existing = await db
@@ -38,7 +46,7 @@ export async function saveAllocation(weights: Record<string, number>): Promise<S
       userId: user.id,
       weekOf: week,
       weights,
-      details: null,
+      details: details ? normalizeDetails(details) : null,
       templateId: null,
       decidedAt: new Date(),
       effectiveFrom,

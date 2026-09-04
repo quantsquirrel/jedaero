@@ -16,7 +16,7 @@ export function OptInGate() {
         데이터로 만든 분석도 보지 않습니다 — 강제도 아니고 공짜도 아닙니다.
       </p>
       <ul className="list-disc pl-5 text-xs leading-relaxed text-muted-foreground">
-        <li>집계에는 배분 비중만 쓰입니다. 지출 내역·닉네임은 포함되지 않습니다.</li>
+        <li>집계에는 배분 비중만 쓰입니다. 닉네임은 포함되지 않습니다.</li>
         <li>코호트 인원이 20명 미만이면 더 큰 집단으로 합쳐 표시합니다 (k-익명성).</li>
         <li>언제든 철회할 수 있습니다.</li>
       </ul>

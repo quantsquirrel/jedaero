@@ -6,8 +6,7 @@ import { cn } from '@/lib/utils';
 const ITEMS = [
   { href: '/home', label: '홈' },
   { href: '/portfolio', label: '포트폴리오' },
-  { href: '/expenses', label: '가계부' },
-  { href: '/league', label: '리그' },
+  { href: '/league', label: '지수' },
   { href: '/learn', label: '학습' },
 ];
 
@@ -22,7 +21,7 @@ export function BottomNav() {
             href={it.href}
             className={cn(
               'flex-1 py-3 text-center text-sm font-medium',
-              pathname.startsWith(it.href) ? 'text-foreground' : 'text-muted-foreground',
+              pathname.startsWith(it.href) ? 'text-amber-400' : 'text-muted-foreground',
             )}
           >
             {it.label}

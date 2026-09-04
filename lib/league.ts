@@ -1,137 +1,151 @@
-// 동기 코호트 리그 (SPEC §3-8) — 주간 시즌제, 누적 순위 없음 (C7)
-// 지표는 예산 준수율 + XP. 수익률은 순위 대신 코호트 분포 안의 백분위로만 보여주고,
-// 변동성·최대낙폭·집중도를 반드시 함께 표시한다.
-// ★ 랭킹은 전역(일시금) 곡선의 TWR만 사용한다. 다른 곡선은 여기에 절대 넣지 않는다.
-import { and, eq, gte, inArray, lt } from 'drizzle-orm';
+// 리그 — 「제대로 지수」로 겨룬다 (DESIGN-DECISIONS §7, HANDOFF ③)
+// ★ 랭킹은 전역(일시금) 곡선만 사용한다. 다른 곡선을 여기에 넣지 않는다.
+// ★ 등수 숫자(1위·2위)를 만들지 않는다. 짧은 시즌의 1등은 대개 몰빵이고,
+//   그 행동을 표창하는 순간 서비스가 가르치려는 것과 반대로 작동한다.
+// ★ 코호트(전역 예정 월 자동 배정)는 폐지했다. 비교 집단은 사용자가 아는 집단이어야 한다 —
+//   우리 그룹 / 같은 군종 / 같은 계급. 부대 정보는 어디에도 쓰지 않는다 (C4).
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
-import { allocations, budgetEnvelopes, budgetMonths, users, weeklyScores } from '../db/schema';
-import { budgetAccuracy } from './budget';
-import { SEED_AMOUNT } from './constants';
+import { allocations, groupMembers, users, weeklyScores } from '../db/schema';
+import { SEED_AMOUNT, type Weights } from './constants';
 import { kstToday } from './day-type';
+import { annualizedVol, weeklyTurnover } from './insights';
+import { jedaeroIndex, type IndexParts } from './jedaero-index';
 import { computeCurve, type WeightHistoryItem } from './portfolio/engine';
 import { pricesUpTo } from './portfolio/prices';
-import { twr } from './portfolio/twr';
-import { weekXp } from './quests';
-import { mondayOfWeeksAgo, weekOf } from './week';
+import { weekOf } from './week';
 import type { SessionUser } from './session';
 
-export type WeeklyScore = { twrPct: number | null; budgetAccuracy: number | null; xp: number };
+export type WeeklyScore = IndexParts & { hasHistory: boolean };
 
-/** 내 이번 주 점수를 요청 시점에 계산해 weekly_scores에 lazy upsert (크론 없음) */
-export async function computeAndStoreWeeklyScore(user: SessionUser): Promise<WeeklyScore> {
-  const week = weekOf(new Date());
-  const today = kstToday();
+/** 배분 이력으로 제대로 지수의 세 축을 계산한다. DB 쓰기는 하지 않는다. */
+function scoreFromAllocations(
+  allocs: { weekOf: string; effectiveFrom: string; weights: unknown; details: unknown }[],
+  today: string,
+): WeeklyScore {
+  if (allocs.length === 0) {
+    return { grown: 0, spread: 0, held: 0, total: 0, hasHistory: false };
+  }
+  const { dates, series } = pricesUpTo(today);
+  const history: WeightHistoryItem[] = allocs.map((a) => ({
+    effectiveFrom: a.effectiveFrom,
+    weights: a.weights as Record<string, number>,
+    details: (a.details as Record<string, Record<string, number>> | null) ?? null,
+  }));
+  const { values } = computeCurve(dates, series, history, { [allocs[0].effectiveFrom]: SEED_AMOUNT });
 
-  // 이번 주 TWR — 전역(일시금) 곡선. 주 시작 전 마지막 평가액 → 최신 평가액
-  let twrPct: number | null = null;
+  const first = values.find((v) => v > 0) ?? 0;
+  const last = values[values.length - 1] ?? 0;
+  const tradingDays = values.filter((v) => v > 0).length;
+  // 연환산 수익률 — 구간이 1년보다 짧으면 늘려 잡는다 (252 영업일 기준)
+  const annualReturn =
+    first > 0 && tradingDays > 1 ? (last / first) ** (252 / tradingDays) - 1 : null;
+
+  const weightsHistory = allocs.map((a) => ({ weekOf: a.weekOf, weights: a.weights as Weights }));
+  const parts = jedaeroIndex({
+    annualReturn,
+    annualVol: annualizedVol(values),
+    weights: weightsHistory[weightsHistory.length - 1].weights,
+    turnoverPct: weeklyTurnover(weightsHistory, weekOf(new Date(`${today}T12:00:00+09:00`))),
+  });
+  return { ...parts, hasHistory: true };
+}
+
+/** 내 이번 주 점수를 «읽기만» 한다. 홈처럼 보여주기만 하는 화면이 쓴다 — DB 쓰기 없음. */
+export async function computeWeeklyScore(user: SessionUser): Promise<WeeklyScore> {
   const allocs = await db
     .select()
     .from(allocations)
     .where(eq(allocations.userId, user.id))
     .orderBy(allocations.effectiveFrom);
-  if (allocs.length > 0) {
-    const { dates, series } = pricesUpTo(today);
-    const history: WeightHistoryItem[] = allocs.map((a) => ({
-      effectiveFrom: a.effectiveFrom,
-      weights: a.weights as Record<string, number>,
-      details: (a.details as Record<string, Record<string, number>> | null) ?? null,
-    }));
-    const { values } = computeCurve(dates, series, history, {
-      [allocs[0].effectiveFrom]: SEED_AMOUNT,
-    });
-    const monday = mondayOfWeeksAgo(new Date(), 0);
-    let startIdx = -1;
-    for (let i = 0; i < dates.length; i++) if (dates[i] < monday) startIdx = i;
-    const start = startIdx >= 0 ? values[startIdx] : 0;
-    const end = values[values.length - 1] ?? 0;
-    if (start > 0 && end > 0) twrPct = twr([{ start, flow: 0, end }]) * 100;
-  }
+  return scoreFromAllocations(allocs, kstToday());
+}
 
-  // 이번 달 예산 준수율
-  let accuracy: number | null = null;
-  const ym = today.slice(0, 7);
-  const [bm] = await db
-    .select()
-    .from(budgetMonths)
-    .where(and(eq(budgetMonths.userId, user.id), eq(budgetMonths.yearMonth, ym)))
-    .limit(1);
-  if (bm) {
-    const envs = await db
-      .select()
-      .from(budgetEnvelopes)
-      .where(eq(budgetEnvelopes.budgetMonthId, bm.id));
-    if (envs.length > 0) accuracy = budgetAccuracy(envs);
-  }
-
-  const xp = await weekXp(user.id, week);
+/** 내 이번 주 점수를 요청 시점에 계산해 weekly_scores에 lazy upsert (크론 없음) */
+export async function computeAndStoreWeeklyScore(user: SessionUser): Promise<WeeklyScore> {
+  const week = weekOf(new Date());
+  const score = await computeWeeklyScore(user);
 
   const existing = await db
     .select({ id: weeklyScores.id })
     .from(weeklyScores)
     .where(and(eq(weeklyScores.userId, user.id), eq(weeklyScores.weekOf, week)))
     .limit(1);
+  const row = { grown: score.grown, spread: score.spread, held: score.held, total: score.total };
   if (existing.length > 0) {
-    await db
-      .update(weeklyScores)
-      .set({ twrPct, budgetAccuracy: accuracy, xp })
-      .where(eq(weeklyScores.id, existing[0].id));
+    await db.update(weeklyScores).set(row).where(eq(weeklyScores.id, existing[0].id));
   } else {
-    await db.insert(weeklyScores).values({ userId: user.id, weekOf: week, twrPct, budgetAccuracy: accuracy, xp });
+    await db.insert(weeklyScores).values({ userId: user.id, weekOf: week, ...row });
   }
-  return { twrPct, budgetAccuracy: accuracy, xp };
+  return score;
 }
 
-/** 값 배열에서 내 값의 백분위 (0~100, 내 값보다 작은 비율) */
-export function percentile(values: number[], mine: number): number {
-  if (values.length === 0) return 50;
-  const below = values.filter((v) => v < mine).length;
-  return Math.round((below / values.length) * 100);
-}
+export type BoardScope = 'GROUP' | 'BRANCH' | 'RANK';
 
-export type CohortView = {
-  cohortMonth: string; // 전역 예정 연월
-  n: number;
-  accuracyPercentile: number | null;
-  xpPercentile: number;
-  twrPercentile: number | null;
+export const BOARD_LABEL: Record<BoardScope, string> = {
+  GROUP: '우리 그룹',
+  BRANCH: '같은 군종',
+  RANK: '같은 계급',
 };
 
-/** 동기 코호트(전역 예정 월 자동 배정) 안에서 내 위치. 수익률은 백분위만 — 순위·금액 없음 */
-export async function cohortView(user: SessionUser, mine: WeeklyScore): Promise<CohortView> {
+export type BoardEntry = {
+  nickname: string;
+  isMe: boolean;
+  total: number | null; // 이번 주 집계가 없으면 null
+};
+
+export type Board = { scope: BoardScope; n: number; entries: BoardEntry[] };
+
+/** 비교 집단 안의 구성원과 각자의 제대로 지수.
+ *  ★ 정렬은 가입순(=조회 순서)이다. 점수 내림차순으로 두면 등수를 지워도 등수가 남는다. */
+export async function board(user: SessionUser, scope: BoardScope): Promise<Board> {
   const week = weekOf(new Date());
-  const cohortMonth = user.dischargeAt.slice(0, 7);
-  const monthStart = `${cohortMonth}-01`;
-  const nextMonth = new Date(`${monthStart}T00:00:00Z`);
-  nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
-  const monthEnd = nextMonth.toISOString().slice(0, 10);
 
-  const peers = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(and(gte(users.dischargeAt, monthStart), lt(users.dischargeAt, monthEnd)));
-  const peerIds = peers.map((p) => p.id).filter((id) => id !== user.id);
-
-  let scores: { twrPct: number | null; budgetAccuracy: number | null; xp: number | null }[] = [];
-  if (peerIds.length > 0) {
-    scores = await db
-      .select({
-        twrPct: weeklyScores.twrPct,
-        budgetAccuracy: weeklyScores.budgetAccuracy,
-        xp: weeklyScores.xp,
-      })
-      .from(weeklyScores)
-      .where(and(inArray(weeklyScores.userId, peerIds), eq(weeklyScores.weekOf, week)));
+  let memberIds: string[];
+  if (scope === 'GROUP') {
+    const mine = await db
+      .select({ groupId: groupMembers.groupId })
+      .from(groupMembers)
+      .where(eq(groupMembers.userId, user.id));
+    if (mine.length === 0) return { scope, n: 0, entries: [] };
+    const rows = await db
+      .select({ userId: groupMembers.userId })
+      .from(groupMembers)
+      .where(
+        inArray(
+          groupMembers.groupId,
+          mine.map((m) => m.groupId),
+        ),
+      );
+    memberIds = [...new Set(rows.map((r) => r.userId))];
+  } else {
+    const col = scope === 'BRANCH' ? users.branch : users.rank;
+    const val = scope === 'BRANCH' ? user.branch : user.rank;
+    const rows = await db.select({ id: users.id }).from(users).where(eq(col, val));
+    memberIds = rows.map((r) => r.id);
   }
+  if (memberIds.length === 0) return { scope, n: 0, entries: [] };
 
-  const accs = scores.map((s) => s.budgetAccuracy).filter((v): v is number => v != null);
-  const twrs = scores.map((s) => s.twrPct).filter((v): v is number => v != null);
-  const xps = scores.map((s) => s.xp ?? 0);
+  // ★ 가입순을 «명시»한다. ORDER BY가 없으면 Postgres가 임의 순서를 주고,
+  //   그 순서가 우연히 점수와 나란히 보이는 순간 화면의 "가입순" 문구가 거짓말이 된다.
+  const people = await db
+    .select({ id: users.id, nickname: users.nickname })
+    .from(users)
+    .where(inArray(users.id, memberIds))
+    .orderBy(asc(users.createdAt), asc(users.id));
+  const scores = await db
+    .select({ userId: weeklyScores.userId, total: weeklyScores.total })
+    .from(weeklyScores)
+    .where(and(inArray(weeklyScores.userId, memberIds), eq(weeklyScores.weekOf, week)));
+  const byUser = new Map(scores.map((s) => [s.userId, s.total]));
 
   return {
-    cohortMonth,
-    n: scores.length + 1,
-    accuracyPercentile: mine.budgetAccuracy != null && accs.length > 0 ? percentile(accs, mine.budgetAccuracy) : null,
-    xpPercentile: percentile(xps, mine.xp),
-    twrPercentile: mine.twrPct != null && twrs.length > 0 ? percentile(twrs, mine.twrPct) : null,
+    scope,
+    n: people.length,
+    entries: people.map((p) => ({
+      nickname: p.nickname,
+      isMe: p.id === user.id,
+      total: byUser.get(p.id) ?? null,
+    })),
   };
 }

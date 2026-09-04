@@ -10,13 +10,15 @@ import {
   hhi,
   maxWeightOf,
   median,
+  reserveWeight,
   resolveCohort,
-  turnover,
+  weeklyTurnover,
+  type WeeklyWeight,
   type InsightStats,
 } from './insights';
 import { computeCurve, type WeightHistoryItem } from './portfolio/engine';
 import { pricesUpTo } from './portfolio/prices';
-import { weekOf } from './week';
+import { weekOf, weeksBetween } from './week';
 import type { SessionUser } from './session';
 
 function monthRange(ym: string): [string, string] {
@@ -52,8 +54,11 @@ export async function computeInsightStats(user: SessionUser): Promise<InsightDat
     .orderBy(allocations.effectiveFrom);
   if (myAllocs.length === 0) return null;
 
-  const myHistory = myAllocs.map((a) => a.weights as Weights);
-  const myWeights = myHistory[myHistory.length - 1];
+  const myHistory: WeeklyWeight[] = myAllocs.map((a) => ({
+    weekOf: a.weekOf,
+    weights: a.weights as Weights,
+  }));
+  const myWeights = myHistory[myHistory.length - 1].weights;
 
   // k-익명성: 코호트 n<20 → 상위 코호트로 합산 (월 → 분기 → 전체)
   const cohortMonth = user.dischargeAt.slice(0, 7);
@@ -72,14 +77,17 @@ export async function computeInsightStats(user: SessionUser): Promise<InsightDat
           .where(inArray(allocations.userId, cohortIds))
           .orderBy(allocations.effectiveFrom)
       : [];
-  const byUser = new Map<string, Weights[]>();
+  const byUser = new Map<string, WeeklyWeight[]>();
   for (const a of cohortAllocs) {
     const list = byUser.get(a.userId) ?? [];
-    list.push(a.weights as Weights);
+    list.push({ weekOf: a.weekOf, weights: a.weights as Weights });
     byUser.set(a.userId, list);
   }
-  const latestList = [...byUser.values()].map((l) => l[l.length - 1]);
-  const turnoverList = [...byUser.values()].map((l) => turnover(l));
+  const nowWeek = weekOf(new Date());
+  const latestList = [...byUser.values()].map((l) => l[l.length - 1].weights);
+  const turnoverList = [...byUser.values()]
+    .map((l) => weeklyTurnover(l, nowWeek))
+    .filter((value): value is number => value !== null);
 
   // 내 변동성: 전역(일시금) 곡선의 연환산 변동성
   const { dates, series } = pricesUpTo(kstToday());
@@ -94,11 +102,10 @@ export async function computeInsightStats(user: SessionUser): Promise<InsightDat
 
   // 최근 몇 주 동안 비중을 바꾸지 않았나 (최신 결정 주차와 현재 주차의 간격)
   const lastWeek = myAllocs[myAllocs.length - 1].weekOf;
-  const nowWeek = weekOf(new Date());
-  const weeksUnchanged = Math.max(0, weekIndex(nowWeek) - weekIndex(lastWeek));
+  const weeksUnchanged = Math.max(0, weeksBetween(lastWeek, nowWeek));
 
   const myMaxWeight = maxWeightOf(myWeights);
-  const myMaxCode = THEME_CODES.find((c) => (myWeights[c] ?? 0) === myMaxWeight) ?? 'KR_LARGE';
+  const myMaxCode = THEME_CODES.find((c) => (myWeights[c] ?? 0) === myMaxWeight) ?? THEME_CODES[0];
 
   const stats: InsightStats = {
     cohort,
@@ -106,19 +113,14 @@ export async function computeInsightStats(user: SessionUser): Promise<InsightDat
     myMaxTheme: { code: myMaxCode as ThemeCode, weight: myMaxWeight },
     cohortMaxWeightMedian: median(latestList.map(maxWeightOf)),
     myHhi: hhi(myWeights),
-    myTurnover: turnover(myHistory),
+    myTurnover: weeklyTurnover(myHistory, nowWeek) ?? 0,
     cohortTurnoverMedian: median(turnoverList),
-    myCash: myWeights.BOND_CASH ?? 0,
-    cohortCashMedian: median(latestList.map((w) => w.BOND_CASH ?? 0)),
+    // 현금 = 예비대(미배치분). 「현금성」 축을 없앴으므로 잔여로 계산한다 (DESIGN-DECISIONS §3)
+    myCash: reserveWeight(myWeights),
+    cohortCashMedian: median(latestList.map(reserveWeight)),
     myVol: annualizedVol(values),
     weeksUnchanged,
   };
   const themeName = THEMES.find((t) => t.code === myMaxCode)?.name ?? myMaxCode;
   return { stats, themeName };
-}
-
-/** 'YYYY-WW' → 대략적 절대 주차 인덱스 (주차 간격 계산용) */
-function weekIndex(weekStr: string): number {
-  const [y, w] = weekStr.split('-').map(Number);
-  return y * 53 + w;
 }

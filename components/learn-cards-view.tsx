@@ -44,7 +44,7 @@ export function LearnCardsView({ cards, initialOpen }: { cards: LearnCard[]; ini
                   </p>
                 ))}
                 {done.has(c.id) ? (
-                  <p className="text-sm text-emerald-400">읽음 완료 — 퀘스트에 반영됐습니다.</p>
+                  <p className="text-sm text-emerald-400">읽음으로 표시했습니다.</p>
                 ) : (
                   <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => finish(c.id)}>
                     끝까지 읽었어요

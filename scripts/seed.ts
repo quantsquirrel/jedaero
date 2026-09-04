@@ -1,11 +1,10 @@
 // DB 시드 적재 (멱등). 실행: npm run seed
-// tickers·quests·holidays·settings는 upsert, prices는 전체 교체.
+// tickers·holidays·settings는 upsert, prices는 전체 교체.
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { inArray, sql } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { TICKERS } from '../db/seed/tickers';
-import { QUESTS } from '../db/seed/quests';
 import { HOLIDAYS_KR } from '../db/seed/holidays';
 import { PRICE_DATES, PRICE_SERIES } from '../db/seed/prices';
 import { THEME_CODES, type Weights } from '../lib/constants';
@@ -33,18 +32,6 @@ async function main() {
       set: { name: sql`excluded.name`, theme: sql`excluded.theme`, kind: sql`excluded.kind` },
     });
 
-  await db
-    .insert(schema.quests)
-    .values(QUESTS.map((q) => ({ code: q.code, title: q.title, description: q.description, xp: q.xp, badge: q.badge })))
-    .onConflictDoUpdate({
-      target: schema.quests.code,
-      set: {
-        title: sql`excluded.title`,
-        description: sql`excluded.description`,
-        xp: sql`excluded.xp`,
-        badge: sql`excluded.badge`,
-      },
-    });
 
   await db
     .insert(schema.holidays)
@@ -71,7 +58,7 @@ async function main() {
   }
 
   console.log(
-    `시드 완료: tickers ${TICKERS.length}, quests ${QUESTS.length}, holidays ${HOLIDAYS_KR.length}, prices ${rows.length} (${PRICE_DATES[0]} ~ ${PRICE_DATES[PRICE_DATES.length - 1]})`,
+    `시드 완료: tickers ${TICKERS.length}, holidays ${HOLIDAYS_KR.length}, prices ${rows.length} (${PRICE_DATES[0]} ~ ${PRICE_DATES[PRICE_DATES.length - 1]})`,
   );
 
   await seedDummyUsers();
@@ -94,15 +81,19 @@ const DUMMY_COUNT = 200;
 const dummyId = (i: number) => `00000000-0000-4000-8000-${String(100000000000 + i)}`;
 const NICKS = ['해뜰날', '강철비', '초코우유', '별헤는밤', '든든적금', '월급지킴이', '산바람', '바다안개', '새벽별', '고요아침', '달빛산책', '구름과자'];
 
+// 포인트 20개를 무작위로 놓는다. 일부는 다 놓지 않아 예비대가 남는다 —
+// 전원이 100%를 채우면 「예비대」 코호트 중앙값이 항상 0이 되어 비교 화면이 무의미해진다.
 function randomWeights(rng: () => number): Weights {
   const w = Object.fromEntries(THEME_CODES.map((c) => [c, 0])) as Weights;
-  for (let b = 0; b < 20; b++) {
+  const place = rng() < 0.3 ? 16 + Math.floor(rng() * 4) : 20; // 30%는 예비대를 남긴다
+  for (let b = 0; b < place; b++) {
     const c = THEME_CODES[Math.floor(rng() * THEME_CODES.length)];
     w[c] += 5;
   }
   return w;
 }
 
+// 1포인트를 다른 전선으로 옮긴다. 합계는 그대로이므로 예비대도 그대로다.
 function shiftWeights(rng: () => number, base: Weights): Weights {
   const w = { ...base };
   const from = THEME_CODES.filter((c) => w[c] >= 5);
@@ -173,9 +164,12 @@ async function seedDummyUsers() {
       scoreRows.push({
         userId: id,
         weekOf: weekOfDateStr(mondayOfWeeksAgo(now, -off)),
-        twrPct: Math.round((rng() * 10 - 4) * 100) / 100,
-        budgetAccuracy: Math.round((0.5 + rng() * 0.48) * 1000) / 1000,
-        xp: Math.floor(rng() * 121),
+        ...(() => {
+          const grown = Math.round(rng() * 40 * 10) / 10;
+          const spread = Math.round((10 + rng() * 20) * 10) / 10;
+          const held = Math.round((12 + rng() * 18) * 10) / 10;
+          return { grown, spread, held, total: Math.round((grown + spread + held) * 10) / 10 };
+        })(),
       });
     }
   }

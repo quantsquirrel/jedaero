@@ -28,6 +28,26 @@ export function weekOfDateStr(dateStr: string): string {
   return `${year}-${String(week).padStart(2, '0')}`;
 }
 
+/** ISO 주차 두 개 사이의 주 간격. 연말의 52/53주 경계도 실제 달력으로 계산한다. */
+export function weeksBetween(fromWeek: string, toWeek: string): number {
+  const mondayMs = (weekStr: string): number | null => {
+    const match = /^(\d{4})-(\d{2})$/.exec(weekStr);
+    if (!match) return null;
+    const year = Number(match[1]);
+    const week = Number(match[2]);
+    if (week < 1 || week > 53) return null;
+
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const jan4Day = (jan4.getUTCDay() + 6) % 7;
+    return jan4.getTime() - jan4Day * 86_400_000 + (week - 1) * 7 * 86_400_000;
+  };
+
+  const from = mondayMs(fromWeek);
+  const to = mondayMs(toWeek);
+  if (from === null || to === null) return 0;
+  return Math.round((to - from) / (7 * 86_400_000));
+}
+
 /** KST 기준 k주 전 월요일 날짜 (YYYY-MM-DD). weeksAgo=0이면 이번 주 월요일 */
 export function mondayOfWeeksAgo(now: Date, weeksAgo: number): string {
   const k = new Date(now.getTime() + KST_OFFSET_MS);

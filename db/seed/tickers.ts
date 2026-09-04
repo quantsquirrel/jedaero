@@ -1,59 +1,83 @@
-// 종목 시드 30종 (docs/SEED.md §2)
-// ⚠️ 티커·종목명은 표시용 라벨이다. 가격은 전부 합성 더미 데이터이며 실제 시세와 무관하다.
+// 지수 시드 36종 (DESIGN-DECISIONS §11-A)
+// ★ 개별 종목명·운용사 상품명을 쓰지 않는다. 전부 「지수(바스켓)」 수준이다 (C10).
+//   같은 섹터에 여러 운용사 상품이 있는데 하나를 골라 표시하는 것 자체가 특정 상품 지목이 된다.
+//   화면 문구는 복수형으로 — "이런 지수를 따라가는 ETF가 여러 운용사에서 나와 있습니다."
+// ⚠️ 가격은 전부 합성 더미 데이터이며 실제 지수와 무관하다 (scripts/generate-prices.ts).
+// 구조: 전선마다 대표지수 1종 + 하위 테마 N종.
+//   하위를 건드리지 않으면 그 전선은 대표지수를 그대로 추종한다 (lib/portfolio/engine.ts).
 import type { ThemeCode } from '../../lib/constants';
 
 export type TickerSeed = {
   ticker: string;
   name: string;
   theme: ThemeCode;
-  kind: 'STOCK' | 'ETF';
+  kind: 'INDEX' | 'THEME'; // INDEX = 전선 대표지수, THEME = 하위 테마
 };
 
 export const TICKERS: TickerSeed[] = [
-  // KR_LARGE — 국내 대형주 (6)
-  { ticker: '005930', name: '삼성전자', theme: 'KR_LARGE', kind: 'STOCK' },
-  { ticker: '000660', name: 'SK하이닉스', theme: 'KR_LARGE', kind: 'STOCK' },
-  { ticker: '005380', name: '현대차', theme: 'KR_LARGE', kind: 'STOCK' },
-  { ticker: '207940', name: '삼성바이오로직스', theme: 'KR_LARGE', kind: 'STOCK' },
-  { ticker: '373220', name: 'LG에너지솔루션', theme: 'KR_LARGE', kind: 'STOCK' },
-  { ticker: '069500', name: 'KODEX 200', theme: 'KR_LARGE', kind: 'ETF' },
-  // KR_THEME — 국내 성장·테마 (6)
-  { ticker: '091160', name: 'KODEX 반도체', theme: 'KR_THEME', kind: 'ETF' },
-  { ticker: '305540', name: 'TIGER 2차전지테마', theme: 'KR_THEME', kind: 'ETF' },
-  { ticker: '244580', name: 'KODEX 바이오', theme: 'KR_THEME', kind: 'ETF' },
-  { ticker: '091180', name: 'KODEX 자동차', theme: 'KR_THEME', kind: 'ETF' },
-  { ticker: '139230', name: 'TIGER 200 중공업', theme: 'KR_THEME', kind: 'ETF' },
-  { ticker: '227540', name: 'TIGER 200 헬스케어', theme: 'KR_THEME', kind: 'ETF' },
-  // US_INDEX — 미국지수 (국내상장 ETF) (5)
-  { ticker: '360750', name: 'TIGER 미국S&P500', theme: 'US_INDEX', kind: 'ETF' },
-  { ticker: '379810', name: 'KODEX 미국나스닥100', theme: 'US_INDEX', kind: 'ETF' },
-  { ticker: '381180', name: 'TIGER 미국필라델피아반도체나스닥', theme: 'US_INDEX', kind: 'ETF' },
-  { ticker: '133690', name: 'TIGER 미국나스닥100', theme: 'US_INDEX', kind: 'ETF' },
-  { ticker: '143850', name: 'TIGER 미국S&P500 선물(H)', theme: 'US_INDEX', kind: 'ETF' },
-  // BOND_CASH — 채권·현금성 (5)
-  { ticker: '157450', name: 'TIGER 단기통안채', theme: 'BOND_CASH', kind: 'ETF' },
-  { ticker: '114260', name: 'KODEX 국고채3년', theme: 'BOND_CASH', kind: 'ETF' },
-  { ticker: '439870', name: 'KODEX CD금리액티브', theme: 'BOND_CASH', kind: 'ETF' },
-  { ticker: '152380', name: 'KODEX 국채선물10년', theme: 'BOND_CASH', kind: 'ETF' },
-  { ticker: '130730', name: 'KOSEF 단기자금', theme: 'BOND_CASH', kind: 'ETF' },
-  // GOLD_COMM — 금·원자재 (4)
-  { ticker: '132030', name: 'KODEX 골드선물(H)', theme: 'GOLD_COMM', kind: 'ETF' },
-  { ticker: '319640', name: 'TIGER 골드선물(H)', theme: 'GOLD_COMM', kind: 'ETF' },
-  { ticker: '130680', name: 'TIGER 원유선물Enhanced(H)', theme: 'GOLD_COMM', kind: 'ETF' },
-  { ticker: '261220', name: 'KODEX WTI원유선물(H)', theme: 'GOLD_COMM', kind: 'ETF' },
-  // DIVIDEND — 배당 (4)
-  { ticker: '211560', name: 'TIGER 배당성장', theme: 'DIVIDEND', kind: 'ETF' },
-  { ticker: '279530', name: 'KODEX 고배당', theme: 'DIVIDEND', kind: 'ETF' },
-  { ticker: '161510', name: 'ARIRANG 고배당주', theme: 'DIVIDEND', kind: 'ETF' },
-  { ticker: '104530', name: 'KOSEF 고배당', theme: 'DIVIDEND', kind: 'ETF' },
+  // 국내 주식 — 대표 + 하위 7
+  { ticker: 'KR-IDX', name: '국내 대표지수', theme: 'KR_STOCK', kind: 'INDEX' },
+  { ticker: 'KR-SEMI', name: '국내 반도체 지수', theme: 'KR_STOCK', kind: 'THEME' },
+  { ticker: 'KR-BATT', name: '국내 2차전지 지수', theme: 'KR_STOCK', kind: 'THEME' },
+  { ticker: 'KR-BIO', name: '국내 바이오·헬스케어 지수', theme: 'KR_STOCK', kind: 'THEME' },
+  { ticker: 'KR-FIN', name: '국내 금융 지수', theme: 'KR_STOCK', kind: 'THEME' },
+  { ticker: 'KR-INDU', name: '국내 산업재 지수 (조선·기계·방산)', theme: 'KR_STOCK', kind: 'THEME' },
+  { ticker: 'KR-AUTO', name: '국내 자동차 지수', theme: 'KR_STOCK', kind: 'THEME' },
+  { ticker: 'KR-NET', name: '국내 인터넷·게임 지수', theme: 'KR_STOCK', kind: 'THEME' },
+
+  // 미국 주식 — 대표 + 하위 8
+  { ticker: 'US-IDX', name: '미국 대표지수 (S&P500)', theme: 'US_STOCK', kind: 'INDEX' },
+  { ticker: 'US-TECH', name: '미국 빅테크·AI 지수', theme: 'US_STOCK', kind: 'THEME' },
+  { ticker: 'US-SEMI', name: '미국 반도체 지수', theme: 'US_STOCK', kind: 'THEME' },
+  { ticker: 'US-HLTH', name: '미국 헬스케어 지수', theme: 'US_STOCK', kind: 'THEME' },
+  { ticker: 'US-FIN', name: '미국 금융 지수', theme: 'US_STOCK', kind: 'THEME' },
+  { ticker: 'US-CONS', name: '미국 소비재 지수', theme: 'US_STOCK', kind: 'THEME' },
+  { ticker: 'US-ENGY', name: '미국 에너지 지수', theme: 'US_STOCK', kind: 'THEME' },
+  { ticker: 'US-DIV', name: '미국 배당 지수', theme: 'US_STOCK', kind: 'THEME' },
+
+  // 기타 해외 — 대표 + 하위 4
+  { ticker: 'IN-IDX', name: '신흥국 종합지수', theme: 'INTL_STOCK', kind: 'INDEX' },
+  { ticker: 'IN-JP', name: '일본 대표지수', theme: 'INTL_STOCK', kind: 'THEME' },
+  { ticker: 'IN-EU', name: '유럽 대표지수', theme: 'INTL_STOCK', kind: 'THEME' },
+  { ticker: 'IN-CN', name: '중국 대표지수', theme: 'INTL_STOCK', kind: 'THEME' },
+  { ticker: 'IN-IN', name: '인도 대표지수', theme: 'INTL_STOCK', kind: 'THEME' },
+
+  // 채권 — 대표 + 하위 4
+  { ticker: 'BD-IDX', name: '종합채권 지수', theme: 'BOND', kind: 'INDEX' },
+  { ticker: 'BD-KTB3', name: '국고채 3년 지수', theme: 'BOND', kind: 'THEME' },
+  { ticker: 'BD-KTB10', name: '국고채 10년 지수', theme: 'BOND', kind: 'THEME' },
+  { ticker: 'BD-CORP', name: '회사채 지수', theme: 'BOND', kind: 'THEME' },
+  { ticker: 'BD-UST', name: '미국채 지수', theme: 'BOND', kind: 'THEME' },
+
+  // 금·원자재 — 대표 + 하위 4
+  { ticker: 'CM-IDX', name: '원자재 종합지수', theme: 'GOLD_COMM', kind: 'INDEX' },
+  { ticker: 'CM-GOLD', name: '금 지수', theme: 'GOLD_COMM', kind: 'THEME' },
+  { ticker: 'CM-SILV', name: '은 지수', theme: 'GOLD_COMM', kind: 'THEME' },
+  { ticker: 'CM-OIL', name: '원유·에너지 지수', theme: 'GOLD_COMM', kind: 'THEME' },
+  { ticker: 'CM-AGRI', name: '농산물 지수', theme: 'GOLD_COMM', kind: 'THEME' },
+
+  // 리츠·인프라 — 대표 + 하위 3
+  { ticker: 'RE-IDX', name: '리츠 종합지수', theme: 'REIT_INFRA', kind: 'INDEX' },
+  { ticker: 'RE-KR', name: '국내 리츠 지수', theme: 'REIT_INFRA', kind: 'THEME' },
+  { ticker: 'RE-US', name: '미국 리츠 지수', theme: 'REIT_INFRA', kind: 'THEME' },
+  { ticker: 'RE-DC', name: '데이터센터·전력 지수', theme: 'REIT_INFRA', kind: 'THEME' },
 ];
 
-// 축별 대표 종목 (P0-11 검증, 화면 대표 표시용) = 각 축의 첫 종목
+// 전선 대표지수 = 하위 테마를 건드리지 않았을 때의 기본 편성 대상.
+// 전선 등락률(lib/market-week.ts)과 가격 시드 제약(scripts/generate-prices.ts)의 기준이기도 하다.
 export const REPRESENTATIVE: Record<ThemeCode, string> = {
-  KR_LARGE: '005930',
-  KR_THEME: '091160',
-  US_INDEX: '360750',
-  BOND_CASH: '157450',
-  GOLD_COMM: '132030',
-  DIVIDEND: '211560',
+  KR_STOCK: 'KR-IDX',
+  US_STOCK: 'US-IDX',
+  INTL_STOCK: 'IN-IDX',
+  BOND: 'BD-IDX',
+  GOLD_COMM: 'CM-IDX',
+  REIT_INFRA: 'RE-IDX',
 };
+
+/** 전선별 하위 테마 (대표지수 제외). 하위 조정 UI가 여는 목록 */
+export const SUB_THEMES: Record<ThemeCode, TickerSeed[]> = Object.fromEntries(
+  (Object.keys(REPRESENTATIVE) as ThemeCode[]).map((code) => [
+    code,
+    TICKERS.filter((t) => t.theme === code && t.kind === 'THEME'),
+  ]),
+) as Record<ThemeCode, TickerSeed[]>;

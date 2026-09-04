@@ -1,7 +1,7 @@
 // ★ 부대 관련 컬럼이 하나도 없다는 점이 이 스키마의 핵심이다. 절대 추가하지 말 것. (C4)
 // ★ holdings 테이블·cash_balance 컬럼 없음 — 보유수량은 (비중 이력 × 일별 종가 × 현금흐름)으로
-//   요청 시점에 계산한다. 현금은 BOND_CASH 축 비중으로 표현된다.
-// 논리 스키마 원본: SPEC.md §2 (테이블 15개 + 승인된 추가 1개 = 16개)
+//   요청 시점에 계산한다. 현금은 예비대(미배치 포인트)로 표현된다 — 축이 아니라 잔여다.
+// 논리 스키마 원본: SPEC.md §2. 테이블 11개 (ai_calls·drafts 포함). 가계부·퀘스트 테이블 없음.
 import {
   pgTable,
   uuid,
@@ -23,7 +23,7 @@ export const users = pgTable('users', {
   rank: text('rank').notNull(), // PRIVATE|PFC|CORPORAL|SERGEANT
   branch: text('branch').notNull(), // ARMY|NAVY|AIRFORCE|MARINE (복무기간 산정용)
   enlistedAt: date('enlisted_at').notNull(),
-  dischargeAt: date('discharge_at').notNull(), // 동기 코호트 키
+  dischargeAt: date('discharge_at').notNull(),
   homeDistance: text('home_distance').notNull(), // NEAR|MID|FAR|ISLAND (주소 원문 저장 금지)
   analyticsOptIn: boolean('analytics_opt_in').notNull().default(false), // AI-7 옵트인
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -38,9 +38,9 @@ export const allocations = pgTable(
       .notNull()
       .references(() => users.id),
     weekOf: text('week_of').notNull(), // YYYY-WW (ISO 주, KST)
-    weights: jsonb('weights').notNull(), // {"KR_LARGE":30,"US_INDEX":40,...} 합계 100
-    details: jsonb('details'), // 하위 비중(2축만). NULL이면 동일가중
-    templateId: text('template_id'), // 예시 포트폴리오에서 시작했으면 그 id
+    weights: jsonb('weights').notNull(), // {"KR_STOCK":20,"US_STOCK":40,...} 5의 배수, 합계 100 이하(나머지=예비대)
+    details: jsonb('details'), // 하위 테마 비중(주식 2전선만). NULL이면 그 전선의 대표지수 추종
+    templateId: text('template_id'), // 예시 작전에서 시작했으면 그 id (OPERATIONS)
     decidedAt: timestamp('decided_at', { withTimezone: true }).notNull(),
     effectiveFrom: date('effective_from').notNull(), // 체결 기준일 = 다음 거래일
   },
@@ -50,72 +50,29 @@ export const allocations = pgTable(
   ],
 );
 
-// 지출·예산
-export const budgetMonths = pgTable(
-  'budget_months',
+// 평일 명령하달 초안. allocations 가 아니다. 안 적은 주가 정상. 반쪽 UI는 넣지 않음.
+export const drafts = pgTable(
+  'drafts',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
-    yearMonth: text('year_month').notNull(), // YYYY-MM
-    baseSalary: integer('base_salary').notNull(),
-    lockedAt: timestamp('locked_at', { withTimezone: true }), // NULL 아니면 수정 불가
-  },
-  (t) => [unique('budget_months_user_id_year_month_unique').on(t.userId, t.yearMonth)],
-);
-
-export const budgetEnvelopes = pgTable('budget_envelopes', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  budgetMonthId: uuid('budget_month_id').notNull(),
-  category: text('category').notNull(),
-  allocated: integer('allocated').notNull(),
-  spent: integer('spent').notNull().default(0),
-});
-
-export const expenses = pgTable('expenses', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
-  occurredOn: date('occurred_on').notNull(),
-  amount: integer('amount').notNull(), // 원 단위 정수
-  memo: text('memo'),
-  tier: text('tier').notNull().default('UNCLASSIFIED'), // A|B|C|UNCLASSIFIED
-  category: text('category'),
-  aiSuggestedTier: text('ai_suggested_tier'),
-  aiConfidence: real('ai_confidence'),
-  confirmedByUser: boolean('confirmed_by_user').notNull().default(false), // false면 tier 미반영
-});
-
-export const exemptionClaims = pgTable('exemption_claims', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
-  yearQuarter: text('year_quarter').notNull(), // YYYY-Q. 분기 1회 제한 키
-  type: text('type').notNull(), // TRANSPORT|MEDICAL|FAMILY_EMERGENCY
-  amount: integer('amount').notNull(),
-  reason: text('reason'), // 자유서술. 검증하지 않음
-  capApplied: integer('cap_applied').notNull(),
-});
-
-// 위클리 퀘스트
-export const quests = pgTable('quests', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  code: text('code').unique().notNull(),
-  title: text('title').notNull(),
-  description: text('description').notNull(),
-  xp: integer('xp').notNull(),
-  badge: text('badge'),
-});
-
-export const questProgress = pgTable(
-  'quest_progress',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
-    questId: uuid('quest_id').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
     weekOf: text('week_of').notNull(),
-    progress: integer('progress').notNull().default(0),
-    completedAt: timestamp('completed_at', { withTimezone: true }),
+    weights: jsonb('weights').notNull(), // 의도 목표 비중. 현재 편성 대비가 아니라 목표 그 자체
+    note: text('note'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [unique('quest_progress_user_quest_week_unique').on(t.userId, t.questId, t.weekOf)],
+  (t) => [unique('drafts_user_id_week_of_unique').on(t.userId, t.weekOf)],
 );
+
+// 가계부(지출·봉투 예산·면제 청구)는 제거됐다 (DESIGN-DECISIONS §9 → 완전 제외).
+// budget_months / budget_envelopes / expenses / exemption_claims 테이블을 되살리지 말 것.
+// 투자 파트와의 접합이 약했고, 지출 분류가 서비스의 초점을 흐렸다.
+
+// 퀘스트·XP는 제거됐다 (DESIGN-DECISIONS §7).
+// 빈도를 늘리는 게임화는 이 서비스가 가르치려는 것(주 1회·오래 버티기)과 정면으로 어긋난다.
+// quests / quest_progress 테이블을 되살리지 말 것.
 
 // 그룹
 export const groups = pgTable('groups', {
@@ -132,21 +89,23 @@ export const groupMembers = pgTable('group_members', {
   userId: uuid('user_id').notNull(),
 });
 
-// 주간 집계 (랭킹용) — 요청 시점 lazy upsert. 크론 없음
+// 주간 집계 (제대로 지수) — 요청 시점 lazy upsert. 크론 없음
+// 세 축을 따로 저장한다. 총점만 두면 화면에서 "왜 이 점수인가"를 보여줄 수 없다.
 export const weeklyScores = pgTable('weekly_scores', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
   weekOf: text('week_of').notNull(),
-  twrPct: real('twr_pct'), // 전역(일시금) 곡선 시간가중수익률 (비교용)
-  budgetAccuracy: real('budget_accuracy'), // 예산 준수율 0~1 (비교용)
-  xp: integer('xp'),
+  grown: real('grown'), // 불린 만큼 (40점 만점)
+  spread: real('spread'), // 나눠 담은 만큼 (30점 만점)
+  held: real('held'), // 버틴 만큼 (30점 만점)
+  total: real('total'), // 제대로 지수 (100점 만점)
 });
 
 // 종목 마스터 + 일별 종가 (사전 시드. 더미 데이터이며 실제 시세와 무관)
 export const tickers = pgTable('tickers', {
   ticker: text('ticker').primaryKey(),
   name: text('name').notNull(),
-  theme: text('theme').notNull(), // KR_LARGE|KR_THEME|US_INDEX|BOND_CASH|GOLD_COMM|DIVIDEND
+  theme: text('theme').notNull(), // KR_STOCK|US_STOCK|INTL_STOCK|BOND|GOLD_COMM|REIT_INFRA
   kind: text('kind').notNull(), // STOCK|ETF
 });
 
@@ -177,7 +136,7 @@ export const settings = pgTable('settings', {
 export const aiCalls = pgTable('ai_calls', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
-  kind: text('kind').notNull(), // AI-1|AI-3|AI-4|AI-5|AI-7
+  kind: text('kind').notNull(), // AI-3|AI-4|AI-5|AI-7
   blocked: boolean('blocked').notNull().default(false), // 인젝션·rate limit 차단 여부
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });

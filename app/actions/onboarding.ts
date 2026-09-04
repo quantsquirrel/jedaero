@@ -1,12 +1,12 @@
 'use server';
-// 온보딩 (S2): 계급·군종·복무 기간·거리 → 시드 지급 → 예시 포트폴리오 선택
+// 온보딩 (S2): 계급·군종·복무 기간·거리 → 시드 지급 → 예시 작전 선택 (자유도 1단계)
 // 최초 배분은 "조정"이 아니라 "시작"이므로 요일 제한을 적용하지 않는다.
 // 단, week_of는 현재 주로 기록되어 주 1회 규칙에 그대로 편입된다.
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { db } from '../../db';
 import { allocations, users } from '../../db/schema';
-import { PORTFOLIO_TEMPLATES, SALARY_2026, TRANSPORT_CAP } from '../../lib/constants';
+import { OPERATIONS, SALARY_2026, TRANSPORT_CAP } from '../../lib/constants';
 import { kstToday } from '../../lib/day-type';
 import { nextTradingDay } from '../../lib/portfolio/prices';
 import { USER_COOKIE, userCookieOptions } from '../../lib/session';
@@ -35,8 +35,8 @@ export async function completeOnboarding(
   if (!(homeDistance in TRANSPORT_CAP)) return { error: '집까지 거리를 선택해주세요.' };
   if (!DATE_RE.test(enlistedAt) || !DATE_RE.test(dischargeAt)) return { error: '입대일과 전역 예정일을 입력해주세요.' };
   if (dischargeAt <= enlistedAt) return { error: '전역 예정일이 입대일보다 빨라요.' };
-  const template = PORTFOLIO_TEMPLATES.find((t) => t.id === templateId);
-  if (!template) return { error: '예시 포트폴리오를 선택해주세요.' };
+  const operation = OPERATIONS.find((o) => o.id === templateId);
+  if (!operation) return { error: '예시 작전을 선택해주세요.' };
 
   const today = kstToday();
   const effectiveFrom = nextTradingDay(today);
@@ -50,9 +50,9 @@ export async function completeOnboarding(
   await db.insert(allocations).values({
     userId: user.id,
     weekOf: weekOf(new Date()),
-    weights: template.weights,
+    weights: operation.weights,
     details: null,
-    templateId: template.id,
+    templateId: operation.id,
     decidedAt: new Date(),
     effectiveFrom,
   });
