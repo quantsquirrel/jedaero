@@ -17,7 +17,7 @@ export function JobLinks({ items, footnote }: { items: JobLinkItem[]; footnote?:
         const className = cn(
           'flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 transition-colors',
           it.primary
-            ? 'border-amber-400/40 bg-amber-400/5 hover:border-amber-400/70'
+            ? 'border-primary/40 bg-primary/5 hover:border-primary/70'
             : 'border-border hover:border-muted-foreground/40',
         );
         const body = (

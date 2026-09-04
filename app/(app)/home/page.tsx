@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { IndexGauge } from '@/components/index-gauge';
 import { JobLinks } from '@/components/job-links';
 import { MarketWeekCard } from '@/components/market-week-card';
 import { PageHeader } from '@/components/page-header';
@@ -10,7 +11,6 @@ import { SEED_AMOUNT, THEMES } from '@/lib/constants';
 import { currentDayType, currentRebalanceOpen } from '@/lib/day-context';
 import { daysUntilRebalance, kstToday } from '@/lib/day-type';
 import { pct, won } from '@/lib/format';
-import { INDEX_LABELS } from '@/lib/jedaero-index';
 import { computeWeeklyScore } from '@/lib/league';
 import { computeMarketWeek } from '@/lib/market-week';
 import { portfolioSummary } from '@/lib/portfolio/summary';
@@ -120,14 +120,14 @@ export default async function HomePage() {
               <p className="text-3xl font-bold tabular-nums">{won(me.value)}</p>
               <p className="text-sm text-muted-foreground">
                 원금 {won(SEED_AMOUNT)} ·{' '}
-                <span className={me.cumulativePct >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                <span className={me.cumulativePct >= 0 ? 'text-up' : 'text-down'}>
                   누적 {pct(me.cumulativePct, 2)}
                 </span>
               </p>
               {week ? (
                 <p className="text-sm">
                   이번 주 내 편성 기준{' '}
-                  <span className={week.weightedPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                  <span className={week.weightedPct >= 0 ? 'text-up' : 'text-down'}>
                     {pct(week.weightedPct)}
                   </span>
                 </p>
@@ -138,7 +138,7 @@ export default async function HomePage() {
               <p
                 className={cn(
                   'text-3xl font-bold tabular-nums',
-                  me.cumulativePct >= 0 ? 'text-emerald-400' : 'text-rose-400',
+                  me.cumulativePct >= 0 ? 'text-up' : 'text-down',
                 )}
               >
                 {pct(me.cumulativePct, 2)}
@@ -177,11 +177,11 @@ export default async function HomePage() {
         </CardContent>
       </Card>
 
-      <Card id="ai-coach" className="scroll-mt-40 border-amber-400/30">
+      <Card id="ai-coach" className="scroll-mt-40 border-primary/30">
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="text-base">AI 행동 회고 코치</CardTitle>
-            <Badge variant="outline" className="border-amber-400/40 text-amber-300">
+            <Badge variant="outline" className="border-primary/40 text-primary/90">
               판단 보조
             </Badge>
           </div>
@@ -229,23 +229,7 @@ export default async function HomePage() {
                 {score.total}
                 <span className="ml-1 text-base font-normal text-muted-foreground">/ 100</span>
               </p>
-              <div className="flex flex-col gap-2">
-                {INDEX_LABELS.map((row, i) => (
-                  <div key={row.key} className="flex items-center gap-2">
-                    <span className="w-24 shrink-0 text-xs">{row.label}</span>
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-primary"
-                        style={{ width: `${(parts[i] / row.max) * 100}%` }}
-                      />
-                    </div>
-                    <span className="w-16 text-right font-mono text-xs tabular-nums">
-                      {parts[i]}
-                      <span className="text-muted-foreground">/{row.max}</span>
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <IndexGauge parts={parts} />
               <p className="text-xs leading-relaxed text-muted-foreground">
                 세 축 중 하나만 밀어서는 만점이 나오지 않습니다. 등수는 매기지 않습니다.
               </p>

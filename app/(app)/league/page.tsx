@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { asc, eq } from 'drizzle-orm';
+import { IndexGauge } from '@/components/index-gauge';
 import { JobLinks } from '@/components/job-links';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -118,23 +119,7 @@ export default async function LeaguePage({
                 {mine.total}
                 <span className="ml-1 text-base font-normal text-muted-foreground">/ 100</span>
               </p>
-              <div className="flex flex-col gap-2">
-                {INDEX_LABELS.map((row, i) => (
-                  <div key={row.key} className="flex items-center gap-2">
-                    <span className="w-24 shrink-0 text-xs">{row.label}</span>
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-primary"
-                        style={{ width: `${(parts[i] / row.max) * 100}%` }}
-                      />
-                    </div>
-                    <span className="w-16 text-right font-mono text-xs tabular-nums">
-                      {parts[i]}
-                      <span className="text-muted-foreground">/{row.max}</span>
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <IndexGauge parts={parts} />
               <p className="text-xs leading-relaxed text-muted-foreground">
                 {INDEX_LABELS.map((r) => `${r.label} = ${r.hint}`).join(' · ')}. 세 축 중 하나만
                 밀어서는 만점이 나오지 않습니다. 짧은 시즌의 수익률 1등은 대개 몰빵이고, 이 서비스는

@@ -4,6 +4,7 @@
 import { useActionState } from 'react';
 import { submitReview, type ReviewState } from '@/app/actions/learn';
 import { AiNotice } from '@/components/ai-notice';
+import { SourceChip } from '@/components/source-chip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,7 +55,7 @@ export function ReviewForm({ coachContext }: { coachContext?: CoachContext } = {
       </div>
       {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
       {state.ok ? (
-        <p className="text-sm text-emerald-400">분석했습니다. 입력 내용은 저장되지 않습니다.</p>
+        <p className="text-sm text-up">분석했습니다. 입력 내용은 저장되지 않습니다.</p>
       ) : null}
 
       {state.reflection ? (
@@ -62,9 +63,7 @@ export function ReviewForm({ coachContext }: { coachContext?: CoachContext } = {
           {state.source === 'ai' ? (
             <AiNotice />
           ) : (
-            <span className="inline-flex w-fit items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-300">
-              규칙 기반 되묻기 · 생성형 AI 아님
-            </span>
+            <SourceChip kind="rule" label="규칙 기반 되묻기 · 생성형 AI 아님" />
           )}
           {state.notice ? <p className="text-xs text-muted-foreground">{state.notice}</p> : null}
           <div>

@@ -28,12 +28,12 @@ export function FrontTerrain({ code, className }: { code: ThemeCode; className?:
   return (
     <svg
       viewBox="0 0 48 24"
-      className={cn('h-6 w-12 shrink-0 text-zinc-600', className)}
+      className={cn('h-6 w-12 shrink-0 text-faint/70', className)}
       aria-hidden
     >
       <path d={d} fill="currentColor" fillOpacity="0.35" />
       <path d={d} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
-      <circle cx={dot.cx} cy={dot.cy} r="1.8" className="fill-amber-400" />
+      <circle cx={dot.cx} cy={dot.cy} r="1.8" className="fill-primary" />
     </svg>
   );
 }

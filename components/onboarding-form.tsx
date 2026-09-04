@@ -146,10 +146,10 @@ export function OnboardingForm({ stats }: { stats: OperationStat[] }) {
                 {/* 장점과 단점을 같은 개수로 나란히. 한쪽만 길면 그게 곧 신호가 된다 */}
                 <div className="flex flex-col gap-0.5 text-[11px] leading-relaxed">
                   {op.pros.map((line) => (
-                    <span key={line} className="text-emerald-400">+ {line}</span>
+                    <span key={line} className="text-up">+ {line}</span>
                   ))}
                   {op.cons.map((line) => (
-                    <span key={line} className="text-amber-400">− {line}</span>
+                    <span key={line} className="text-primary">− {line}</span>
                   ))}
                 </div>
                 <p className="text-[11px] text-muted-foreground">

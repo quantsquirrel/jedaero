@@ -28,7 +28,7 @@ export function DeadlineCountdown({ deadlineIso }: { deadlineIso: string }) {
       <p className="text-sm font-medium">
         {remainText(deadlineMs, now)} <span className="text-muted-foreground">(일요일 21:00 KST)</span>
       </p>
-      <p className="text-sm font-medium text-emerald-300">
+      <p className="text-sm font-medium text-up">
         조정하지 않으면 기존 편성이 그대로 유지됩니다.
       </p>
     </div>
