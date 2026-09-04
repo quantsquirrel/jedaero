@@ -277,7 +277,7 @@ export function WeightEditor({
 
       <Button
         type="button"
-        className={cn('h-11', !dirty && 'opacity-60')}
+        className={cn('h-12 text-base', !dirty && 'opacity-60')}
         disabled={locked || !dirty}
         onClick={submit}
       >

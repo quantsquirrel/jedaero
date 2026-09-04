@@ -41,7 +41,7 @@ export function OnboardingForm({ stats }: { stats: OperationStat[] }) {
   const [templateId, setTemplateId] = useState<string>('ALLIANCE');
 
   const selectClass =
-    'h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30';
+    'h-12 w-full rounded-lg border border-input bg-background px-3.5 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/25';
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
