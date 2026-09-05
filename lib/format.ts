@@ -1,7 +1,12 @@
 // 표시 포맷. 금액은 원 단위 정수 + 천 단위 콤마
 export const won = (n: number) => `${Math.round(n).toLocaleString('ko-KR')}원`;
 
-export const pct = (x: number, digits = 1) => `${x >= 0 ? '+' : ''}${(x * 100).toFixed(digits)}%`;
+// ★ 부호는 «표기»가 아니라 접근성 장치다. --up/--down 은 2형 색각에서 ΔE 7.3으로 분리 하한을
+//   겨우 넘기므로, 색을 못 읽는 사람에게는 부호가 유일한 단서다 (DESIGN-RULES §1).
+//   toFixed() 가 내보내는 ASCII 하이픈(U+002D)은 모노 폰트에서 '+' 보다 눈에 띄게 가늘다.
+//   빼기 기호(U+2212)로 바꿔 두 부호의 시각적 무게를 맞춘다.
+export const pct = (x: number, digits = 1) =>
+  `${x >= 0 ? '+' : '−'}${Math.abs(x * 100).toFixed(digits)}%`;
 
 export const TIER_LABEL: Record<string, string> = {
   A: 'A · 구조적',

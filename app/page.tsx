@@ -189,7 +189,7 @@ export default function LandingPage() {
             </Link>
           </div>
           <p className="mt-4 text-xs leading-relaxed text-faint/70">
-            가입 없이 시장 읽기 → AI 코치 → 주말 편성 → 제대로 지수 → AI 회고
+            가입 없이 시장 읽기 → AI 코치 → 주말 편성 → 제대로 지수 → 도상훈련 → 나의 투자 원칙
           </p>
         </Reveal>
 
@@ -304,7 +304,7 @@ export default function LandingPage() {
                       {Array.from({ length: 20 }, (_, i) => (
                         <span
                           key={i}
-                          className={`h-3 rounded-sm ${i < f.pt ? 'bg-primary/75' : 'bg-secondary'}`}
+                          className={`h-3 rounded-sm ${i < f.pt ? 'bg-[var(--chart-1)]' : 'bg-secondary'}`}
                         />
                       ))}
                     </span>
@@ -451,11 +451,11 @@ export default function LandingPage() {
                         <span className="w-24 shrink-0 text-xs text-faint">6전선 분산</span>
                         <span className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
                           <span
-                            className="block h-full rounded-full bg-primary/80"
+                            className="block h-full rounded-full bg-[var(--chart-1)]"
                             style={{ width: `${(r.spread / r.max) * 100}%` }}
                           />
                         </span>
-                        <span className="w-7 shrink-0 text-right font-mono text-xs tabular-nums text-primary">
+                        <span className="w-7 shrink-0 text-right font-mono text-xs tabular-nums text-[var(--chart-1)]">
                           {r.spread}
                         </span>
                       </div>
@@ -469,7 +469,7 @@ export default function LandingPage() {
                   <span className="text-lg text-faint">
                     {INDEX_ROWS.reduce((a, r) => a + r.solo, 0)}
                   </span>
-                  <span className="text-2xl font-bold text-primary">
+                  <span className="text-2xl font-bold text-[var(--chart-1)]">
                     {INDEX_ROWS.reduce((a, r) => a + r.spread, 0)}
                   </span>
                 </span>

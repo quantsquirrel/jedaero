@@ -4,6 +4,7 @@
 import { useState, useTransition } from 'react';
 import { generateBriefingAction, generateWeekdayBriefingAction } from '@/app/actions/briefing';
 import { AiNotice } from '@/components/ai-notice';
+import { DivergingBar } from '@/components/charts/diverging-bar';
 import { SourceChip } from '@/components/source-chip';
 import { FrontTerrain } from '@/components/front-terrain';
 import { Button } from '@/components/ui/button';
@@ -66,7 +67,6 @@ export function MarketWeekCard({
       <ul className="flex flex-col gap-2.5">
         {moves.map((m) => {
           const up = m.changePct >= 0;
-          const width = (Math.abs(m.changePct) / maxAbs) * 50;
           return (
             <li key={m.code} className="flex items-center gap-2 text-sm">
               <FrontTerrain code={m.code} />
@@ -76,13 +76,7 @@ export function MarketWeekCard({
                   {m.myWeight}%
                 </span>
               ) : null}
-              <span className="relative h-3 flex-1 overflow-hidden rounded-sm bg-muted/40">
-                <span className="absolute inset-y-0 left-1/2 w-px bg-border" />
-                <span
-                  className={cn('absolute inset-y-0 rounded-sm', up ? 'bg-up/70' : 'bg-down/70')}
-                  style={up ? { left: '50%', width: `${width}%` } : { right: '50%', width: `${width}%` }}
-                />
-              </span>
+              <DivergingBar value={m.changePct} maxAbs={maxAbs} />
               <span
                 className={cn(
                   'w-16 shrink-0 text-right font-mono text-xs tabular-nums',

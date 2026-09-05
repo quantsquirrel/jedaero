@@ -75,7 +75,20 @@ for (const need of ['alloc', 'spread', 'decisions', 'drawdown', 'drill', 'attrib
 }
 
 // 전 기간 현금이 0인 이력에서는 cash 문장이 뜨지 않는다
-const fullRows = rows.map((r) => ({ ...r, weights: rows[rows.length - 1].weights }));
+// ★ 전제(합계 100)를 여기서 «직접» 만든다. 예전에는 데모 스토리의 마지막 주를 빌려 썼는데,
+//   그 주가 예비대를 남기도록 바뀌자 전제가 무너져 검사가 엉뚱하게 실패했다.
+//   이 검사가 보는 것은 「현금 0이면 cash 문장 없음」이지 데모 서사가 아니다.
+const FULLY_ALLOCATED: Weights = {
+  KR_STOCK: 20,
+  US_STOCK: 30,
+  INTL_STOCK: 10,
+  BOND: 20,
+  GOLD_COMM: 15,
+  REIT_INFRA: 5,
+};
+const fullSum = Object.values(FULLY_ALLOCATED).reduce((a, b) => a + b, 0);
+if (fullSum !== 100) fail(`검사 전제 오류: FULLY_ALLOCATED 합계가 ${fullSum} (100이어야 함)`);
+const fullRows = rows.map((r) => ({ ...r, weights: FULLY_ALLOCATED }));
 const fullIds = buildPrincipleSentences({ rows: fullRows, currentWeek, dates, series }).map((s) => s.id);
 if (fullIds.includes('cash')) fail('전 기간 현금 0인데 cash 문장이 뜸');
 

@@ -14,7 +14,7 @@ export function PointTray({ placed, className }: { placed: number; className?: s
             key={i}
             className={cn(
               'h-6 rounded-sm',
-              i < placed ? 'bg-primary/85' : 'border border-dashed border-input',
+              i < placed ? 'bg-[var(--chart-1)]' : 'border border-dashed border-input',
             )}
           />
         ))}

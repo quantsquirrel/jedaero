@@ -33,8 +33,10 @@ export function DemoToggle({ mode }: { mode: 'WEEKDAY' | 'WEEKEND' }) {
       disabled={pending || shownMode === target}
       onClick={() => switchTo(target)}
       aria-pressed={shownMode === target}
+      // ★ 44px. SPEC §7이 「토글 없이 주말 기능을 못 보면 결격에 준한다」고 쓴,
+      //   심사 동선에서 가장 많이 눌리는 컨트롤이다. 가장 작은 버튼이면 안 된다.
       className={cn(
-        'rounded-full px-3 py-1 text-xs font-semibold transition-colors',
+        'min-h-11 min-w-16 rounded-full px-4 text-sm font-semibold transition-colors',
         shownMode === target
           ? 'bg-primary text-primary-foreground'
           : 'text-muted-foreground hover:text-foreground',

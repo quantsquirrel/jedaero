@@ -2,8 +2,8 @@
 // - 입력은 lib/market-week.ts가 규칙 기반으로 계산한 숫자다. LLM은 숫자를 만들지 않는다.
 // - 출력은 사실 요약 + "스스로 던져볼 질문 3개". 전망·추천·목표가는 출력 검증에서 폐기된다 (C10).
 // - 뉴스 본문을 넣지 않는다. 시드 가격은 합성 데이터이며 실제 시세·실제 기사와 무관하다.
-import OpenAI from 'openai';
 import type { MarketWeek } from '../market-week';
+import { completeJson, hasLlmKey } from './complete';
 import { verifyNumbersFrom } from './number-guard';
 import { verifyFactualOutput } from './output-guard';
 
@@ -57,23 +57,6 @@ const SYSTEM_PROMPT = `너는 병사의 모의 포트폴리오 주간 브리핑�
   답을 주지 말고 질문만 한다. 질문도 특정 종목·축을 사라/팔라는 방향으로 유도하지 않는다.
 - 한국어 존댓말. 반드시 JSON만 출력한다.`;
 
-const RESPONSE_SCHEMA = {
-  type: 'json_schema' as const,
-  json_schema: {
-    name: 'weekly_briefing',
-    strict: true,
-    schema: {
-      type: 'object',
-      properties: {
-        summary: { type: 'string' },
-        questions: { type: 'array', items: { type: 'string' }, minItems: 3, maxItems: 3 },
-      },
-      required: ['summary', 'questions'],
-      additionalProperties: false,
-    },
-  },
-};
-
 const WEEKDAY_SYSTEM_PROMPT = `너는 병사의 모의 포트폴리오 평일 지형 요약을 쓰는 도구다.
 데이터는 교육용 합성 시세이며 실제 시장과 무관하다 — 실제 시장을 언급하지 마라.
 
@@ -88,40 +71,17 @@ const WEEKDAY_SYSTEM_PROMPT = `너는 병사의 모의 포트폴리오 평일 �
 - questions: 스스로 던져볼 질문 1개. 40자 이내. 답을 주지 않는다.
 - 한국어 존댓말. 반드시 JSON만 출력한다.`;
 
-const WEEKDAY_SCHEMA = {
-  type: 'json_schema' as const,
-  json_schema: {
-    name: 'weekday_briefing',
-    strict: true,
-    schema: {
-      type: 'object',
-      properties: {
-        summary: { type: 'string' },
-        questions: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
-      },
-      required: ['summary', 'questions'],
-      additionalProperties: false,
-    },
-  },
-};
-
 /** 브리핑 생성. 실패·검증 위반 시 null → 호출부가 규칙 기반 요약으로 폴백한다. */
 export async function generateBriefing(week: MarketWeek): Promise<Briefing | null> {
-  if (!process.env.OPENAI_API_KEY) return null;
+  if (!hasLlmKey()) return null;
   try {
-    const client = new OpenAI();
     const input = briefingInput(week);
-    const res = await client.chat.completions.create({
-      model: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: JSON.stringify(input) },
-      ],
-      response_format: RESPONSE_SCHEMA,
-      max_tokens: 400,
+    const raw = await completeJson({
+      system: SYSTEM_PROMPT,
+      user: JSON.stringify(input),
+      maxTokens: 400,
       temperature: 0.3,
     });
-    const raw = res.choices[0]?.message?.content;
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Briefing;
     if (typeof parsed.summary !== 'string' || !Array.isArray(parsed.questions)) return null;
@@ -142,7 +102,7 @@ export async function generateBriefing(week: MarketWeek): Promise<Briefing | nul
 /** 규칙 기반 폴백 요약 — 키가 없어도, 429여도, 킬스위치가 내려가도 이 문장은 뜬다.
  *  생성형 AI가 아니므로 UI에서 고지 배지를 붙이지 않고 "규칙 기반"으로 구분 표기한다 (C9). */
 export function briefingFallback(week: MarketWeek): Briefing {
-  const s = (x: number) => `${x >= 0 ? '+' : ''}${r1(x)}%`;
+  const s = (x: number) => `${x >= 0 ? '+' : '−'}${r1(Math.abs(x))}%`;
   return {
     summary:
       `${week.fromDate}부터 ${week.toDate}까지 영업일 ${week.tradingDays}일 구간입니다. ` +
@@ -158,21 +118,15 @@ export function briefingFallback(week: MarketWeek): Briefing {
 }
 
 export async function generateWeekdayBriefing(week: MarketWeek): Promise<WeekdayBriefing | null> {
-  if (!process.env.OPENAI_API_KEY) return null;
+  if (!hasLlmKey()) return null;
   try {
-    const client = new OpenAI();
     const input = weekdayBriefingInput(week);
-    const res = await client.chat.completions.create({
-      model: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: WEEKDAY_SYSTEM_PROMPT },
-        { role: 'user', content: JSON.stringify(input) },
-      ],
-      response_format: WEEKDAY_SCHEMA,
-      max_tokens: 280,
+    const raw = await completeJson({
+      system: WEEKDAY_SYSTEM_PROMPT,
+      user: JSON.stringify(input),
+      maxTokens: 280,
       temperature: 0.3,
     });
-    const raw = res.choices[0]?.message?.content;
     if (!raw) return null;
     const parsed = JSON.parse(raw) as WeekdayBriefing;
     if (typeof parsed.summary !== 'string' || !Array.isArray(parsed.questions)) return null;
@@ -190,7 +144,7 @@ export async function generateWeekdayBriefing(week: MarketWeek): Promise<Weekday
 }
 
 export function weekdayBriefingFallback(week: MarketWeek): WeekdayBriefing {
-  const s = (x: number) => `${x >= 0 ? '+' : ''}${r1(x)}%`;
+  const s = (x: number) => `${x >= 0 ? '+' : '−'}${r1(Math.abs(x))}%`;
   return {
     summary:
       `${week.fromDate}부터 ${week.toDate}까지 영업일 ${week.tradingDays}일 구간입니다. ` +

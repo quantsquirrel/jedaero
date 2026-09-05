@@ -15,7 +15,8 @@ import { kstToday } from '@/lib/day-type';
 import { pricesUpTo } from '@/lib/portfolio/prices';
 import { benchmarkRows } from '@/lib/principles/benchmarks';
 import { FIXED_COPY, staleNotice } from '@/lib/principles/copy';
-import { buildPrincipleSentences, type PrincipleRow } from '@/lib/principles/facts';
+import { AttributionCurves } from '@/components/charts/attribution-curves';
+import { buildAttributionCurves, buildPrincipleSentences, type PrincipleRow } from '@/lib/principles/facts';
 import { getSessionUser } from '@/lib/session';
 import { weekOf } from '@/lib/week';
 import type { Weights } from '@/lib/constants';
@@ -42,15 +43,14 @@ export default async function PrinciplesPage() {
     details: (r.details as Details | null) ?? null,
   }));
   const { dates, series } = pricesUpTo(today);
-  const sentences =
-    principleRows.length > 0
-      ? buildPrincipleSentences({
-          rows: principleRows,
-          currentWeek: weekOf(new Date()),
-          dates,
-          series,
-        })
-      : [];
+  const factInput = {
+    rows: principleRows,
+    currentWeek: weekOf(new Date()),
+    dates,
+    series,
+  };
+  const sentences = principleRows.length > 0 ? buildPrincipleSentences(factInput) : [];
+  const attribution = principleRows.length > 0 ? buildAttributionCurves(factInput) : null;
 
   return (
     <main className="flex flex-col gap-6 px-5 py-8">
@@ -67,6 +67,22 @@ export default async function PrinciplesPage() {
       ) : (
         <PrinciplesSheet sentences={sentences} />
       )}
+
+      {attribution ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-base font-semibold">내 조정이 움직인 만큼</h2>
+          <SourceChip kind="rule" />
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            같은 시세에 편성 이력만 바꿔 넣은 곡선입니다. 두 선 사이의 넓이가 «내가 조정해서
+            달라진 몫»이고, 나머지는 시장이 움직였습니다.
+          </p>
+          <AttributionCurves data={attribution} />
+          <p className="text-xs leading-relaxed text-faint">
+            어느 선이 위에 있는지는 이 구간에서 우연입니다. 잘한 조정인지 아닌지를 이 그림이
+            말해주지 않습니다 — 크기만 말합니다.
+          </p>
+        </section>
+      ) : null}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-base font-semibold">{FIXED_COPY.benchTitle}</h2>

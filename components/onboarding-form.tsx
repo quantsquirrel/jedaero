@@ -143,13 +143,15 @@ export function OnboardingForm({ stats }: { stats: OperationStat[] }) {
                 <p className="font-mono text-xs tabular-nums text-muted-foreground">
                   최대낙폭(MDD) {pct(op.mdd)}
                 </p>
-                {/* 장점과 단점을 같은 개수로 나란히. 한쪽만 길면 그게 곧 신호가 된다 */}
+                {/* 장점과 단점을 같은 개수로 나란히. 한쪽만 길면 그게 곧 신호가 된다.
+                    ★ 단점에 신호색(primary)을 쓰지 않는다. 개수가 같아도 색이 더 세면 무게가 달라지고,
+                      가장 강한 색이 「단점」에 붙으면 카드 하나가 조용히 경고로 읽힌다. */}
                 <div className="flex flex-col gap-0.5 text-[11px] leading-relaxed">
                   {op.pros.map((line) => (
-                    <span key={line} className="text-up">+ {line}</span>
+                    <span key={line} className="text-muted-foreground">+ {line}</span>
                   ))}
                   {op.cons.map((line) => (
-                    <span key={line} className="text-primary">− {line}</span>
+                    <span key={line} className="text-muted-foreground">− {line}</span>
                   ))}
                 </div>
                 <p className="text-[11px] text-muted-foreground">

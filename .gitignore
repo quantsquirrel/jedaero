@@ -48,3 +48,5 @@ credentials.*
 .vercel
 .verify-build.log
 .env*.local
+.superpowers/
+.neon

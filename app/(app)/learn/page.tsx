@@ -94,7 +94,7 @@ export default async function LearnPage() {
       </Card>
 
       <JobLinks
-        items={[{ href: '/principles', label: '나의 투자 원칙', hint: '기록으로 한 장 만들기' }]}
+        items={[{ href: '/principles', label: '나의 투자 원칙', hint: '전역 후에도 남는 기록' }]}
       />
     </main>
   );

@@ -6,13 +6,19 @@ const STEPS = [
   { label: '주말 편성', href: '/portfolio' },
   { label: '제대로 지수', href: '/league' },
   { label: '도상훈련', href: '/learn#drill' },
+  { label: '나의 투자 원칙', href: '/principles' },
 ] as const;
 
 export function DemoGuide() {
   return (
-    <details className="border-b border-border bg-background/95 px-4 py-2" open>
-      <summary className="cursor-pointer text-xs font-semibold">3분 심사용 동선</summary>
-      <ol className="mt-2 grid grid-cols-5 gap-1" aria-label="3분 심사용 데모 순서">
+    // ★ 기본은 «접힘». 펼친 채로 두면 토글과 합쳐 238px — 390px 화면의 3분의 1을 상시 차지하고,
+    //   본문 앵커(scroll-mt-40 = 160px)보다 커져서 카드 제목이 헤더 뒤로 들어간다.
+    <details className="border-b border-border bg-background px-4">
+      <summary className="flex min-h-11 cursor-pointer items-center text-xs font-semibold">
+        3분 심사용 동선
+        <span className="ml-2 font-normal text-muted-foreground">6단계 · 펼치기</span>
+      </summary>
+      <ol className="mt-2 grid grid-cols-3 gap-1" aria-label="3분 심사용 데모 순서">
         {STEPS.map((step, i) => (
           <li key={step.label}>
             <Link
@@ -25,8 +31,8 @@ export function DemoGuide() {
           </li>
         ))}
       </ol>
-      <p className="mt-1.5 text-[10px] leading-relaxed text-muted-foreground">
-        1~2는 평일, 3~4는 위 토글을 주말로. 5 도상훈련은 요일과 무관합니다.
+      <p className="mt-1.5 pb-3 text-[10px] leading-relaxed text-muted-foreground">
+        1~2는 평일, 3~4는 위 토글을 주말로. 5·6은 요일과 무관합니다. 6은 전역 후에도 남는 기록입니다.
       </p>
     </details>
   );

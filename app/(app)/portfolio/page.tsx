@@ -8,6 +8,8 @@ import { RevertButton } from '@/components/revert-button';
 import { SourceChip } from '@/components/source-chip';
 import { WeightEditor } from '@/components/weight-editor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DivergingBar } from '@/components/charts/diverging-bar';
+import { ValueCurve } from '@/components/charts/value-curve';
 import { db } from '@/db';
 import { allocations, drafts } from '@/db/schema';
 import { POINT_UNIT, RESERVE, SEED_AMOUNT, THEMES, type Weights } from '@/lib/constants';
@@ -122,6 +124,10 @@ export default async function PortfolioPage() {
     return { ...row, current, gap: round1(current - row.target) };
   });
   const maxAbsGap = Math.max(...gaps.map((g) => Math.abs(g.gap)));
+  // 막대 스케일. 조정 «단위»인 5%p를 절반 폭의 기준으로 삼는다.
+  // ★ 최대 편차로만 정규화하면 3%p 벌어진 것도 칸을 꽉 채워 사태처럼 보인다.
+  //   눈금이 고정되어야 「지난주보다 벌어졌나」를 주 간에 견줄 수 있다 (§7 사실 + 선택지).
+  const gapScale = Math.max(maxAbsGap, 5);
   const week = computeMarketWeek(kstToday(), targetWeights);
   const awaitingFirst = lumpCurve.invested === 0;
 
@@ -132,6 +138,22 @@ export default async function PortfolioPage() {
       ) : (
         <DeadlineCountdown deadlineIso={deadlineIso} />
       )
+    ) : null;
+
+  // 곡선은 «일시금 하나»다. 두 곡선을 합산한 총자산 타일을 만들지 않는다 (CLAUDE.md)
+  const curveBlock =
+    lumpCurve.values.length >= 2 ? (
+      <div className="mt-2 flex flex-col gap-1.5">
+        <ValueCurve
+          values={lumpCurve.values}
+          baseline={SEED_AMOUNT}
+          ariaLabel={`${lumpCurve.dates[0]}부터 ${lumpCurve.dates[lumpCurve.dates.length - 1]}까지 평가액 곡선. 원금 ${won(SEED_AMOUNT)}, 현재 ${won(lumpFinal)}`}
+        />
+        <p className="flex justify-between font-mono text-[11px] tabular-nums text-faint">
+          <span>{lumpCurve.dates[0]}</span>
+          <span>{lumpCurve.dates[lumpCurve.dates.length - 1]}</span>
+        </p>
+      </div>
     ) : null;
 
   const returnsCard = (
@@ -153,6 +175,7 @@ export default async function PortfolioPage() {
                 누적 {pct(lumpFinal / SEED_AMOUNT - 1, 2)}
               </span>
             </p>
+            {curveBlock}
             {week ? (
               <p className="text-sm">
                 이번 주 내 편성 기준{' '}
@@ -178,6 +201,7 @@ export default async function PortfolioPage() {
             <p className="text-sm text-muted-foreground">
               평가액 {won(lumpFinal)} · 원금 {won(SEED_AMOUNT)}
             </p>
+            {curveBlock}
             <p className="text-xs text-muted-foreground">
               시작 이후 전체입니다. 이번 주가 얼마나 흔들렸는지는 주말에 봅니다.{' '}
               <Link href="/learn#card-patience" className="underline">
@@ -197,22 +221,30 @@ export default async function PortfolioPage() {
       </CardHeader>
       <CardContent className="flex flex-col gap-2.5">
         {gaps.map((g) => (
-          <div key={g.code} className="flex items-center justify-between gap-2 text-sm">
-            <span className="w-24 shrink-0">{g.name}</span>
-            <span className="font-mono text-xs tabular-nums text-muted-foreground">
-              목표 {g.target}% → 현재 {g.current.toFixed(1)}%
-            </span>
-            <span
-              className={cn(
-                'w-16 text-right font-mono text-xs tabular-nums',
-                g.gap === 0 ? 'text-muted-foreground' : g.gap > 0 ? 'text-up' : 'text-down',
-              )}
-            >
-              {g.gap > 0 ? '+' : ''}
-              {g.gap.toFixed(1)}%p
-            </span>
+          <div key={g.code} className="flex flex-col gap-1">
+            <div className="flex items-baseline justify-between gap-2 text-sm">
+              <span className="min-w-0 truncate">{g.name}</span>
+              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                목표 {g.target}% → 현재 {g.current.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <DivergingBar value={g.gap} maxAbs={gapScale} />
+              <span
+                className={cn(
+                  'w-16 shrink-0 text-right font-mono text-xs tabular-nums',
+                  g.gap === 0 ? 'text-muted-foreground' : g.gap > 0 ? 'text-up' : 'text-down',
+                )}
+              >
+                {g.gap > 0 ? '+' : g.gap < 0 ? '−' : ''}
+                {Math.abs(g.gap).toFixed(1)}%p
+              </span>
+            </div>
           </div>
         ))}
+        <p className="text-[11px] text-faint">
+          가운데 선이 목표입니다. 오른쪽으로 자라면 목표보다 많이, 왼쪽이면 적게 담긴 것입니다.
+        </p>
         <p className="text-xs text-muted-foreground">
           시장이 움직이면 실제 비중은 목표에서 저절로 멀어집니다. 되돌리는 것이 리밸런싱입니다.{' '}
           <Link href="/learn#card-rebalance" className="underline">

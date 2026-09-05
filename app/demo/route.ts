@@ -12,7 +12,10 @@ export async function GET(req: NextRequest) {
   // 랜딩을 다시 거쳐도 같은 체험 계정과 편성을 유지한다.
   let user: { id: string };
   try {
-    user = (await findDemoUser(req.cookies.get(USER_COOKIE)?.value)) ?? (await createDemoUser());
+    const startNew = req.nextUrl.searchParams.get('new') === '1';
+    user =
+      (!startNew ? await findDemoUser(req.cookies.get(USER_COOKIE)?.value) : null) ??
+      (await createDemoUser());
   } catch (e) {
     console.error('[demo] 체험 세션 준비 실패:', e instanceof Error ? e.message : e);
     return NextResponse.redirect(new URL('/demo/unavailable', req.url), 303);

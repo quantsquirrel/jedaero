@@ -16,8 +16,21 @@ report() { # id status msg
   [ "$2" = FAIL ] && ANY_FAIL=1
   return 0
 }
-q() { psql "$DATABASE_URL" -X -A -t -c "$1" 2>/dev/null; }
-have_db() { [ -n "${DATABASE_URL:-}" ]; }
+# DB 판정은 psql 바이너리가 아니라 프로젝트의 pg 드라이버로 한다.
+# psql이 없는 머신에서 「스키마 깨짐」과 「도구 없음」이 똑같이 FAIL로 찍히던 문제를 없앤다.
+# 한 번만 실행해 결과를 담아 두고, 각 항목은 그 줄을 꺼내 쓴다.
+DB_PROBE=$(npx tsx scripts/checks/db-probe.ts 2>/dev/null | grep -E '^P[01]-[0-9]+\|')
+probe() { # id — 해당 항목을 report 한다
+  local line status msg
+  line=$(printf '%s\n' "$DB_PROBE" | grep -m1 "^$1|")
+  if [ -z "$line" ]; then
+    report "$1" FAIL "DB 검사를 실행하지 못했습니다 (미구현 아님)"
+    return 0
+  fi
+  status=${line#*|}; status=${status%%|*}
+  msg=${line#*|}; msg=${msg#*|}
+  report "$1" "$status" "$msg"
+}
 run_check() { # id tsx파일 — 스크립트가 마지막 줄에 사유를 출력하고 exit code로 판정
   local out
   if out=$(npx tsx "$2" 2>&1); then
@@ -41,17 +54,7 @@ fi
 # P0-02 스키마: public 스키마 테이블 정확히 11개(ai_calls·drafts 포함), 목록 일치
 # quests·quest_progress는 퀘스트·XP 폐지로,
 # budget_months·budget_envelopes·expenses·exemption_claims는 가계부 제외로 제거됐다. 되살리지 말 것.
-EXPECTED="ai_calls allocations drafts group_members groups holidays prices settings tickers users weekly_scores"
-if ! have_db; then
-  report P0-02 FAIL "DATABASE_URL 없음"
-else
-  ACTUAL=$(q "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY 1" | tr '\n' ' ' | sed 's/ *$//')
-  if [ "$ACTUAL" = "$EXPECTED" ]; then
-    report P0-02 PASS "테이블 11개 목록 일치"
-  else
-    report P0-02 FAIL "테이블 불일치: [${ACTUAL:-없음}]"
-  fi
-fi
+probe P0-02
 
 # P0-03 부대 정보 없음 — docs/VERIFY.md §A-1 스코프 규칙 그대로.
 # 검사 대상: db/schema.ts, db/migrations/*.sql, app/**/*.tsx, components/**/*.tsx 만.
@@ -70,29 +73,10 @@ else
 fi
 
 # P0-04 금지 구조: holdings 테이블·cash_balance 컬럼 없음 (DB 기준)
-if ! have_db; then
-  report P0-04 FAIL "DATABASE_URL 없음"
-else
-  H=$(q "SELECT coalesce(to_regclass('public.holdings')::text, '없음')")
-  CB=$(q "SELECT count(*) FROM information_schema.columns WHERE table_schema='public' AND column_name='cash_balance'")
-  if [ "$H" = "없음" ] && [ "$CB" = "0" ]; then
-    report P0-04 PASS "holdings 테이블 없음, cash_balance 컬럼 없음"
-  else
-    report P0-04 FAIL "holdings=$H, cash_balance 컬럼 ${CB:-?}개"
-  fi
-fi
+probe P0-04
 
 # P0-05 주 1회 제약: allocations UNIQUE(user_id, week_of)
-if ! have_db; then
-  report P0-05 FAIL "DATABASE_URL 없음"
-else
-  U=$(q "SELECT count(*) FROM pg_indexes WHERE schemaname='public' AND tablename='allocations' AND indexdef LIKE '%UNIQUE%' AND indexdef LIKE '%user_id%' AND indexdef LIKE '%week_of%'")
-  if [ "${U:-0}" -ge 1 ]; then
-    report P0-05 PASS "UNIQUE(user_id, week_of) 존재"
-  else
-    report P0-05 FAIL "allocations에 UNIQUE(user_id, week_of) 없음"
-  fi
-fi
+probe P0-05
 
 # P0-06 디바이스 권한 API 참조 0건 (코드만, 문서·설정 제외)
 DEV_HITS=$(grep -rnE 'getUserMedia|navigator\.geolocation|navigator\.bluetooth' app lib components db --include='*.ts' --include='*.tsx' 2>/dev/null)
@@ -107,71 +91,13 @@ run_check P0-07 scripts/checks/p0-07-day-type.ts
 run_check P0-08 scripts/checks/p0-08-rebalance.ts
 
 # P0-09 주 1회 강제: 같은 (user_id, week_of) 2회 insert → 제약 위반 후 롤백
-if ! have_db; then
-  report P0-09 FAIL "DATABASE_URL 없음"
-else
-  OUT=$(psql "$DATABASE_URL" -X -q 2>&1 <<'SQL'
-BEGIN;
-INSERT INTO users (id, nickname, rank, branch, enlisted_at, discharge_at, home_distance)
-VALUES ('00000000-0000-0000-0000-000000000901', '검증용', 'PRIVATE', 'ARMY', '2026-01-01', '2027-06-30', 'NEAR');
-INSERT INTO allocations (user_id, week_of, weights, decided_at, effective_from)
-VALUES ('00000000-0000-0000-0000-000000000901', '2099-01', '{}'::jsonb, now(), '2099-01-04');
-INSERT INTO allocations (user_id, week_of, weights, decided_at, effective_from)
-VALUES ('00000000-0000-0000-0000-000000000901', '2099-01', '{}'::jsonb, now(), '2099-01-04');
-ROLLBACK;
-SQL
-  )
-  if echo "$OUT" | grep -q 'duplicate key value violates unique constraint'; then
-    report P0-09 PASS "같은 주 2회 insert → unique_violation 발생 (롤백됨)"
-  else
-    report P0-09 FAIL "제약 위반이 발생하지 않음: $(echo "$OUT" | head -1)"
-  fi
-fi
+probe P0-09
 
 # P0-10 예시 배분 합계
 run_check P0-10 scripts/checks/p0-10-templates.ts
 
-# P0-11 가격 시드 드로다운 (합의안): 위험 4축 대표 -15% 이상, BOND_CASH 대표는 -8% 이내
-if ! have_db; then
-  report P0-11 FAIL "DATABASE_URL 없음"
-else
-  mdd_of() {
-    q "SELECT round(((SELECT min(close::float8 / peak) FROM (SELECT close, max(close) OVER (ORDER BY trade_date) AS peak FROM prices WHERE ticker='$1') s) - 1) * 1000) / 10"
-  }
-  ret_of() {
-    q "SELECT round(((SELECT close FROM prices WHERE ticker='$1' ORDER BY trade_date DESC LIMIT 1)::float8 / (SELECT close FROM prices WHERE ticker='$1' ORDER BY trade_date ASC LIMIT 1) - 1) * 1000) / 10"
-  }
-  DD_MSG=""; DD_FAIL=""
-  # 위험 4전선 대표지수는 -15% 이상 빠지는 구간이 있어야 한다
-  for pair in KR_STOCK:KR-IDX US_STOCK:US-IDX INTL_STOCK:IN-IDX REIT_INFRA:RE-IDX; do
-    axis=${pair%%:*}; tk=${pair##*:}
-    v=$(mdd_of "$tk")
-    DD_MSG="$DD_MSG $axis ${v:-없음}%"
-    [ -z "$v" ] && DD_FAIL="$DD_FAIL $axis(시드없음)" && continue
-    awk "BEGIN{exit !($v <= -15)}" || DD_FAIL="$DD_FAIL $axis($v%)"
-  done
-  # 채권은 얕게 — 여섯 전선이 같이 빠지면 리밸런싱을 가르칠 재료가 사라진다
-  vb=$(mdd_of BD-IDX)
-  DD_MSG="$DD_MSG BOND ${vb:-없음}%"
-  if [ -z "$vb" ]; then
-    DD_FAIL="$DD_FAIL BOND(시드없음)"
-  else
-    awk "BEGIN{exit !($vb >= -8)}" || DD_FAIL="$DD_FAIL BOND($vb%)"
-  fi
-  # 금·원자재는 주식이 빠지는 구간에 오르도록 생성된다 — 전구간 수익률이 양수여야 한다
-  vg=$(ret_of CM-IDX)
-  DD_MSG="$DD_MSG GOLD_COMM 전구간 ${vg:-없음}%"
-  if [ -z "$vg" ]; then
-    DD_FAIL="$DD_FAIL GOLD_COMM(시드없음)"
-  else
-    awk "BEGIN{exit !($vg > 0)}" || DD_FAIL="$DD_FAIL GOLD_COMM(전구간 $vg%)"
-  fi
-  if [ -z "$DD_FAIL" ]; then
-    report P0-11 PASS "대표 종목 MDD:$DD_MSG"
-  else
-    report P0-11 FAIL "기준 미달:$DD_FAIL (전체:$DD_MSG)"
-  fi
-fi
+# P0-11 가격 시드 드로다운: 위험 4축 대표 -15% 이상, 채권 -8% 이내, 금·원자재 전구간 +
+probe P0-11
 
 # P0-12 키 유출: 클라이언트 번들에 실제 비밀값·API 키 패턴 0건
 if [ ! -d .next/static ]; then
@@ -276,16 +202,7 @@ run_check P1-05 scripts/checks/p1-05-jedaero-index.ts
 # P1-06 폐지 — 퀘스트·XP 제거 (DESIGN-DECISIONS §7). 번호는 상호참조를 위해 비워 둔다.
 
 # P1-07 옵트인 기본값 false
-if ! have_db; then
-  report P1-07 FAIL "DATABASE_URL 없음"
-else
-  DEF=$(q "SELECT column_default FROM information_schema.columns WHERE table_schema='public' AND table_name='users' AND column_name='analytics_opt_in'")
-  if echo "$DEF" | grep -q 'false'; then
-    report P1-07 PASS "analytics_opt_in DEFAULT false"
-  else
-    report P1-07 FAIL "기본값: ${DEF:-없음}"
-  fi
-fi
+probe P1-07
 
 run_check P1-08 scripts/checks/p1-08-optin.ts
 run_check P1-09 scripts/checks/p1-09-kanon.ts

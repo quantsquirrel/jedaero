@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { NarrativeButton, OptInGate, OptOutButton } from '@/components/insights-panel';
 import { PageHeader } from '@/components/page-header';
+import { CompareMark } from '@/components/charts/compare-mark';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { POINT_UNIT, RESERVE, THEMES, type Weights } from '@/lib/constants';
 import { currentDayType } from '@/lib/day-context';
@@ -94,7 +95,7 @@ export default async function InsightsPage() {
                   <span className="w-24 shrink-0">{t.name}</span>
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-primary"
+                      className="h-full rounded-full bg-[var(--chart-1)]"
                       style={{ width: `${myWeights[t.code] ?? 0}%` }}
                     />
                   </div>
@@ -120,51 +121,54 @@ export default async function InsightsPage() {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">② 집중도</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm">
-                <p className="font-semibold tabular-nums">최대 {data.stats.myMaxTheme.weight}%</p>
-                <p className="text-xs text-muted-foreground">
-                  HHI {data.stats.myHhi.toFixed(2)} · 코호트 최대비중 중앙값{' '}
-                  {Math.round(data.stats.cohortMaxWeightMedian)}%
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">③ 회전율</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm">
-                <p className="font-semibold tabular-nums">주당 {data.stats.myTurnover.toFixed(1)}%p</p>
-                <p className="text-xs text-muted-foreground">
-                  코호트 중앙값 {data.stats.cohortTurnoverMedian.toFixed(1)}%p
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">④ 예비대</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm">
-                <p className="font-semibold tabular-nums">{data.stats.myCash / POINT_UNIT}포인트</p>
-                <p className="text-xs text-muted-foreground">
-                  코호트 중앙값 {Math.round(data.stats.cohortCashMedian)}%
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">⑤ 변동성</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm">
-                <p className="font-semibold tabular-nums">연 {Math.round(data.stats.myVol * 100)}%</p>
-                <p className="text-xs text-muted-foreground">전역 곡선 일간 수익률 기준</p>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">② ~ ④ 나와 코호트</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <CompareRow
+                title="② 집중도"
+                mineText={`최대 ${data.stats.myMaxTheme.weight}%`}
+                mine={data.stats.myMaxTheme.weight}
+                cohort={data.stats.cohortMaxWeightMedian}
+                cohortText={`${Math.round(data.stats.cohortMaxWeightMedian)}%`}
+                max={100}
+                note={`HHI ${data.stats.myHhi.toFixed(2)}`}
+              />
+              <CompareRow
+                title="③ 회전율"
+                mineText={`주당 ${data.stats.myTurnover.toFixed(1)}%p`}
+                mine={data.stats.myTurnover}
+                cohort={data.stats.cohortTurnoverMedian}
+                cohortText={`${data.stats.cohortTurnoverMedian.toFixed(1)}%p`}
+                max={Math.max(data.stats.myTurnover, data.stats.cohortTurnoverMedian) * 1.25 || 1}
+              />
+              <CompareRow
+                title="④ 예비대"
+                mineText={`${data.stats.myCash / POINT_UNIT}포인트 (${data.stats.myCash}%)`}
+                mine={data.stats.myCash}
+                cohort={data.stats.cohortCashMedian}
+                cohortText={`${Math.round(data.stats.cohortCashMedian)}%`}
+                max={100}
+              />
+              <p className="text-[11px] leading-relaxed text-faint">
+                가는 세로선이 코호트 중앙값입니다. 높고 낮음이 잘하고 못하고를 뜻하지 않습니다 —
+                어디쯤 서 있는지만 보여줍니다.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">⑤ 변동성</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm">
+              <p className="font-semibold tabular-nums">연 {Math.round(data.stats.myVol * 100)}%</p>
+              <p className="text-xs text-muted-foreground">
+                전역 곡선 일간 수익률 기준 · 견줄 코호트 값이 없어 숫자로만 둡니다
+              </p>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>
@@ -196,5 +200,39 @@ export default async function InsightsPage() {
         </>
       )}
     </main>
+  );
+}
+
+/** 한 축 위에 내 값과 코호트 중앙값을 나란히. 숫자는 «글자로도» 위에 적는다 —
+ *  막대가 유일한 읽기 수단이 되면 안 된다 (DESIGN-RULES §9-1). */
+function CompareRow({
+  title,
+  mineText,
+  mine,
+  cohort,
+  cohortText,
+  max,
+  note,
+}: {
+  title: string;
+  mineText: string;
+  mine: number;
+  cohort: number;
+  cohortText: string;
+  max: number;
+  note?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-sm">{title}</span>
+        <span className="font-mono text-sm font-semibold tabular-nums">{mineText}</span>
+      </div>
+      <CompareMark mine={mine} cohort={cohort} max={max} />
+      <p className="font-mono text-[11px] tabular-nums text-muted-foreground">
+        코호트 중앙값 {cohortText}
+        {note ? <span className="text-faint"> · {note}</span> : null}
+      </p>
+    </div>
   );
 }
