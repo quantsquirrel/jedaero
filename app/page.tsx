@@ -1,5 +1,10 @@
 import Link from 'next/link';
+import { FrontTerrain } from '@/components/front-terrain';
+import { RecordFlow } from '@/components/record-flow';
 import { Reveal } from '@/components/reveal';
+import { HeroRidges, RidgeRule } from '@/components/ridge';
+import { SourceChip } from '@/components/source-chip';
+import { TOTAL_POINTS, type ThemeCode } from '@/lib/constants';
 import {
   EFFECTIVE_FRONTS_FULL,
   INDEX_MAX,
@@ -57,13 +62,44 @@ function Panel({ children, className }: { children: React.ReactNode; className?:
 }
 
 const FRONTS = [
-  { name: '국내 주식', pt: 4 },
-  { name: '미국 주식', pt: 4 },
-  { name: '기타 해외', pt: 3 },
-  { name: '채권', pt: 4 },
-  { name: '금·원자재', pt: 3 },
-  { name: '리츠·인프라', pt: 2 },
+  { name: '국내 주식', code: 'KR_STOCK', pt: 4 },
+  { name: '미국 주식', code: 'US_STOCK', pt: 5 },
+  { name: '기타 해외', code: 'INTL_STOCK', pt: 2 },
+  { name: '채권', code: 'BOND', pt: 4 },
+  { name: '금·원자재', code: 'GOLD_COMM', pt: 2 },
+  { name: '리츠·인프라', code: 'REIT_INFRA', pt: 1 },
+] as const satisfies ReadonlyArray<{ name: string; code: ThemeCode; pt: number }>;
+
+// 놓지 않은 포인트. 화면에서 사라지면 방치가 되고, 보이면 선택이 된다
+const RESERVE_PT = TOTAL_POINTS - FRONTS.reduce((sum, f) => sum + f.pt, 0);
+
+const BOUNDARY = [
+  {
+    kind: 'rule' as const,
+    chip: '규칙 기반 계산',
+    role: '규칙이 계산한다',
+    description: '수익률, 제대로 지수, 전선 등락을 공개된 규칙으로 계산합니다. 화면과 코드가 같은 상수를 읽습니다.',
+  },
+  {
+    kind: 'ai' as const,
+    chip: '생성형 AI 제안',
+    role: 'AI가 해석하고 되묻는다',
+    description: '규칙이 만든 숫자를 읽기 좋게 정리하고 질문을 돌려줍니다. 숫자를 만들지 않고, 종목을 고르지 않습니다.',
+  },
+  {
+    kind: 'human' as const,
+    chip: '확정은 본인이 · 주말 1회',
+    role: '사람이 확정한다',
+    description: '주말에 한 번, 본인이 편성을 확정합니다. AI에게는 확정 버튼이 주어지지 않습니다.',
+  },
 ];
+
+const TERRAIN = [
+  { name: '국내 주식', code: 'KR_STOCK', value: '+1.2%', up: true },
+  { name: '미국 주식', code: 'US_STOCK', value: '+0.4%', up: true },
+  { name: '채권', code: 'BOND', value: '−0.3%', up: false },
+  { name: '금·원자재', code: 'GOLD_COMM', value: '+0.9%', up: true },
+] as const satisfies ReadonlyArray<{ name: string; code: ThemeCode; value: string; up: boolean }>;
 
 const INDEX_ROWS = [
   { label: '위험을 이긴 성과', hint: '위험 대비 성과', solo: 40, spread: 33, max: INDEX_MAX.grown },
@@ -159,12 +195,15 @@ export default function LandingPage() {
 
         <div
           aria-hidden
-          className="absolute bottom-8 flex flex-col items-center gap-2 text-faint/50 motion-safe:animate-bounce"
+          className="mt-10 flex flex-col items-center gap-2 text-faint/50 motion-safe:animate-bounce"
         >
           <span className="text-[11px] tracking-widest">SCROLL</span>
           <span className="h-8 w-px bg-gradient-to-b from-input to-transparent" />
         </div>
       </section>
+
+      {/* 능선 — 히어로와 본문 사이. 이 서비스의 시각 문법이 여기서 시작한다 */}
+      <HeroRidges className="-mt-6" />
 
       <div className="mx-auto max-w-5xl space-y-24 px-6 pb-32 sm:space-y-28">
         {/* ── 1. 시드 ─────────────────────────────── */}
@@ -255,26 +294,44 @@ export default function LandingPage() {
               </Body>
             </div>
             <Panel>
+              {/* 편성기 화면과 같은 문법 — 포인트는 낱개로 센다. 남는 칸이 곧 예비대다 */}
               <div className="flex flex-col gap-3.5">
                 {FRONTS.map((f) => (
                   <div key={f.name} className="flex items-center gap-3">
-                    <span className="w-24 shrink-0 text-sm text-muted-foreground">{f.name}</span>
-                    <span className="flex flex-1 gap-1">
-                      {Array.from({ length: 5 }, (_, i) => (
+                    <FrontTerrain code={f.code} className="hidden sm:block" />
+                    <span className="w-20 shrink-0 text-sm text-muted-foreground">{f.name}</span>
+                    <span className="grid flex-1 grid-cols-[repeat(20,minmax(0,1fr))] gap-1">
+                      {Array.from({ length: 20 }, (_, i) => (
                         <span
                           key={i}
-                          className={`h-2.5 flex-1 rounded-full ${i < f.pt ? 'bg-primary/70' : 'bg-secondary'}`}
+                          className={`h-3 rounded-sm ${i < f.pt ? 'bg-primary/75' : 'bg-secondary'}`}
                         />
                       ))}
                     </span>
-                    <span className="w-8 shrink-0 text-right font-mono text-sm tabular-nums text-faint">
-                      {f.pt}
+                    <span className="w-12 shrink-0 text-right font-mono text-sm tabular-nums text-faint">
+                      {f.pt}p
                     </span>
                   </div>
                 ))}
+                <div className="flex items-center gap-3">
+                  <span className="hidden h-6 w-12 shrink-0 sm:block" />
+                  <span className="w-20 shrink-0 text-sm text-faint">예비대</span>
+                  <span className="grid flex-1 grid-cols-[repeat(20,minmax(0,1fr))] gap-1">
+                    {Array.from({ length: 20 }, (_, i) => (
+                      <span
+                        key={i}
+                        className={`h-3 rounded-sm ${i < RESERVE_PT ? 'border border-dashed border-input' : 'bg-secondary'}`}
+                      />
+                    ))}
+                  </span>
+                  <span className="w-12 shrink-0 text-right font-mono text-sm tabular-nums text-faint">
+                    {RESERVE_PT}p
+                  </span>
+                </div>
               </div>
               <p className="mt-5 border-t border-border pt-4 text-sm text-faint">
-                합계 <span className="font-mono tabular-nums text-foreground">20</span> 포인트 · 1포인트 = 5%
+                합계 <span className="font-mono tabular-nums text-foreground">20</span> 포인트 · 1포인트 = 5% ·
+                슬라이더 없음, 자동 재조정 없음
               </p>
             </Panel>
           </Split>
@@ -300,15 +357,11 @@ export default function LandingPage() {
             <Panel>
               <p className="text-xs font-semibold tracking-wider text-faint">오늘의 지형</p>
               <div className="mt-4 flex flex-col gap-3 font-mono text-sm tabular-nums">
-                {[
-                  ['국내 주식', '+1.2%', 'text-up'],
-                  ['미국 주식', '+0.4%', 'text-up'],
-                  ['채권', '−0.3%', 'text-down'],
-                  ['금·원자재', '+0.9%', 'text-up'],
-                ].map(([k, v, c]) => (
-                  <div key={k} className="flex items-center justify-between">
-                    <span className="font-sans text-muted-foreground">{k}</span>
-                    <span className={c}>{v}</span>
+                {TERRAIN.map((row) => (
+                  <div key={row.name} className="flex items-center gap-3">
+                    <FrontTerrain code={row.code} />
+                    <span className="flex-1 font-sans text-muted-foreground">{row.name}</span>
+                    <span className={row.up ? 'text-up' : 'text-down'}>{row.value}</span>
                   </div>
                 ))}
               </div>
@@ -500,19 +553,17 @@ export default function LandingPage() {
 
             <Panel className="!p-0 overflow-hidden">
               <div className="grid divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-                {[
-                  ['규칙', '계산', '수익률, 제대로 지수, 전선 등락을 공개된 규칙으로 계산합니다.'],
-                  ['AI', '해석과 질문', '규칙이 만든 숫자를 읽기 좋게 정리하고 되묻습니다. 숫자를 만들지 않습니다.'],
-                  ['사람', '확정', '주말에 한 번, 본인이 편성을 확정합니다. AI가 대신 확정하지 않습니다.'],
-                ].map(([who, role, description]) => (
-                  <div key={who} className="px-6 py-5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">{who}</p>
-                    <p className="mt-2 font-semibold text-foreground">{role}</p>
-                    <p className="mt-2 break-keep text-sm leading-relaxed text-muted-foreground">{description}</p>
+                {BOUNDARY.map((row) => (
+                  <div key={row.role} className="flex flex-col gap-3 px-6 py-5">
+                    <SourceChip kind={row.kind} label={row.chip} />
+                    <p className="font-semibold text-foreground">{row.role}</p>
+                    <p className="break-keep text-sm leading-relaxed text-muted-foreground">{row.description}</p>
                   </div>
                 ))}
               </div>
             </Panel>
+
+            <RecordFlow />
 
             <div className="grid gap-4 md:grid-cols-2">
               <Panel>
@@ -524,7 +575,7 @@ export default function LandingPage() {
                   <li>회고 원문은 응답 뒤 저장하지 않고 폐기</li>
                   <li>군 소속 정보는 수집하지 않고 그룹은 익명 초대코드로 참여</li>
                 </ul>
-                <p className="mt-4 text-xs font-semibold text-primary/90">생성형 AI 제안 · 확정은 본인이 합니다</p>
+                <SourceChip kind="ai" className="mt-4" />
               </Panel>
               <Panel>
                 <Eyebrow>재현 가능한 합성 데이터</Eyebrow>
@@ -547,7 +598,8 @@ export default function LandingPage() {
 
         {/* ── 6. 마무리 ───────────────────────────── */}
         <Reveal>
-          <div className="flex flex-col items-center gap-8 border-t border-border pt-20 text-center">
+          <div className="flex flex-col items-center gap-8 pt-4 text-center">
+            <RidgeRule className="max-w-md" />
             <SectionTitle>지금 시작하세요</SectionTitle>
             <Body>
               <span className="block text-center">
