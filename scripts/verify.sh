@@ -321,6 +321,7 @@ run_check P1-23 scripts/checks/p1-23-weekly-turnover.ts
 run_check P1-24 scripts/checks/p1-24-security-hardening.ts
 run_check P1-25 scripts/checks/p1-25-benchmarks.ts
 run_check P1-26 scripts/checks/p1-26-principles-copy.ts
+run_check P1-27 scripts/checks/p1-27-principles-ai.ts
 
 # ---------- 요약 ----------
 echo '---'
