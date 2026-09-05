@@ -158,10 +158,13 @@ export default async function LeaguePage({
               <Link
                 key={s}
                 href={`/league?scope=${s}`}
+                aria-current={s === scope ? 'page' : undefined}
                 className={cn(
-                  'rounded-md border px-3 py-1.5 text-xs transition-colors',
+                  // ★ 활성 탭은 «지금 어디를 보고 있나»이지 «지금 누를 것»이 아니다.
+                  //   신호색을 여기 쓰면 화면의 amber가 둘이 된다 (DESIGN-RULES §0.3).
+                  'flex min-h-11 items-center rounded-md border px-3 text-xs transition-colors',
                   s === scope
-                    ? 'border-primary bg-primary/10 text-foreground'
+                    ? 'border-input bg-muted font-medium text-foreground'
                     : 'border-border text-muted-foreground hover:border-muted-foreground/40',
                 )}
               >
@@ -185,7 +188,9 @@ export default async function LeaguePage({
                     key={i}
                     className={cn(
                       'flex items-center justify-between rounded-md px-2.5 py-1.5 text-sm',
-                      e.isMe && 'bg-primary/10',
+                      // 「(나)」 라벨이 이미 누구인지 말한다. 색은 표면으로만 구분한다 —
+                      // 신호색은 «할 일»에만 쓴다.
+                      e.isMe && 'bg-muted',
                     )}
                   >
                     <span>

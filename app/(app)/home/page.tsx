@@ -179,11 +179,11 @@ export default async function HomePage() {
         </CardContent>
       </Card>
 
-      <Card id="ai-coach" className="scroll-mt-40 border-primary/30">
+      <Card id="ai-coach" className="scroll-mt-40">
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="text-base">AI 행동 회고 코치</CardTitle>
-            <Badge variant="outline" className="border-primary/40 text-primary/90">
+            <Badge variant="outline" className="text-muted-foreground">
               판단 보조
             </Badge>
           </div>

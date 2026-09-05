@@ -107,7 +107,7 @@ export default async function PrinciplesPage() {
         </ul>
 
         {stale.length > 0 ? (
-          <p className="rounded-xl border border-primary/40 bg-primary/5 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+          <p className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
             {stale.map((b) => staleNotice(b.label, b.asOf)).join(' ')}
           </p>
         ) : null}

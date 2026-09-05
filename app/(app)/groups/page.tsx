@@ -46,7 +46,7 @@ export default async function GroupsPage() {
                 key={i}
                 className={cn(
                   'flex items-center justify-between rounded-md px-2.5 py-1.5 text-sm',
-                  m.isMe && 'bg-primary/10',
+                  m.isMe && 'bg-muted',
                 )}
               >
                 <span>
