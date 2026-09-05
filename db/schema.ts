@@ -138,7 +138,7 @@ export const settings = pgTable('settings', {
 export const aiCalls = pgTable('ai_calls', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
-  kind: text('kind').notNull(), // AI-3|AI-4|AI-5|AI-7
+  kind: text('kind').notNull(), // AI-3|AI-4|AI-5|AI-7|AI-8
   blocked: boolean('blocked').notNull().default(false), // 인젝션·rate limit 차단 여부
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });

@@ -36,3 +36,4 @@ cd ~/projects/jedaero
 - [ ] `bash scripts/verify.sh` **직접 재실행**
 - [ ] 09-06 기능 동결
 - [ ] 09-07 ~ 09-11 매일 URL 접속 확인
+- [ ] 기준선 갱신 확인 — **1월·6월 국민연금 / 2월·8월 노르웨이 / 3월·9월 SPIVA** (`db/seed/benchmarks.ts`)
