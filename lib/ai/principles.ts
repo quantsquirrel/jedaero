@@ -19,6 +19,11 @@ export type PrinciplesAiInput = {
   국민연금_채권비중: number;
   노르웨이_주식목표: number;
   노르웨이_주식실제: number;
+  // ★ 차이도 사실이다. 규칙이 계산해 넣지 않으면 LLM이 직접 빼서(30.5−20=10.5)
+  //   number-guard 에 걸린다 — AI-7 에서 같은 이유로 4/5가 폐기됐다.
+  주식비중차이: number;
+  채권비중차이: number;
+  노르웨이_목표대비차이: number;
 };
 
 const sliceOf = (id: string, name: string) => {
@@ -35,14 +40,21 @@ export function buildPrinciplesInput(mix: {
   bond: number;
   cash: number;
 }): PrinciplesAiInput {
+  const npsEquity = r1(sliceOf('NPS', '국내주식') + sliceOf('NPS', '해외주식'));
+  const npsBond = r1(sliceOf('NPS', '국내채권') + sliceOf('NPS', '해외채권'));
+  const gpfgTarget = sliceOf('GPFG_STRATEGY', '주식');
+  const gpfgActual = sliceOf('GPFG_ACTUAL', '주식');
   return {
     내_주식비중: r1(mix.equity),
     내_채권비중: r1(mix.bond),
     내_현금비중: r1(mix.cash),
-    국민연금_주식비중: r1(sliceOf('NPS', '국내주식') + sliceOf('NPS', '해외주식')),
-    국민연금_채권비중: r1(sliceOf('NPS', '국내채권') + sliceOf('NPS', '해외채권')),
-    노르웨이_주식목표: sliceOf('GPFG_STRATEGY', '주식'),
-    노르웨이_주식실제: sliceOf('GPFG_ACTUAL', '주식'),
+    국민연금_주식비중: npsEquity,
+    국민연금_채권비중: npsBond,
+    노르웨이_주식목표: gpfgTarget,
+    노르웨이_주식실제: gpfgActual,
+    주식비중차이: r1(Math.abs(mix.equity - npsEquity)),
+    채권비중차이: r1(Math.abs(mix.bond - npsBond)),
+    노르웨이_목표대비차이: r1(Math.abs(gpfgActual - gpfgTarget)),
   };
 }
 
@@ -56,6 +68,12 @@ const SYSTEM_PROMPT = `너는 병사의 자산 배분과 «공표된 기관 배�
 - 차이가 «왜» 생기는지를 기관의 자금 목적·지급 의무·운용 기간으로만 설명한다.
   국민연금은 연금 지급이 매달 나가는 기관이다. 노르웨이 국부펀드는 세대를 넘겨 운용한다.
   병사의 목돈은 한 번 들어오고 나갈 날이 정해져 있지 않다.
+- ★ 기관을 설명할 때 "해야"를 쓰지 않는다. "지급해야 하는 기관"이 아니라
+  "매달 지급이 나가는 기관", "지급 의무가 있는 기관"이라고 쓴다.
+  («해야»는 권유형 어미로 판정돼 출력 전체가 폐기된다. 실측 8/8이 이것으로 버려졌다.)
+- 두 값의 차이를 말하려면 «…차이» 필드의 «값»만 쓰고 직접 빼지 않는다.
+  ★ 필드 이름을 문장에 그대로 적지 않는다. "채권비중차이는 10.5%입니다"가 아니라
+  "채권은 10.5%p 적습니다"처럼 사람이 읽는 말로 옮긴다.
 - "합니다"체. 상대는 "사용자님"이라고 부른다.
 - 사실 3~4문장을 쓰고, 마지막에 스스로 돌아보게 하는 열린 질문 1개를 쓴다.
 - 250자 이내.
