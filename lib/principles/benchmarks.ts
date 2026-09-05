@@ -6,10 +6,12 @@ import { BENCHMARKS, type Benchmark } from '../../db/seed/benchmarks';
 
 export type BenchmarkRow = Benchmark & { stale: boolean };
 
+/** todayStr은 kstToday()가 만드는 정규 YYYY-MM-DD 문자열이어야 한다. */
 export function benchmarkRows(todayStr: string): BenchmarkRow[] {
   return BENCHMARKS.map((b) => ({ ...b, stale: todayStr > b.nextReviewAt }));
 }
 
+/** todayStr은 kstToday()가 만드는 정규 YYYY-MM-DD 문자열이어야 한다. */
 export function staleBenchmarks(todayStr: string): BenchmarkRow[] {
   return benchmarkRows(todayStr).filter((b) => b.stale);
 }
