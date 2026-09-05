@@ -4,6 +4,7 @@ import { DrillDeck } from '@/components/drill-deck';
 import { LearnCardsView } from '@/components/learn-cards-view';
 import { MarketWeekCard } from '@/components/market-week-card';
 import { PageHeader } from '@/components/page-header';
+import { JobLinks } from '@/components/job-links';
 import { ReviewForm } from '@/components/review-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
@@ -91,6 +92,10 @@ export default async function LearnPage() {
           <ReviewForm />
         </CardContent>
       </Card>
+
+      <JobLinks
+        items={[{ href: '/principles', label: '나의 투자 원칙', hint: '기록으로 한 장 만들기' }]}
+      />
     </main>
   );
 }

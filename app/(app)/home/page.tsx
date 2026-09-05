@@ -54,11 +54,13 @@ export default async function HomePage() {
         { href: '/portfolio', label: '편성 조정', hint: '포인트 20개 · 이번 주 한 번', primary: true },
         { href: '/league', label: '제대로 지수', hint: '세 축으로 함께 보기' },
         { href: '#ai-coach', label: '한 줄 회고', hint: '사실 + 질문 하나' },
+        { href: '/principles', label: '나의 투자 원칙', hint: '기록으로 한 장 만들기' },
       ]
     : [
         { href: '#market', label: '오늘의 지형', hint: '전선 등락 · 내 손익 가중은 주말에' },
         { href: '/portfolio', label: '명령하달 초안', hint: '실행되지 않는 메모. 안 적어도 됩니다' },
         { href: '/learn#drill', label: '도상훈련', hint: '지금 편성을 과거 지형에 넣기' },
+        { href: '/principles', label: '나의 투자 원칙', hint: '기록으로 한 장 만들기' },
       ];
 
   return (
