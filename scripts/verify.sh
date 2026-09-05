@@ -319,6 +319,7 @@ run_check P1-21 scripts/checks/p1-21-number-guard.ts
 run_check P1-22 scripts/checks/p1-22-drafts.ts
 run_check P1-23 scripts/checks/p1-23-weekly-turnover.ts
 run_check P1-24 scripts/checks/p1-24-security-hardening.ts
+run_check P1-25 scripts/checks/p1-25-benchmarks.ts
 
 # ---------- 요약 ----------
 echo '---'
