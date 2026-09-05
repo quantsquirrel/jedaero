@@ -70,7 +70,7 @@
   --border: oklch(0.268 0.007 286);
   --input: oklch(0.305 0.008 286);
   --ring: oklch(0.830 0.170 82);
-  --faint: oklch(0.550 0.012 286);
+  --faint: oklch(0.680 0.012 286);
   --up: oklch(0.780 0.150 158);
   --down: oklch(0.700 0.170 20);
   /* 데이터 사다리 — 차트 전용. ★ --primary(0.830)보다 한 단 어둡게 시작한다.
@@ -111,7 +111,7 @@
   --border: oklch(0.268 0.007 286);
   --input: oklch(0.305 0.008 286);
   --ring: oklch(0.830 0.170 82);
-  --faint: oklch(0.550 0.012 286);
+  --faint: oklch(0.680 0.012 286);
   --up: oklch(0.780 0.150 158);
   --down: oklch(0.700 0.170 20);
   /* 데이터 사다리 — 차트 전용. ★ --primary(0.830)보다 한 단 어둡게 시작한다.
@@ -141,5 +141,7 @@
   }
   html {
     @apply font-sans;
+    /* 하단 탭(~60px) + 홈 인디케이터. #ai-coach 같은 앵커가 탭 뒤로 들어가지 않게. */
+    scroll-padding-bottom: 7rem;
   }
 }

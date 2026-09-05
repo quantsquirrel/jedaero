@@ -31,9 +31,15 @@ export function DemoGuide() {
           </li>
         ))}
       </ol>
-      <p className="mt-1.5 pb-3 text-[10px] leading-relaxed text-muted-foreground">
+      <p className="mt-1.5 text-[10px] leading-relaxed text-muted-foreground">
         1~2는 평일, 3~4는 위 토글을 주말로. 5·6은 요일과 무관합니다. 6은 전역 후에도 남는 기록입니다.
       </p>
+      <Link
+        href="/onboarding"
+        className="mb-2 inline-flex h-11 items-center text-xs text-muted-foreground underline"
+      >
+        시작하기(온보딩) 화면도 볼 수 있습니다
+      </Link>
     </details>
   );
 }
