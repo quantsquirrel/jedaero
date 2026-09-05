@@ -115,6 +115,12 @@ export function DrillDeck({ items, hasAllocation }: { items: DrillDeckItem[]; ha
           </div>
           <p className="text-sm leading-relaxed text-muted-foreground">
             예측이 아닙니다. 지금 포인트를 과거 한 해에 그대로 넣어 본 결과입니다.
+            {/* ★ 구간 이름·기간은 실제 시장에서 가져왔고 시세는 합성이다. 이 차이를 적지 않으면
+                「2008년 수익률」로 읽힌다. 방어가 아니라 정확한 서술이다 (lib/drill/fixtures.ts). */}
+            <span className="mt-1 block text-xs text-faint">
+              구간의 이름과 기간은 실제 시장에서 가져왔고, 시세는 교훈을 보이기 위한 교육용 합성
+              데이터입니다.
+            </span>
           </p>
           {!hasAllocation ? (
             <p className="text-xs leading-relaxed text-faint">
