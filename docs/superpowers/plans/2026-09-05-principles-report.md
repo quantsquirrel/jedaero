@@ -99,7 +99,7 @@ const fail = (msg: string) => {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-if (BENCHMARKS.length !== 5) fail(`기준선 ${BENCHMARKS.length}개 — 5개여야 함`);
+if (BENCHMARKS.length !== 4) fail(`기준선 ${BENCHMARKS.length}개 — 4개여야 함`);
 
 for (const b of BENCHMARKS) {
   const sum = b.slices.reduce((s, x) => s + x.pct, 0);
@@ -162,7 +162,7 @@ Create `db/seed/benchmarks.ts`:
 export type BenchmarkSlice = { name: string; pct: number };
 
 export type Benchmark = {
-  id: 'NPS' | 'GPFG_STRATEGY' | 'GPFG_ACTUAL' | 'SIXTY_FORTY' | 'EQUAL_WEIGHT';
+  id: 'NPS' | 'GPFG_STRATEGY' | 'GPFG_ACTUAL' | 'EQUAL_WEIGHT';
   label: string;
   slices: BenchmarkSlice[];
   /** 이 숫자의 기준일 */
@@ -216,18 +216,6 @@ export const BENCHMARKS: readonly Benchmark[] = [
     nextReviewAt: '2027-02-28',
     // 목표 70인데 실제 72.1 — 「목표 vs 현재」 갭의 실물 증거다. 학습 카드 4단계가 여기서 증명된다.
     note: '반기보고서 실제 배분',
-  },
-  {
-    id: 'SIXTY_FORTY',
-    label: '60/40',
-    slices: [
-      { name: '주식', pct: 60 },
-      { name: '채권', pct: 40 },
-    ],
-    asOf: '2026-09-05',
-    sourceUrl: 'https://www.nber.org/papers/w4369',
-    nextReviewAt: '2099-12-31',
-    note: '오래 쓰인 기준선',
   },
   {
     id: 'EQUAL_WEIGHT',
@@ -284,7 +272,7 @@ export function staleBenchmarks(todayStr: string): BenchmarkRow[] {
 - [ ] **Step 5: 통과를 확인한다**
 
 Run: `cd /Users/barella/projects/jedaero && npx tsx scripts/checks/p1-25-benchmarks.ts`
-Expected: PASS — `기준선 5개 합계·메타·경과 판정 통과 (SPIVA 10년 90.4%)`
+Expected: PASS — `기준선 4개 합계·메타·경과 판정 통과 (SPIVA 10년 90.4%)`
 
 - [ ] **Step 6: `verify.sh`에 등록한다**
 
@@ -468,7 +456,6 @@ export const FIXED_COPY: Record<string, string> = {
   gpfg: `노르웨이 국부펀드 — 목표는 ${slices('GPFG_STRATEGY')}, 실제는 주식 ${
     gpfgActual.slices[0].pct
   } · 채권 ${gpfgActual.slices[1].pct} (NBIM ${gpfgActual.asOf})`,
-  sixtyForty: `60/40 — ${slices('SIXTY_FORTY')}. 오래 쓰인 기준선입니다.`,
   equalWeight: '균등배분 — 여섯 개에 고르게. 훈련의 「연합작전」이 이에 가깝습니다.',
   mappingNote:
     '자산군을 어떻게 자를지는 기관마다 다릅니다. 국민연금에는 금·원자재 자산군이 없고, 대체투자 14%는 리츠·인프라와 다릅니다 — 사모투자가 들어갑니다. 해외주식 34.7%도 미국과 그 밖을 나눠 공개하지 않습니다. 억지로 맞추지 않았습니다.',
@@ -1546,7 +1533,7 @@ P1 표 끝에 추가:
 §B 심사자 시나리오 끝에 추가:
 
 ```
-| 22 | 평일 → `/principles` | **열림.** 사실 문장에 숫자가 채워지고, 기준선 5종에 기준일·출처가 붙는다. 제대로 지수 점수는 없다 |
+| 22 | 평일 → `/principles` | **열림.** 사실 문장에 숫자가 채워지고, 기준선 4종에 기준일·출처가 붙는다. 제대로 지수 점수는 없다 |
 | 23 | `/principles`에서 「왜 다른지 보기」 | AI 배지 + 사실 서술 + 질문 1개. 조언 없음. 키가 없으면 규칙 폴백이 같은 자리에 뜬다 |
 | 24 | 문장 체크를 풀고 「이미지로 저장」 | 선택한 문장만 담긴 PNG. 별명 없음. 기준일이 이미지에 각인됨 |
 ```
