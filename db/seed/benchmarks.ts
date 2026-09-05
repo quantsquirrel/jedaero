@@ -4,11 +4,13 @@
 // ★ 전부 상수다. 런타임 외부 호출이 없다 (C6). 갱신은 사람이 하고 P1-25가 기계로 확인한다.
 // ★ 공표 분류를 그대로 둔다. 우리 6자산군으로 강제 매핑하지 않는다 —
 //   국민연금에는 금·원자재 자산군이 아예 없고, 맞춰 넣으면 «우리가 만든 숫자»가 된다.
+// ★ 60/40은 넣지 않는다. 기관 공시도 학술 논문도 아니라 업계 관행일 뿐이고, 출처 링크를
+//   정직하게 채울 수 없다. 화면 카피가 「억지로 맞추지 않았습니다」라서 인용을 만들면 모순된다.
 
 export type BenchmarkSlice = { name: string; pct: number };
 
 export type Benchmark = {
-  id: 'NPS' | 'GPFG_STRATEGY' | 'GPFG_ACTUAL' | 'SIXTY_FORTY' | 'EQUAL_WEIGHT';
+  id: 'NPS' | 'GPFG_STRATEGY' | 'GPFG_ACTUAL' | 'EQUAL_WEIGHT';
   label: string;
   slices: BenchmarkSlice[];
   /** 이 숫자의 기준일 */
@@ -62,18 +64,6 @@ export const BENCHMARKS: readonly Benchmark[] = [
     nextReviewAt: '2027-02-28',
     // 목표 70인데 실제 72.1 — 「목표 vs 현재」 갭의 실물 증거다. 학습 카드 4단계가 여기서 증명된다.
     note: '반기보고서 실제 배분',
-  },
-  {
-    id: 'SIXTY_FORTY',
-    label: '60/40',
-    slices: [
-      { name: '주식', pct: 60 },
-      { name: '채권', pct: 40 },
-    ],
-    asOf: '2026-09-05',
-    sourceUrl: 'https://www.nber.org/papers/w4369',
-    nextReviewAt: '2099-12-31',
-    note: '오래 쓰인 기준선',
   },
   {
     id: 'EQUAL_WEIGHT',

@@ -11,7 +11,7 @@ const fail = (msg: string) => {
 };
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const EXPECTED_IDS = ['NPS', 'GPFG_STRATEGY', 'GPFG_ACTUAL', 'SIXTY_FORTY', 'EQUAL_WEIGHT'] as const;
+const EXPECTED_IDS = ['NPS', 'GPFG_STRATEGY', 'GPFG_ACTUAL', 'EQUAL_WEIGHT'] as const;
 
 // 모양만 보면 2026-13-40도 통과한다. UTC로 읽고 다시 쓴 값까지 같아야 실제 달력 날짜다.
 const isCanonicalDate = (value: string) => {
@@ -29,9 +29,9 @@ const isHttpsUrl = (value: string) => {
   }
 };
 
-if (BENCHMARKS.length !== 5) fail(`기준선 ${BENCHMARKS.length}개 — 5개여야 함`);
+if (BENCHMARKS.length !== 4) fail(`기준선 ${BENCHMARKS.length}개 — 4개여야 함`);
 
-// 길이만 5면 중복으로 다른 기준선 하나를 밀어낼 수 있다. 집합 자체를 고정한다.
+// 길이만 4면 중복으로 다른 기준선 하나를 밀어낼 수 있다. 집합 자체를 고정한다.
 const benchmarkIds = BENCHMARKS.map((b) => b.id);
 const uniqueBenchmarkIds = new Set(benchmarkIds);
 if (uniqueBenchmarkIds.size !== benchmarkIds.length) fail(`기준선 id 중복: ${benchmarkIds.join(', ')}`);
