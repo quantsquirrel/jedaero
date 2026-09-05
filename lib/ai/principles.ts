@@ -4,8 +4,8 @@
 // ★ 사용자 자유 텍스트를 입력으로 받지 않는다 — 전부 서버 계산값과 상수다. 인젝션 표면이 없다.
 // ★ 금지 어휘: output-guard의 ADVICE_PATTERN이 폐기하는 어미·자문 어휘를 프롬프트에도 쓰지 않는다.
 //   프롬프트가 그 단어를 쓰면 LLM이 따라 쓰고, 출력이 매번 버려져 폴백만 보인다.
-import OpenAI from 'openai';
 import { BENCHMARKS } from '../../db/seed/benchmarks';
+import { completeJson, hasLlmKey } from './complete';
 import { verifyNumbersFrom } from './number-guard';
 import { verifyFactualOutput } from './output-guard';
 
@@ -75,20 +75,14 @@ export function principlesFallback(input: PrinciplesAiInput): PrincipleNarrative
 export async function generatePrinciplesNarrative(
   input: PrinciplesAiInput,
 ): Promise<PrincipleNarrative | null> {
-  if (!process.env.OPENAI_API_KEY) return null;
+  if (!hasLlmKey()) return null;
   try {
-    const client = new OpenAI();
-    const res = await client.chat.completions.create({
-      model: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: JSON.stringify(input) },
-      ],
-      response_format: { type: 'json_object' },
-      max_tokens: 400,
+    const raw = await completeJson({
+      system: SYSTEM_PROMPT,
+      user: JSON.stringify(input),
+      maxTokens: 400,
       temperature: 0.3,
     });
-    const raw = res.choices[0]?.message?.content?.trim();
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as { text?: unknown; question?: unknown };

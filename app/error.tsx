@@ -40,7 +40,7 @@ export default function RouteError({
           다시 시도
         </button>
         <Link
-          href="/demo"
+          href="/demo?new=1"
           className="flex h-12 items-center justify-center rounded-xl border border-input text-sm font-semibold text-foreground transition-colors hover:border-muted-foreground/60 hover:bg-card"
         >
           데모로 다시 들어가기

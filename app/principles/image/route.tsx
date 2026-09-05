@@ -22,13 +22,17 @@ import type { Details } from '../../../lib/portfolio/details';
 
 export const runtime = 'nodejs';
 
-const FONT = readFileSync(join(process.cwd(), 'assets/fonts/NotoSansKR-Regular.ttf'));
+// Satori는 가변 폰트 테이블을 못 읽는다. 정적 Regular만 쓴다.
+const FONT = readFileSync(join(process.cwd(), 'assets/fonts/NotoSansKR-400.ttf'));
 
-const BG = '#09090b';
-const FG = '#fafafa';
-const MUTED = '#a1a1aa';
-const LINE = '#27272a';
-const ACCENT = '#fbbf24';
+// ★ 토큰(app/globals.css)의 oklch를 sRGB로 옮긴 값이다. 눈대중으로 고르지 않는다 —
+//   `node scripts/tokens-to-hex.mjs` 가 뽑아 준다. 토큰을 손보면 여기도 다시 뽑아 맞춘다.
+//   이 PNG는 사용자가 밖으로 들고 나가는 유일한 산출물이라 브랜드 색이 정확해야 한다.
+const BG = '#0a0a0c'; // background
+const FG = '#f5f5f7'; // foreground
+const MUTED = '#a4a4ac'; // muted-foreground
+const LINE = '#252529'; // border
+const ACCENT = '#feba08'; // primary
 
 export async function GET(request: Request) {
   const user = await getSessionUser();
@@ -63,7 +67,8 @@ export async function GET(request: Request) {
 
   const nps = BENCHMARKS.find((b) => b.id === 'NPS');
 
-  return new ImageResponse(
+  try {
+    const image = new ImageResponse(
     (
       <div
         style={{
@@ -82,10 +87,15 @@ export async function GET(request: Request) {
           <div style={{ fontSize: 52 }}>나의 투자 원칙</div>
         </div>
 
+        {/* ★ flexGrow + justifyContent:center — 문장 수가 셋이든 일곱이든 남는 공간을 이 블록이
+            가져가고, 문장은 그 안에서 세로 가운데에 선다. 고정 높이 캔버스에 위로만 붙이면
+            문장이 적을 때 아래로 400~800px가 검게 비어 산출물이 미완성으로 보인다. */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
+            justifyContent: 'center',
+            flexGrow: 1,
             gap: '20px',
             marginTop: '44px',
             borderTop: `2px solid ${LINE}`,
@@ -127,5 +137,13 @@ export async function GET(request: Request) {
       fonts: [{ name: 'NotoSansKR', data: FONT, weight: 400, style: 'normal' }],
       headers: { 'Cache-Control': 'no-store' },
     },
-  );
+    );
+    const bytes = await image.arrayBuffer();
+    return new Response(bytes, { headers: image.headers });
+  } catch {
+    return new Response('이미지를 만들지 못했습니다. 브라우저 인쇄로 저장해 주세요.', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  }
 }

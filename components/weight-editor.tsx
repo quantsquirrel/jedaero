@@ -138,9 +138,11 @@ export function WeightEditor({
             </div>
 
             {canSplit ? (
+              // 심사 시나리오 6-c가 지목하는 컨트롤이다. 밑줄 텍스트만 두면 터치 타깃이 16px다.
               <button
                 type="button"
-                className="self-start text-xs text-muted-foreground underline underline-offset-2"
+                aria-expanded={isOpen}
+                className="flex min-h-11 items-center self-start text-xs text-muted-foreground underline underline-offset-2"
                 onClick={() => setOpen(isOpen ? null : t.code)}
               >
                 {isOpen
@@ -227,7 +229,7 @@ export function WeightEditor({
                       now === d ? 'text-muted-foreground' : 'text-primary/90',
                     )}
                   >
-                    {now === d ? '같음' : `${now > d ? '+' : ''}${now - d}p`}
+                    {now === d ? '같음' : `${now > d ? '+' : '−'}${Math.abs(now - d)}p`}
                   </span>
                 </div>
               );
@@ -269,6 +271,13 @@ export function WeightEditor({
           </span>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">{RESERVE.note}</p>
+        {/* ★ 예비대가 0이면 여섯 전선의 `+`가 전부 비활성이 된다. 왜 안 눌리는지 같은 화면에
+            적지 않으면 화면이 고장난 것으로 읽힌다 (DESIGN-RULES §7 잠김 문구 규범). */}
+        {reserve === 0 && !disabled ? (
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            포인트를 전부 놓았습니다. 더 놓으려면 먼저 다른 전선에서 빼야 합니다.
+          </p>
+        ) : null}
       </div>
 
       {notice ? (

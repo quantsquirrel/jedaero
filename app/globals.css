@@ -73,11 +73,14 @@
   --faint: oklch(0.550 0.012 286);
   --up: oklch(0.780 0.150 158);
   --down: oklch(0.700 0.170 20);
-  --chart-1: oklch(0.830 0.170 82);
-  --chart-2: oklch(0.720 0.130 78);
-  --chart-3: oklch(0.600 0.100 76);
-  --chart-4: oklch(0.480 0.070 74);
-  --chart-5: oklch(0.380 0.040 72);
+  /* 데이터 사다리 — 차트 전용. ★ --primary(0.830)보다 한 단 어둡게 시작한다.
+     같은 값이면 차트가 「지금 누를 것」과 똑같이 보인다 (DESIGN-RULES §1).
+     다섯 단 전부 bg-card·bg-muted 위에서 대비 2:1을 넘긴다 — 손보면 검증기를 다시 돌린다. */
+  --chart-1: oklch(0.780 0.155 82);
+  --chart-2: oklch(0.700 0.125 79);
+  --chart-3: oklch(0.620 0.100 77);
+  --chart-4: oklch(0.530 0.075 75);
+  --chart-5: oklch(0.450 0.055 73);
   --radius: 0.75rem;
   --sidebar: oklch(0.192 0.006 286);
   --sidebar-foreground: oklch(0.970 0.003 286);
@@ -111,11 +114,14 @@
   --faint: oklch(0.550 0.012 286);
   --up: oklch(0.780 0.150 158);
   --down: oklch(0.700 0.170 20);
-  --chart-1: oklch(0.830 0.170 82);
-  --chart-2: oklch(0.720 0.130 78);
-  --chart-3: oklch(0.600 0.100 76);
-  --chart-4: oklch(0.480 0.070 74);
-  --chart-5: oklch(0.380 0.040 72);
+  /* 데이터 사다리 — 차트 전용. ★ --primary(0.830)보다 한 단 어둡게 시작한다.
+     같은 값이면 차트가 「지금 누를 것」과 똑같이 보인다 (DESIGN-RULES §1).
+     다섯 단 전부 bg-card·bg-muted 위에서 대비 2:1을 넘긴다 — 손보면 검증기를 다시 돌린다. */
+  --chart-1: oklch(0.780 0.155 82);
+  --chart-2: oklch(0.700 0.125 79);
+  --chart-3: oklch(0.620 0.100 77);
+  --chart-4: oklch(0.530 0.075 75);
+  --chart-5: oklch(0.450 0.055 73);
   --sidebar: oklch(0.192 0.006 286);
   --sidebar-foreground: oklch(0.970 0.003 286);
   --sidebar-primary: oklch(0.830 0.170 82);

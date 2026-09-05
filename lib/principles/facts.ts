@@ -77,10 +77,17 @@ export function buildPrincipleSentences(input: PrincipleInput): PrincipleSentenc
   });
 
   // ── 문안 6: 분산 ──
+  // ★ 「나눴지만 ~ 수준이었습니다」는 «칸 수보다 실질이 적을 때»만 성립하는 대조문이다.
+  //   고르게 담아 실질 분산이 칸 수와 같아지면 "여섯 개로 나눴지만 실제 분산은 여섯 개"가 되어
+  //   문장이 자기모순이 된다. 두 경우를 갈라 쓴다 — 둘 다 사실 서술이고, 어느 쪽도 평가하지 않는다.
   const fronts = effectiveFronts(latest.weights);
+  const roundedFronts = Math.round(fronts);
   out.push({
     id: 'spread',
-    text: `${koCount(nonZero.length, '개')}로 나눴지만 실제 분산은 ${koCount(Math.round(fronts), '개')} 수준이었습니다. ${maxName} 하나가 컸습니다.`,
+    text:
+      roundedFronts < nonZero.length
+        ? `${koCount(nonZero.length, '개')}로 나눴지만 실제 분산은 ${koCount(roundedFronts, '개')} 수준이었습니다. ${maxName} 하나가 컸습니다.`
+        : `${koCount(nonZero.length, '개')}로 나눴고 실제 분산도 ${koCount(roundedFronts, '개')} 수준이었습니다. 한 곳으로 쏠리지 않았습니다.`,
   });
 
   // ── 문안 7: 의사결정 횟수 ──
@@ -155,6 +162,39 @@ export function buildPrincipleSentences(input: PrincipleInput): PrincipleSentenc
   }
 
   return out;
+}
+
+export type AttributionCurves = {
+  dates: string[];
+  /** 실제로 조정해 온 곡선 */
+  mine: number[];
+  /** 첫 편성을 끝까지 유지했다면 (반사실) */
+  held: number[];
+  /** 두 끝점 차이의 «크기». 부호를 쓰지 않는 이유는 아래 주석 */
+  diff: number;
+};
+
+/** 문안 11('attrib')이 문장으로 줄여 버리는 두 곡선을 그대로 돌려준다.
+ *  ★ 같은 엔진에 이력 배열만 바꿔 넣는다 — 새 체결 로직이 없다.
+ *  ★ 「내 조정이 움직인 금액」은 두 선 «사이»이지 끝점 차이 하나가 아니다. 그래서 그린다.
+ *  ★ 어느 쪽이 높은지는 합성 시세에서 우연이다. 우열로 칠하지 않는다 (문안 11과 같은 이유). */
+export function buildAttributionCurves(input: PrincipleInput): AttributionCurves | null {
+  const { rows, dates, series } = input;
+  if (rows.length < 2) return null;
+
+  const history = toHistory(rows);
+  const cashflows = { [rows[0].effectiveFrom]: SEED_AMOUNT };
+  const mine = computeCurve(dates, series, history, cashflows);
+  const held = computeCurve(dates, series, [history[0]], cashflows);
+  if (mine.values.length < 2) return null;
+
+  const last = (a: number[]) => a[a.length - 1] ?? 0;
+  return {
+    dates: mine.dates,
+    mine: mine.values,
+    held: held.values,
+    diff: Math.abs(last(mine.values) - last(held.values)),
+  };
 }
 
 /** AI-8 입력용 요약 비중. 주식 3전선을 합쳐 기관 분류와 견줄 수 있게 만든다 */

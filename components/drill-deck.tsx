@@ -18,10 +18,12 @@ function Sparkline({
   values,
   overlay,
   troughIndex,
+  label,
 }: {
   values: number[];
   overlay?: number[];
   troughIndex: number;
+  label: string;
 }) {
   const w = 320;
   const h = 88;
@@ -37,10 +39,13 @@ function Sparkline({
   };
   const line = (arr: number[]) => arr.map((_, i) => toPt(arr, i)).join(' ');
   const [tx, ty] = toPt(values, Math.min(troughIndex, values.length - 1)).split(',').map(Number);
+  // 시작값 = 원금. 스케일 안에 들어올 때만 그린다 — 밖이면 선이 화면 밖에 눕는다
+  const startY = pad + (1 - (values[0] - min) / span) * (h - pad * 2);
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-[88px] w-full" role="img" aria-label="구간 평가액 곡선">
-      <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} className="stroke-border" strokeWidth="1" />
+    <svg viewBox={`0 0 ${w} ${h}`} className="h-[88px] w-full" role="img" aria-label={label}>
+      {/* 기준선은 «시작값» 자리다. 바닥에 그으면 0선으로 읽히는데 이 축은 0에서 시작하지 않는다 */}
+      <line x1={pad} y1={startY} x2={w - pad} y2={startY} className="stroke-border" strokeWidth="1" />
       {overlay ? (
         <polyline
           fill="none"
@@ -54,13 +59,31 @@ function Sparkline({
       <polyline
         fill="none"
         points={line(values)}
-        className="stroke-primary/80"
+        className="stroke-[var(--chart-1)]"
         strokeWidth="2"
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      <circle cx={tx} cy={ty} r="3.5" className="fill-primary" />
+      {/* 저점 — 지름 8px + 2px 표면 링으로 선과 분리한다 */}
+      <circle cx={tx} cy={ty} r="4" className="fill-[var(--chart-1)] stroke-card" strokeWidth="2" />
     </svg>
+  );
+}
+
+/** 계열이 둘이면 범례가 반드시 있다. 색만 달리 그려 놓고 어느 쪽이 나인지 안 적으면
+ *  그림이 거짓말을 한다 (DESIGN-RULES §9-1). */
+function CurveLegend({ allianceName }: { allianceName: string }) {
+  return (
+    <ul className="flex flex-wrap items-center gap-x-4 gap-y-1">
+      <li className="flex items-center gap-1.5">
+        <span className="h-0.5 w-4 shrink-0 rounded-full bg-[var(--chart-1)]" aria-hidden />
+        <span className="text-[11px] text-muted-foreground">내 편성</span>
+      </li>
+      <li className="flex items-center gap-1.5">
+        <span className="h-0.5 w-4 shrink-0 rounded-full bg-faint" aria-hidden />
+        <span className="text-[11px] text-muted-foreground">{allianceName}</span>
+      </li>
+    </ul>
   );
 }
 
@@ -158,7 +181,13 @@ export function DrillDeck({ items, hasAllocation }: { items: DrillDeckItem[]; ha
             values={current.mine.values}
             overlay={compare ? current.alliance.values : undefined}
             troughIndex={Math.max(0, troughIndex)}
+            label={
+              compare
+                ? `구간 평가액 곡선 — 내 편성과 ${allianceName}`
+                : '구간 평가액 곡선'
+            }
           />
+          {compare ? <CurveLegend allianceName={allianceName} /> : null}
         </div>
 
         <div className="px-5">

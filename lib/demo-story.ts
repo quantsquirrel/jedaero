@@ -9,7 +9,8 @@ export const SKIP_WEEKS_AGO = new Set([8, 3, 2, 1]);
 
 // 12주 전 → 4주 전. 연합작전에서 시작해 1포인트(5%p)씩 옮긴 이력.
 // ★ 7주 전에 「기타 해외」에서 1포인트를 빼고 어디에도 놓지 않는다 = 예비대 1포인트.
-//   4주 전에 그 1포인트를 금·원자재에 투입한다. 예비대가 생겼다 쓰이는 과정이 시연된다.
+//   4주 전에 「미국 주식」에서 한 포인트를 더 빼 예비대를 2로 둔 채 멈춘다.
+//   예비대가 «쌓이는» 과정이 시연되고, 화면에는 놓을 수 있는 포인트가 남는다.
 export const WEIGHT_STORY: { weeksAgo: number; weights: Weights; templateId?: string }[] = [
   { weeksAgo: 12, weights: { KR_STOCK: 20, US_STOCK: 20, INTL_STOCK: 15, BOND: 20, GOLD_COMM: 15, REIT_INFRA: 10 }, templateId: 'ALLIANCE' },
   { weeksAgo: 11, weights: { KR_STOCK: 20, US_STOCK: 25, INTL_STOCK: 15, BOND: 15, GOLD_COMM: 15, REIT_INFRA: 10 } },
@@ -18,7 +19,11 @@ export const WEIGHT_STORY: { weeksAgo: number; weights: Weights; templateId?: st
   { weeksAgo: 7, weights: { KR_STOCK: 25, US_STOCK: 30, INTL_STOCK: 10, BOND: 15, GOLD_COMM: 10, REIT_INFRA: 5 } },
   { weeksAgo: 6, weights: { KR_STOCK: 20, US_STOCK: 35, INTL_STOCK: 10, BOND: 15, GOLD_COMM: 10, REIT_INFRA: 5 } },
   { weeksAgo: 5, weights: { KR_STOCK: 20, US_STOCK: 30, INTL_STOCK: 10, BOND: 20, GOLD_COMM: 10, REIT_INFRA: 5 } },
-  { weeksAgo: 4, weights: { KR_STOCK: 20, US_STOCK: 30, INTL_STOCK: 10, BOND: 20, GOLD_COMM: 15, REIT_INFRA: 5 } },
+  // ★ 마지막 편성은 미국 주식에서 1포인트를 빼 예비대를 2로 «남긴 채» 끝난다.
+  //   합이 100이면 주말 편성기 첫 화면에서 여섯 전선의 `+`가 전부 비활성으로 뜨고,
+  //   심사자가 핵심 상호작용을 처음 보는 순간이 「아무것도 안 눌리는 화면」이 된다.
+  //   트레이에 빈 칸이 보여야 예비대가 방치가 아니라 선택으로 읽힌다.
+  { weeksAgo: 4, weights: { KR_STOCK: 20, US_STOCK: 25, INTL_STOCK: 10, BOND: 20, GOLD_COMM: 10, REIT_INFRA: 5 } },
 ];
 
 /** 실제로 allocations 행이 생기는 주만 (스킵 주는 행이 없다 = 직전 비중 유지) */

@@ -14,8 +14,8 @@ export default function GlobalError({
         style={{
           margin: 0,
           minHeight: '100dvh',
-          background: '#09090b',
-          color: '#f4f4f5',
+          background: '#0a0a0c',
+          color: '#f5f5f7',
           fontFamily:
             'ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif',
           display: 'flex',
@@ -30,7 +30,7 @@ export default function GlobalError({
               화면을 불러오지 못했습니다
             </p>
             <h1 style={{ fontSize: 24, fontWeight: 700, margin: '10px 0 0' }}>잠시 연결이 끊겼습니다</h1>
-            <p style={{ fontSize: 14, lineHeight: 1.6, color: '#a1a1aa', margin: '12px 0 0', wordBreak: 'keep-all' }}>
+            <p style={{ fontSize: 14, lineHeight: 1.6, color: '#a4a4ac', margin: '12px 0 0', wordBreak: 'keep-all' }}>
               교육용 모의 훈련 서비스입니다. 실제 거래·주문·결제는 일어나지 않으며, 지금 오류로
               잃는 것은 없습니다.
             </p>
@@ -42,8 +42,8 @@ export default function GlobalError({
               height: 48,
               borderRadius: 12,
               border: 0,
-              background: '#fbbf24',
-              color: '#09090b',
+              background: '#feba08',
+              color: '#120c04',
               fontSize: 14,
               fontWeight: 600,
               cursor: 'pointer',
@@ -56,8 +56,8 @@ export default function GlobalError({
             style={{
               height: 48,
               borderRadius: 12,
-              border: '1px solid #3f3f46',
-              color: '#e4e4e7',
+              border: '1px solid #2f2f33',
+              color: '#f5f5f7',
               fontSize: 14,
               fontWeight: 600,
               display: 'flex',
@@ -68,7 +68,7 @@ export default function GlobalError({
           >
             데모로 다시 들어가기
           </a>
-          <p style={{ fontSize: 11, color: '#52525b', margin: 0 }}>
+          <p style={{ fontSize: 11, color: '#717178', margin: 0 }}>
             {error.digest ? `참조 코드 ${error.digest}` : '잠시 뒤 다시 열어 주세요.'}
           </p>
         </main>

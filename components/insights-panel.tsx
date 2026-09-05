@@ -73,7 +73,14 @@ export function NarrativeButton() {
           <p className="text-sm leading-relaxed">{result.text}</p>
         </div>
       ) : null}
-      {result.error ? <p className="text-sm text-destructive">{result.error}</p> : null}
+      {/* ★ AI 실패는 «시스템 오류»가 아니다. destructive 로 칠하지 않는다 (DESIGN-RULES §7).
+          이 화면은 위쪽 「사실 서술」이 이미 규칙 기반으로 같은 숫자를 말하고 있으므로,
+          문장을 새로 지어내 겹치지 않고 그쪽을 가리킨다. */}
+      {result.error ? (
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {result.error} 위의 사실 서술은 규칙으로 계산한 것이라 그대로 남아 있습니다.
+        </p>
+      ) : null}
     </div>
   );
 }
