@@ -50,3 +50,8 @@ credentials.*
 .env*.local
 .superpowers/
 .neon
+
+# Claude Code 플러그인 설치물 — 출품물이 아니다.
+# 여기 있는 파일이 `npm run lint`(릴리스 게이트)에 섞이면 우리 코드의 신호가 묻힌다.
+/oh-my-design
+/.claude

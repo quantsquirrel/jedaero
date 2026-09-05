@@ -36,6 +36,8 @@
   ],
   "exclude": [
     "node_modules",
-    "scripts"
+    "scripts",
+    "oh-my-design",
+    ".claude"
   ]
 }

@@ -47,6 +47,10 @@ const SYSTEM_PROMPT = `너는 병사의 모의 포트폴리오 주간 브리핑�
 
 규칙 (어기면 출력이 폐기된다):
 - 주어진 숫자만 쓴다. 숫자를 새로 만들거나 반올림 외의 가공을 하지 않는다.
+- **여러 축의 비중을 더하지 마라.** "미국 주식과 채권을 합쳐 45%" 같은 문장은 금지다.
+  합계는 주어지지 않았고, 직접 더하면 틀린 값을 쓰게 된다. 축은 하나씩 따로 말한다.
+  전체를 말해야 하면 내비중가중등락퍼센트의 «값»만 쓰고, 문장에서는
+  "이번 주 내 편성 기준 −0.9%"처럼 사람이 읽는 말로 옮긴다. 필드 이름을 그대로 적지 않는다.
 - 전망·예측·추천·목표가·매수/매도 판단을 절대 하지 않는다.
   "오를", "하락할", "유망", "매수", "전망", "추천", "고려" 같은 말을 쓰지 마라.
 - "공격적", "보수적" 같은 성향 라벨을 붙이지 않는다.
@@ -69,7 +73,9 @@ const WEEKDAY_SYSTEM_PROMPT = `너는 병사의 모의 포트폴리오 평일 �
 - 내 손익·가중 등락·이번 주 수익률을 말하지 않는다. 전선이 얼마나 움직였는지만 과거형으로 적는다.
 - summary: 무엇이 얼마나 움직였는지 사실 문장 2개. 90자 이내.
 - questions: 스스로 던져볼 질문 1개. 40자 이내. 답을 주지 않는다.
-- 한국어 존댓말. 반드시 JSON만 출력한다.`;
+  ★ 하나여도 «배열»이다: {"questions": ["..."]}. 문자열로 주면 폐기된다.
+- 한국어 존댓말. 반드시 JSON만 출력한다.
+- 출력 예: {"summary":"...","questions":["..."]}`;
 
 /** 브리핑 생성. 실패·검증 위반 시 null → 호출부가 규칙 기반 요약으로 폴백한다. */
 export async function generateBriefing(week: MarketWeek): Promise<Briefing | null> {
@@ -128,16 +134,23 @@ export async function generateWeekdayBriefing(week: MarketWeek): Promise<Weekday
       temperature: 0.3,
     });
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as WeekdayBriefing;
-    if (typeof parsed.summary !== 'string' || !Array.isArray(parsed.questions)) return null;
-    if (parsed.questions.length !== 1) return null;
-    const text = [parsed.summary, ...parsed.questions].join(' ');
+    const parsed = JSON.parse(raw) as { summary?: unknown; questions?: unknown };
+    if (typeof parsed.summary !== 'string') return null;
+    // ★ 「질문 1개」를 모델이 배열이 아니라 문자열로 돌려주는 일이 잦다 (실측 5/5).
+    //   그건 «사실이 틀린 것»이 아니라 그릇 모양이 다른 것이라 폐기할 이유가 없다.
+    //   가드는 내용을 보는 자리고, 여기는 모양을 맞추는 자리다 — 섞지 않는다.
+    const questions =
+      typeof parsed.questions === 'string' ? [parsed.questions] : parsed.questions;
+    if (!Array.isArray(questions) || questions.length !== 1) return null;
+    if (typeof questions[0] !== 'string') return null;
+    const normalized: WeekdayBriefing = { summary: parsed.summary, questions: [questions[0]] };
+    const text = [normalized.summary, ...normalized.questions].join(' ');
     if (!verifyFactualOutput(text).ok) return null;
     // 입력에 비중이 없으므로 손익은 애초에 계산될 수 없다. 남는 위험은 «지어낸 수치»뿐이고
     // 그건 allowed 목록이 잡는다. 가중 등락을 forbidden 으로 또 막으면, 그 값이 어느 전선
     // 등락과 우연히 같아지는 날(실측 9.4%)에 멀쩡한 문장까지 함께 폐기된다.
     if (!verifyNumbersFrom(text, input).ok) return null;
-    return parsed;
+    return normalized;
   } catch {
     return null;
   }

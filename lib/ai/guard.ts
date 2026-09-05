@@ -59,7 +59,14 @@ export async function guardedAiCall<T>(
   const result = await fn();
   await recordAiCall(userId, kind, result === null);
   if (result === null) {
-    return { error: 'failed', message: 'AI 응답을 만들지 못했습니다. 잠시 후 다시 시도해주세요.' };
+    // ★ 「만들지 못했습니다」는 고장으로 읽힌다. 실제로 가장 흔한 경로는 «검증 폐기»다 —
+    //   조언 어미·성향 라벨·입력에 없던 숫자가 잡히면 문장 전체를 버린다.
+    //   버렸다는 사실을 숨기지 않는 편이 정확하고, 이 서비스가 무엇을 하는지도 그때 보인다.
+    //   호출 자체가 실패했을 때도 「AI 문장이 통과하지 못했다」는 서술은 참이다.
+    return {
+      error: 'failed',
+      message: 'AI 문장이 검증을 통과하지 못했습니다. 아래는 규칙이 계산한 문장입니다.',
+    };
   }
   return { ok: result };
 }
