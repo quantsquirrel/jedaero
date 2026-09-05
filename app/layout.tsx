@@ -15,11 +15,14 @@ export const viewport: Viewport = {
 
 // 글꼴은 빌드 시점에 내려받아 우리 도메인에서 서빙한다 (next/font).
 // 런타임에 fonts.googleapis.com 을 부르지 않는다 — 심사 기간에 외부 장애가 화면을 흔들지 않게.
+// ★ preload: false — KR 은 unicode-range 청크가 수십 개다. 기본 preload 는 전부를
+//   <link rel=preload> 로 걸어 랜딩 LCP 를 한 자리 초로 늘린다. 본문이 쓰는 청크만 늦게 받는다.
 const plexSansKr = IBM_Plex_Sans_KR({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-plex-kr',
   display: 'swap',
+  preload: false,
 });
 
 // 금액·비율·포인트 등 모든 수치는 모노로 — 자릿수가 흔들리면 비교가 어렵다

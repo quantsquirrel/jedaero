@@ -16,7 +16,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="주요 화면"
-      className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-background/95 backdrop-blur"
+      className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <div className="flex justify-around">
         {ITEMS.map((it) => {

@@ -19,7 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <DemoGuide />
         </div>
       ) : null}
-      <div className="flex-1 pb-24">{children}</div>
+      <div className="flex-1 pb-28">{children}</div>
       <BottomNav />
     </div>
   );

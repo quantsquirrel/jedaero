@@ -80,5 +80,5 @@ export function jedaeroIndex(input: {
 export const INDEX_LABELS = [
   { key: 'grown', label: '위험을 이긴 성과', hint: '위험 대비 수익', max: INDEX_MAX.grown },
   { key: 'spread', label: '분산의 힘', hint: '실질 몇 개에 나눴나', max: INDEX_MAX.spread },
-  { key: 'held', label: '판단을 지킨 힘', hint: '몇 주 유지했나', max: INDEX_MAX.held },
+  { key: 'held', label: '판단을 지킨 힘', hint: '목표 비중을 얼마나 지켰나', max: INDEX_MAX.held },
 ] as const;

@@ -207,10 +207,13 @@ export function WeightEditor({
         );
       })}
 
-      {/* 명령하달 초안 — «자동 적용 금지». 불러오는 것 자체가 명령이 되면 안 된다 (잠금 문서 §1) */}
+      {/* 명령하달 초안 — «자동 적용 금지». 불러오는 것 자체가 명령이 되면 안 된다 (잠금 문서 §1)
+          ★ 이 패널은 «설명»이지 행동이 아니다. 신호색을 쓰지 않는다 (DESIGN-RULES §7).
+          같은 화면에 편성 확정 버튼과 하단 네비가 이미 amber 라, 여기까지 칠하면
+          「눌러야 하는 것」이 셋이 되어 확정 버튼이 묻힌다. */}
       {draft ? (
-        <div className="flex flex-col gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2.5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
+        <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/40 px-3 py-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             평일에 남긴 초안
           </p>
           <div className="flex flex-col gap-1">
@@ -226,7 +229,7 @@ export function WeightEditor({
                   <span
                     className={cn(
                       'w-10 text-right font-mono tabular-nums',
-                      now === d ? 'text-muted-foreground' : 'text-primary/90',
+                      now === d ? 'text-muted-foreground' : 'font-semibold text-foreground',
                     )}
                   >
                     {now === d ? '같음' : `${now > d ? '+' : '−'}${Math.abs(now - d)}p`}
@@ -236,7 +239,7 @@ export function WeightEditor({
             })}
           </div>
           {draft.note ? (
-            <p className="border-t border-primary/20 pt-2 text-xs leading-relaxed text-primary/70">
+            <p className="border-t border-border pt-2 text-xs leading-relaxed text-muted-foreground">
               “{draft.note}”
             </p>
           ) : null}

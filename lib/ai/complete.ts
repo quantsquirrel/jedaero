@@ -17,35 +17,46 @@ function stripFence(text: string): string {
   return (m ? m[1] : t).trim();
 }
 
-/** temperature 를 받는 모델인가.
+/** temperature 를 거부하는 모델을 «겪어서» 기억한다.
  *  ★ 4.6 이후 세대(sonnet-5·opus-5·fable-5 …)는 temperature 를 «400으로 거부»한다.
- *    항상 실어 보내면 모델을 올리는 순간 모든 호출이 조용히 null 이 되고,
+ *    조건 없이 실어 보내면 모델을 올리는 순간 모든 호출이 조용히 null 이 되고,
  *    화면은 규칙 폴백으로 내려앉는다 — 실측으로 sonnet-5 가 8/8 실패했다.
- *    ANTHROPIC_MODEL 을 둔 이유가 «환경변수만으로 모델을 바꾸는 것»이므로,
- *    바꾸는 순간 깨지는 파라미터를 조건 없이 붙이지 않는다. */
-function acceptsTemperature(model: string): boolean {
-  return /^claude-(haiku-4-5|3|sonnet-4-5|opus-4-5)/.test(model);
-}
+ *    그렇다고 허용목록을 두면 반대 방향으로 틀린다: opus-4-1·sonnet-4 나 게이트웨이
+ *    접두 id(us.anthropic.…)가 목록 밖이라 temperature 가 조용히 빠지고 기본값 1.0 이 된다.
+ *    그때는 오류가 아무 데도 남지 않고 출력 변동만 커져 number-guard 폐기율이 오른다.
+ *    ANTHROPIC_MODEL 을 둔 이유가 «환경변수만으로 모델을 바꾸는 것»이므로 목록을 관리하지
+ *    않는다 — 일단 싣고, temperature 때문에 400 이 오면 빼고 한 번 더 보낸 뒤 기억한다.
+ *    값은 프로세스당 모델마다 400 한 번이다. */
+const temperatureRejecters = new Set<string>();
 
 async function completeAnthropic(system: string, user: string, maxTokens: number, temperature: number): Promise<string | null> {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return null;
   const model = process.env.ANTHROPIC_MODEL ?? 'claude-haiku-4-5';
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      ...(acceptsTemperature(model) ? { temperature } : {}),
-      system,
-      messages: [{ role: 'user', content: user }],
-    }),
-  });
+  const send = (withTemperature: boolean) =>
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        ...(withTemperature ? { temperature } : {}),
+        system,
+        messages: [{ role: 'user', content: user }],
+      }),
+    });
+
+  let res = await send(!temperatureRejecters.has(model));
+  if (res.status === 400 && !temperatureRejecters.has(model)) {
+    // temperature 를 거부한 것일 때만 다시 보낸다. 다른 400(프롬프트·토큰)은 재시도해도 같다.
+    if (!/temperature/i.test(await res.text())) return null;
+    temperatureRejecters.add(model);
+    res = await send(false);
+  }
   if (!res.ok) return null;
   const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
   const text = data.content?.find((c) => c.type === 'text')?.text;
