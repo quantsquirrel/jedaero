@@ -70,22 +70,12 @@ export function addDays(dateStr: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** ISO 주차 문자열("YYYY-WW")의 월요일 날짜 (YYYY-MM-DD). 형식이 어긋나면 null. */
-export function mondayOfWeek(weekStr: string): string | null {
-  const match = /^(\d{4})-(\d{2})$/.exec(weekStr);
-  if (!match) return null;
-  const year = Number(match[1]);
-  const week = Number(match[2]);
-  if (week < 1 || week > 53) return null;
-  const jan4 = new Date(Date.UTC(year, 0, 4));
-  const jan4Day = (jan4.getUTCDay() + 6) % 7;
-  const ms = jan4.getTime() - jan4Day * 86_400_000 + (week - 1) * 7 * 86_400_000;
-  return new Date(ms).toISOString().slice(0, 10);
-}
-
 /** 주차의 사람이 읽는 구간 표기 — "08-31 ~ 09-06". 형식이 어긋나면 주차 문자열 그대로. */
 export function weekRangeLabel(weekStr: string): string {
-  const monday = mondayOfWeek(weekStr);
-  if (!monday) return weekStr;
+  // mondayOfWeek 는 형식이 어긋나면 입력을 그대로 돌려주므로 실패를 구분할 수 없다.
+  // 여기서는 원시 함수(number | null)를 직접 써서 «파싱 실패»를 분명히 가른다.
+  const ms = mondayMsOfWeek(weekStr);
+  if (ms === null) return weekStr;
+  const monday = new Date(ms).toISOString().slice(0, 10);
   return `${monday.slice(5)} ~ ${addDays(monday, 6).slice(5)}`;
 }
