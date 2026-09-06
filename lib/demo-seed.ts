@@ -62,20 +62,25 @@ export async function createDemoUser(now: Date = new Date()): Promise<{ id: stri
   return user;
 }
 
-/** 이미 발급한 데모 계정에도 회고 시드가 없으면 넣는다. 심사자가 /demo 를 다시 눌러도 복기가 비지 않게. */
+/** 이미 발급한 데모 계정에도 회고 시드가 없으면 넣는다. 심사자가 /demo 를 다시 눌러도 복기가 비지 않게.
+ *  ★ 테이블이 아직 없는 배포에서는 삼킨다. 편성 시드까지 막히면 데모 입구가 닫힌다. */
 export async function seedDemoReviews(userId: string, now: Date = new Date()): Promise<void> {
-  const existing = await db
-    .select({ id: reviews.id })
-    .from(reviews)
-    .where(eq(reviews.userId, userId))
-    .limit(1);
-  if (existing.length > 0) return;
+  try {
+    const existing = await db
+      .select({ id: reviews.id })
+      .from(reviews)
+      .where(eq(reviews.userId, userId))
+      .limit(1);
+    if (existing.length > 0) return;
 
-  await db.insert(reviews).values(
-    REVIEW_STORY.map((r) => ({
-      userId,
-      weekOf: weekOfDateStr(mondayOfWeeksAgo(now, r.weeksAgo)),
-      body: r.body,
-    })),
-  );
+    await db.insert(reviews).values(
+      REVIEW_STORY.map((r) => ({
+        userId,
+        weekOf: weekOfDateStr(mondayOfWeeksAgo(now, r.weeksAgo)),
+        body: r.body,
+      })),
+    );
+  } catch (e) {
+    console.error('[demo] 회고 시드 실패:', e instanceof Error ? e.message : e);
+  }
 }
