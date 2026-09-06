@@ -10,6 +10,7 @@ const STORED: [string, string][] = [
   ['users', '별명·계급·군종·날짜·거리'],
   ['allocations', '주 1행 · UNIQUE(user_id, week_of)'],
   ['drafts', '평일 초안 — 체결 아닌 메모'],
+  ['reviews', '한 줄 회고 · 본인 복기용'],
   ['groups / members', '익명 초대코드'],
   ['tickers / prices', '더미 일별 종가 시드'],
   ['ai_calls', '호출 여부 · 한도 로그(운영)'],
@@ -20,7 +21,7 @@ const COMPUTED: [string, string][] = [
   ['제대로 지수 주간 점수', '계산 후 lazy upsert'],
 ];
 
-const INPUTS = ['별명 · 계급 · 군종 · 날짜 · 거리 구간', '주말 편성 확정 — 판단', '평일 명령하달 초안', '그룹 소속 · 분석 동의'];
+const INPUTS = ['별명 · 계급 · 군종 · 날짜 · 거리 구간', '주말 편성 확정 — 판단', '평일 명령하달 초안', '한 줄 회고', '그룹 소속 · 분석 동의'];
 
 export function RecordFlow() {
   return (
@@ -32,7 +33,8 @@ export function RecordFlow() {
           </h3>
           <p className="max-w-[62ch] break-keep text-sm leading-relaxed text-muted-foreground">
             사용자 정보와 판단과 수익률을 한 덩어리로 저장하지 않습니다. 판단은 남기고, 계산으로
-            만들 수 있는 숫자는 저장하지 않으며, 회고 원문은 응답을 만든 뒤 버립니다.
+            만들 수 있는 숫자는 저장하지 않으며, 한 줄 회고는 필터를 통과한 뒤 본인 복기용으로만
+            남깁니다.
           </p>
         </div>
         <SourceChip kind="rule" label="기능 명세 SPEC §2-1" className="shrink-0" />
@@ -40,7 +42,7 @@ export function RecordFlow() {
 
       {/* ── 데스크톱: 흐름도 ─────────────────────── */}
       <svg
-        viewBox="0 0 1000 560"
+        viewBox="0 0 1000 600"
         className="mt-8 hidden w-full md:block"
         role="img"
         aria-label="입력이 규칙·AI 경계를 지나 저장·요청 때 계산·폐기로 나뉘는 흐름도"
@@ -109,7 +111,7 @@ export function RecordFlow() {
 
         {/* 남는 곳 */}
         <g>
-          <rect x="610" y="40" width="390" height="214" rx="14" className="fill-background stroke-border" />
+          <rect x="610" y="40" width="390" height="240" rx="14" className="fill-background stroke-border" />
           <text x="630" y="68" className="fill-foreground text-[13px] font-bold">저장한다 — PostgreSQL (Neon)</text>
           {STORED.map(([table, note], i) => (
             <g key={table}>
@@ -118,22 +120,22 @@ export function RecordFlow() {
             </g>
           ))}
 
-          <rect x="610" y="272" width="390" height="104" rx="14" className="fill-primary/5 stroke-primary/40" />
-          <text x="630" y="300" className="fill-primary text-[13px] font-bold">요청 때 계산한다 — 크론 없음</text>
+          <rect x="610" y="298" width="390" height="104" rx="14" className="fill-primary/5 stroke-primary/40" />
+          <text x="630" y="326" className="fill-primary text-[13px] font-bold">요청 때 계산한다 — 크론 없음</text>
           {COMPUTED.map(([what, how], i) => (
             <g key={what}>
-              <text x="630" y={326 + i * 26} className="fill-muted-foreground text-[11.5px]">{what}</text>
-              <text x="850" y={326 + i * 26} className="fill-faint text-[11.5px]">{how}</text>
+              <text x="630" y={352 + i * 26} className="fill-muted-foreground text-[11.5px]">{what}</text>
+              <text x="850" y={352 + i * 26} className="fill-faint text-[11.5px]">{how}</text>
             </g>
           ))}
 
-          <rect x="610" y="392" width="390" height="56" rx="14" fill="none" strokeDasharray="5 5" className="stroke-violet-500/35" />
-          <text x="630" y="418" className="fill-foreground text-[13px] font-bold">폐기한다</text>
-          <text x="630" y="437" className="fill-faint text-[11.5px]">한 줄 회고 본문 — 응답을 만든 뒤 저장하지 않고 버림</text>
+          <rect x="610" y="418" width="390" height="56" rx="14" fill="none" strokeDasharray="5 5" className="stroke-violet-500/35" />
+          <text x="630" y="444" className="fill-foreground text-[13px] font-bold">폐기한다</text>
+          <text x="630" y="463" className="fill-faint text-[11.5px]">생성형 AI가 돌려준 문장 — 호출 여부만 남김</text>
 
-          <rect x="610" y="472" width="390" height="52" rx="14" fill="none" strokeDasharray="5 5" className="stroke-input" />
-          <text x="630" y="496" className="fill-muted-foreground text-[13px] font-bold">입력란 자체가 없다</text>
-          <text x="630" y="513" className="fill-faint text-[11.5px]">컬럼에도, 입력폼에도, 로그에도 없음</text>
+          <rect x="610" y="490" width="390" height="52" rx="14" fill="none" strokeDasharray="5 5" className="stroke-input" />
+          <text x="630" y="514" className="fill-muted-foreground text-[13px] font-bold">입력란 자체가 없다</text>
+          <text x="630" y="531" className="fill-faint text-[11.5px]">컬럼에도, 입력폼에도, 로그에도 없음</text>
         </g>
       </svg>
 
@@ -167,7 +169,7 @@ export function RecordFlow() {
         <div className="rounded-xl border border-dashed border-violet-500/35 p-4">
           <p className="text-sm font-bold">폐기한다</p>
           <p className="mt-1 break-keep text-xs leading-relaxed text-faint">
-            한 줄 회고 본문 — AI가 응답을 만든 뒤 저장하지 않고 버립니다.
+            생성형 AI가 돌려준 문장 — 호출 여부만 남깁니다. 한 줄 회고 본문은 본인 복기용으로 저장합니다.
           </p>
         </div>
 

@@ -572,7 +572,7 @@ export default function LandingPage() {
                 <ul className="mt-4 space-y-2 text-sm leading-relaxed text-muted-foreground">
                   <li>수익률과 제대로 지수는 공개된 규칙으로 계산</li>
                   <li>LLM에는 편성, 유지 기간, 주간 변동, 한 줄 회고만 전달</li>
-                  <li>회고 원문은 응답 뒤 저장하지 않고 폐기</li>
+                  <li>한 줄은 본인 복기용으로만 남긴다. AI가 돌려준 문장은 남기지 않는다</li>
                   <li>군 소속 정보는 수집하지 않고 그룹은 익명 초대코드로 참여</li>
                 </ul>
                 <SourceChip kind="ai" className="mt-4" />

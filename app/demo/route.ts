@@ -1,7 +1,7 @@
 // /demo — 심사자 진입점 (SPEC §7). 로그인 없이 즉시 체험 세션을 만들고 데모 데이터를 주입한다.
 import { NextRequest, NextResponse } from 'next/server';
 import { DEMO_DAY_COOKIE } from '../../lib/day-context';
-import { createDemoUser, findDemoUser } from '../../lib/demo-seed';
+import { createDemoUser, findDemoUser, seedDemoReviews } from '../../lib/demo-seed';
 import { USER_COOKIE, userCookieOptions } from '../../lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
     user =
       (!startNew ? await findDemoUser(req.cookies.get(USER_COOKIE)?.value) : null) ??
       (await createDemoUser());
+    await seedDemoReviews(user.id);
   } catch (e) {
     console.error('[demo] 체험 세션 준비 실패:', e instanceof Error ? e.message : e);
     return NextResponse.redirect(new URL('/demo/unavailable', req.url), 303);

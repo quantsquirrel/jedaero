@@ -51,7 +51,7 @@ else
   BUILD_OK=0
 fi
 
-# P0-02 스키마: public 스키마 테이블 정확히 11개(ai_calls·drafts 포함), 목록 일치
+# P0-02 스키마: public 스키마 테이블 정확히 12개(ai_calls·drafts·reviews 포함), 목록 일치
 # quests·quest_progress는 퀘스트·XP 폐지로,
 # budget_months·budget_envelopes·expenses·exemption_claims는 가계부 제외로 제거됐다. 되살리지 말 것.
 probe P0-02
@@ -241,6 +241,7 @@ run_check P1-26 scripts/checks/p1-26-principles-copy.ts
 run_check P1-27 scripts/checks/p1-27-principles-ai.ts
 run_check P1-28 scripts/checks/p1-28-audit-fixes.ts
 run_check P1-29 scripts/checks/p1-29-judge-ux.ts
+run_check P1-30 scripts/checks/p1-30-review-replay.ts
 
 # ---------- 요약 ----------
 echo '---'

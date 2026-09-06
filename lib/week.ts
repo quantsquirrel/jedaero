@@ -28,22 +28,29 @@ export function weekOfDateStr(dateStr: string): string {
   return `${year}-${String(week).padStart(2, '0')}`;
 }
 
+function mondayMsOfWeek(weekStr: string): number | null {
+  const match = /^(\d{4})-(\d{2})$/.exec(weekStr);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const week = Number(match[2]);
+  if (week < 1 || week > 53) return null;
+
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const jan4Day = (jan4.getUTCDay() + 6) % 7;
+  return jan4.getTime() - jan4Day * 86_400_000 + (week - 1) * 7 * 86_400_000;
+}
+
+/** ISO 주차(YYYY-WW)의 월요일 날짜. 잘못된 형식이면 입력을 그대로 돌려준다. */
+export function mondayOfWeek(weekOf: string): string {
+  const ms = mondayMsOfWeek(weekOf);
+  if (ms === null) return weekOf;
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
 /** ISO 주차 두 개 사이의 주 간격. 연말의 52/53주 경계도 실제 달력으로 계산한다. */
 export function weeksBetween(fromWeek: string, toWeek: string): number {
-  const mondayMs = (weekStr: string): number | null => {
-    const match = /^(\d{4})-(\d{2})$/.exec(weekStr);
-    if (!match) return null;
-    const year = Number(match[1]);
-    const week = Number(match[2]);
-    if (week < 1 || week > 53) return null;
-
-    const jan4 = new Date(Date.UTC(year, 0, 4));
-    const jan4Day = (jan4.getUTCDay() + 6) % 7;
-    return jan4.getTime() - jan4Day * 86_400_000 + (week - 1) * 7 * 86_400_000;
-  };
-
-  const from = mondayMs(fromWeek);
-  const to = mondayMs(toWeek);
+  const from = mondayMsOfWeek(fromWeek);
+  const to = mondayMsOfWeek(toWeek);
   if (from === null || to === null) return 0;
   return Math.round((to - from) / (7 * 86_400_000));
 }

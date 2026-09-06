@@ -28,3 +28,14 @@ export const WEIGHT_STORY: { weeksAgo: number; weights: Weights; templateId?: st
 
 /** 실제로 allocations 행이 생기는 주만 (스킵 주는 행이 없다 = 직전 비중 유지) */
 export const ACTIVE_WEIGHT_STORY = WEIGHT_STORY.filter((w) => !SKIP_WEEKS_AGO.has(w.weeksAgo));
+
+/** 데모 회고. 바꾼 주와 그대로 둔 주(8주 전)를 섞어 묶인 카드가 보이게 한다. */
+export const REVIEW_STORY: { weeksAgo: number; body: string }[] = [
+  { weeksAgo: 12, body: '처음이라 여섯 칸에 고르게 나눠 봤다' },
+  { weeksAgo: 11, body: '미국 쪽으로 한 칸 옮겼다' },
+  { weeksAgo: 9, body: '금을 줄이고 미국에 더 실었다' },
+  { weeksAgo: 8, body: '이번 주는 손을 대지 않았다' },
+  { weeksAgo: 7, body: '기타 해외에서 한 칸을 빼 예비대로 뒀다' },
+  { weeksAgo: 5, body: '채권을 다시 늘렸다' },
+  { weeksAgo: 4, body: '미국을 한 칸 줄인 채 멈추기로 했다' },
+];
