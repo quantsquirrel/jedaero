@@ -105,7 +105,11 @@
 - **금액·비율·포인트·날짜는 전부 `font-mono tabular-nums`.** 자릿수가 흔들리면 비교가 안 된다
 - 크기: 화면 제목 `text-2xl~3xl` / 카드 제목 `text-base` / 본문 `text-sm` / 캡션 `text-xs` /
   큰 수치 `text-3xl`. 그 사이를 새로 만들지 않는다
-- 제목에는 `tracking-tight`, 한글 줄바꿈에는 `break-keep`, 문단에는 `leading-relaxed`
+- 제목에는 `tracking-tight`, 문단에는 `leading-relaxed`
+- **한글 줄바꿈은 `app/globals.css`의 `body`가 전역으로 세운다** — `word-break: keep-all`
+  + `overflow-wrap: break-word`. 화면마다 `break-keep`을 붙이지 않아도 어절 단위로 끊긴다.
+  ★ 이 두 줄을 지우지 말 것. 지우면 브라우저 기본값이 «않습|니다»처럼 단어 한가운데를 자른다
+  (2026-09-07 실측: 9개 화면 전부에서 54건). 남아 있는 `break-keep` 클래스는 무해한 중복이다
 - 머리표(kicker)는 `text-[11px] font-semibold uppercase tracking-[0.18em]`
 
 ★ 런타임에 외부 폰트를 부르지 않는다. `<link>`로 fonts.googleapis.com을 추가하지 말 것 —
