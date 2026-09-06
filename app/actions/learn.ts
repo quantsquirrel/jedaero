@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { sql } from 'drizzle-orm';
 import { db } from '../../db';
 import { reviews } from '../../db/schema';
+import { isMissingRelation } from '../../lib/db-errors';
 import { generateReflection, reflectionFallback, type Reflection } from '../../lib/ai/reflect';
 import { guardedAiCall, recordAiCall } from '../../lib/ai/guard';
 import { detectInjection } from '../../lib/filters/injection-filter';
@@ -43,13 +44,21 @@ export async function submitReview(_prev: ReviewState, formData: FormData): Prom
   }
 
   // 필터를 통과한 한 줄만 이번 주 행으로 남긴다. 다시 쓰면 덮는다. AI 응답은 저장하지 않는다.
-  await db
-    .insert(reviews)
-    .values({ userId: user.id, weekOf: weekOf(new Date()), body: text, updatedAt: new Date() })
-    .onConflictDoUpdate({
-      target: [reviews.userId, reviews.weekOf],
-      set: { body: sql`excluded.body`, updatedAt: new Date() },
-    });
+  try {
+    await db
+      .insert(reviews)
+      .values({ userId: user.id, weekOf: weekOf(new Date()), body: text, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: [reviews.userId, reviews.weekOf],
+        set: { body: sql`excluded.body`, updatedAt: new Date() },
+      });
+  } catch (err) {
+    if (isMissingRelation(err, 'reviews')) {
+      console.error('[reviews] 테이블이 없습니다. 한 줄을 저장하지 못했습니다.');
+      return { error: '지금은 한 줄을 남길 수 없습니다. 잠시 뒤 다시 열어 주세요.' };
+    }
+    throw err;
+  }
   revalidatePath('/learn');
   revalidatePath('/home');
   revalidatePath('/principles');

@@ -8,6 +8,7 @@ import type { Weights } from '../../lib/constants';
 import { buildReplayWeeks, formatDeltaPp } from '../../lib/principles/replay';
 import { FIXED_COPY, violatesCopyRules } from '../../lib/principles/copy';
 import { mondayOfWeek } from '../../lib/week';
+import { isMissingRelation, reviewsOrEmpty } from '../../lib/db-errors';
 
 let failed = 0;
 const fail = (msg: string) => {
@@ -100,5 +101,35 @@ for (const banned of ['필요합니다', '고려', '좋습니다', '권장']) {
   if (lines.length > 0) fail(`AI-9 프롬프트/폴백에 금지 어휘 「${banned}」: ${lines[0].trim().slice(0, 60)}`);
 }
 
-if (failed > 0) process.exit(1);
-console.log('주 단위 합치기 · 같은 주 묶음 · 빈 주 제외 · AI-9 폴백 가드 통과');
+if (!isMissingRelation({ code: '42P01', message: 'relation "reviews" does not exist' }, 'reviews')) {
+  fail('Postgres 42P01 + reviews 를 빠진 테이블로 보지 않음');
+}
+if (!isMissingRelation(new Error('Failed query: select\nrelation "reviews" does not exist'), 'reviews')) {
+  fail('Neon HTTP 문구의 reviews 없음을 놓침');
+}
+if (isMissingRelation(new Error('relation "allocations" does not exist'), 'reviews')) {
+  fail('다른 테이블 없음을 reviews 로 오인');
+}
+if (isMissingRelation(new Error('connection timeout'), 'reviews')) {
+  fail('연결 오류를 테이블 없음으로 오인');
+}
+
+void (async () => {
+  const recovered = await reviewsOrEmpty(async () => {
+    throw Object.assign(new Error('relation "reviews" does not exist'), { code: '42P01' });
+  });
+  if (recovered.length !== 0) fail(`빠진 reviews 를 빈 목록으로 안 바꿈: ${recovered.length}`);
+
+  let threw = false;
+  try {
+    await reviewsOrEmpty(async () => {
+      throw new Error('connection timeout');
+    });
+  } catch {
+    threw = true;
+  }
+  if (!threw) fail('테이블 없음이 아닌 오류를 삼킴');
+
+  if (failed > 0) process.exit(1);
+  console.log('주 단위 합치기 · 같은 주 묶음 · 빈 주 제외 · AI-9 폴백 가드 통과');
+})();

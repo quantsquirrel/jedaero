@@ -3,6 +3,7 @@
 import { asc, eq } from 'drizzle-orm';
 import { db } from '../../db';
 import { allocations, reviews } from '../../db/schema';
+import { reviewsOrEmpty } from '../../lib/db-errors';
 import { guardedAiCall } from '../../lib/ai/guard';
 import {
   buildReplayAiInput,
@@ -23,17 +24,17 @@ export async function generateReplayAction(): Promise<ReplayResult> {
   const user = await getSessionUser();
   if (!user) return { error: '세션이 없습니다.' };
 
-  const [allocRows, reviewRows] = await Promise.all([
-    db
-      .select({ weekOf: allocations.weekOf, weights: allocations.weights })
-      .from(allocations)
-      .where(eq(allocations.userId, user.id))
-      .orderBy(asc(allocations.weekOf)),
+  const allocRows = await db
+    .select({ weekOf: allocations.weekOf, weights: allocations.weights })
+    .from(allocations)
+    .where(eq(allocations.userId, user.id))
+    .orderBy(asc(allocations.weekOf));
+  const reviewRows = await reviewsOrEmpty(() =>
     db
       .select({ weekOf: reviews.weekOf, body: reviews.body })
       .from(reviews)
       .where(eq(reviews.userId, user.id)),
-  ]);
+  );
 
   const safeReviews = reviewRows.filter((r) => !detectInjection(r.body).blocked);
   if (safeReviews.length === 0) {
