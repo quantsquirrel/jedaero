@@ -9,10 +9,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+// ★ 이 세 값은 「분석 입력」이라는 라벨을 달고 화면에 선다. 그러므로 «실제로 모델에 들어가는 것»과
+//   같아야 한다. lib/ai/reflect.ts 의 입력은 회고 원문 + 이 셋(조정 여부·바꾼폭 / 유지 주수 / 예비대 몫)이다.
+//   편성 비중과 이번 주 손익은 모델에 «들어가지 않는다» — 여기에 적으면 화면이 거짓을 말하고,
+//   평일에는 주말에만 열기로 한 내 손익을 이 자리에서 새어 보이게 한다.
 export type CoachContext = {
-  allocation: string;
+  /** 이번 주 조정 여부와 바꾼폭 (%p) */
+  turnover: string;
+  /** 마지막 조정 이후 지난 주수 */
   duration: string;
-  weeklyMove: string;
+  /** 어느 전선에도 놓지 않은 몫 (%) */
+  reserve: string;
   defaultReview?: string;
 };
 
@@ -25,16 +32,16 @@ export function ReviewForm({ coachContext }: { coachContext?: CoachContext } = {
           <p className="text-xs font-semibold text-muted-foreground">분석 입력</p>
           <dl className="mt-2 grid grid-cols-3 gap-2 text-xs">
             <div className="rounded-md bg-muted/40 p-2">
-              <dt className="text-muted-foreground">편성(목표 비중)</dt>
-              <dd className="mt-1 font-medium leading-relaxed">{coachContext.allocation}</dd>
+              <dt className="text-muted-foreground">이번 주 조정</dt>
+              <dd className="mt-1 font-medium leading-relaxed">{coachContext.turnover}</dd>
             </div>
             <div className="rounded-md bg-muted/40 p-2">
               <dt className="text-muted-foreground">유지 기간</dt>
               <dd className="mt-1 font-medium leading-relaxed">{coachContext.duration}</dd>
             </div>
             <div className="rounded-md bg-muted/40 p-2">
-              <dt className="text-muted-foreground">이번 주 변동</dt>
-              <dd className="mt-1 font-medium leading-relaxed">{coachContext.weeklyMove}</dd>
+              <dt className="text-muted-foreground">예비대 몫</dt>
+              <dd className="mt-1 font-medium leading-relaxed">{coachContext.reserve}</dd>
             </div>
           </dl>
         </div>

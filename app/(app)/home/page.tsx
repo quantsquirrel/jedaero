@@ -7,7 +7,7 @@ import { JobLinks } from '@/components/job-links';
 import { MarketWeekCard } from '@/components/market-week-card';
 import { PageHeader } from '@/components/page-header';
 import { ReviewForm } from '@/components/review-form';
-import { SEED_AMOUNT, THEMES } from '@/lib/constants';
+import { SEED_AMOUNT } from '@/lib/constants';
 import { currentDayType, currentRebalanceOpen } from '@/lib/day-context';
 import { daysUntilRebalance, kstToday } from '@/lib/day-type';
 import { pct, won } from '@/lib/format';
@@ -35,19 +35,6 @@ export default async function HomePage() {
   const score = weekend ? await computeWeeklyScore(user) : null;
   const reviewFacts = await collectReviewFacts(user.id);
   const parts = score ? [score.grown, score.spread, score.held] : [];
-  const leadingWeights = THEMES.map((theme) => ({
-    name: theme.name,
-    value: me.weights[theme.code] ?? 0,
-  }))
-    .filter((item) => item.value > 0)
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 2);
-  const allocationLabel = leadingWeights.length
-    ? leadingWeights.map((item) => `${item.name} ${item.value}%`).join(' · ')
-    : '예비대(현금성 자산) 100%';
-  const durationLabel = reviewFacts.changedThisWeek
-    ? `이번 주 ${reviewFacts.turnoverPp.toFixed(0)}%p 조정`
-    : `${reviewFacts.weeksUnchanged}주 유지`;
 
   const jobs = open
     ? [
@@ -195,16 +182,18 @@ export default async function HomePage() {
             </Badge>
           </div>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            규칙으로 계산한 편성·유지·변동과 한 줄 회고를 연결해 행동 패턴을 짚고 질문 하나를
-            돌려줍니다.
+            규칙으로 계산한 이번 주 조정·유지 기간·예비대 몫과 한 줄 회고를 연결해 행동 패턴을
+            짚고 질문 하나를 돌려줍니다. 내 손익은 넣지 않습니다.
           </p>
         </CardHeader>
         <CardContent>
           <ReviewForm
             coachContext={{
-              allocation: allocationLabel,
-              duration: durationLabel,
-              weeklyMove: week ? pct(week.weightedPct) : '집계 전',
+              turnover: reviewFacts.changedThisWeek
+                ? `${reviewFacts.turnoverPp.toFixed(1)}%p 조정`
+                : '조정 없음',
+              duration: `${reviewFacts.weeksUnchanged}주`,
+              reserve: `${reviewFacts.reservePct}%`,
               defaultReview: user.isDemo
                 ? '이번 주 변동을 보며 편성을 바꾸고 싶은 마음이 들었다'
                 : undefined,

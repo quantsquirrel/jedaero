@@ -29,12 +29,17 @@
 | F-10 | 09-04 | 오류 | 앱 화면 어디서든 서버 컴포넌트 예외 / 없는 주소 | 한글 안내 + 다음 클릭 | Next 기본 «Application error» / Vercel 기본 404. 안내 없음 | `app/error.tsx`·`global-error.tsx`·`not-found.tsx` 부재 | 세 파일 추가. 스택·메시지 원문 미노출 | 닫힘 | `smoke-url.sh` S5-02 + `npx tsc --noEmit` |
 | F-11 | 09-04 | 경계 | 링크 미리보기 description 과 랜딩 히어로 첫 문장 대조 | 같은 문장 | «2,000만원을 … 모의투자 훈련» vs «목돈을 … 훈련» — 다른 문장 | 두 곳을 따로 씀 | `app/layout.tsx` description 을 §0 문장으로 바꿨다고 적었으나 2,000만원 변형이 남음 | 재오픈 → F-12 | 09-06 F-12 |
 | F-12 | 09-06 | 경계 | 히어로 큰 글자 · 본문 · `metadata.description` · SPEC §0 · 기획서 §2 첫 줄 | 잠근 문장 하나 | 큰 글자는 «전역 전, 첫 2천만원의 판단을 연습합니다», 메타는 «받게 될 2,000만원» | 세 갈래로 따로 씀 | `app/page.tsx` 히어로, `app/layout.tsx` description, SPEC §0, 기획서 §2를 목돈 문장으로 통일. `smoke-url.sh` S1-04가 `받게 될 2,000만원`을 잡음 | 닫힘 | 로컬 `:3010` HTML: 옛 히어로 없음 · «시드는 전원 2,000만원» 있음 · 메타 2,000만원 변형 없음. `/demo` → `/home`. **프로덕션은 이 브랜치 배포 뒤 S1-04** |
+| F-13 | 09-07 | 오류 | 배포된 9개 화면을 390px 폭으로 훑고 어절 중간 끊김을 세는 프로브 실행 | 한글은 어절 단위로 끊긴다 | **54건**이 단어 한가운데서 끊김 — «않습\|니다» «결과\|가» «카드를 엽\|니다» | 브라우저 기본값 `word-break: normal`. DESIGN-RULES §2가 `break-keep`을 지시했으나 56개 파일 중 8개에만 붙어 있었다 | `app/globals.css` `body` 에 `word-break: keep-all` + `overflow-wrap: break-word` | 닫힘 | 프로덕션 재측정 — 9개 화면 × 평일/주말 × 390·375·360·1440px 에서 끊김 0건, `scrollWidth == clientWidth` |
+| F-14 | 09-07 | 오류 | 평일 홈의 AI 코치 카드 「분석 입력」 세 타일과 `lib/ai/reflect.ts` 입력 대조 | 화면이 적은 것 = 모델이 받는 것 | «편성(목표 비중)»과 «이번 주 변동»은 모델에 **들어가지 않는 값**. 그중 «이번 주 변동 −0.8%»는 같은 화면이 두 번 「주말에 봅니다」라고 적은 내 손익 | `app/(app)/home/page.tsx` 가 `weekend` 분기 없이 `weeklyMove`를 넘김. 타일 구성이 실제 입력과 따로 씀 | 타일 셋을 실제 입력으로 교체 (이번 주 조정·유지 기간·예비대 몫). 카드 설명문도 맞춤 | 닫힘 | `npx tsc --noEmit` exit 0 · `npx eslint .` 경고 0 · 프리뷰 화면 확인 |
+| F-15 | 09-07 | 경계 | `bash scripts/smoke-url.sh https://jedaero.vercel.app` | 전부 PASS | **20/23.** S3-01·S4-01·S4-03 FAIL — 그런데 토글은 브라우저에서 정상 동작 | JSX `지금은 {mode} 화면입니다` 가 SSR 에서 `지금은 <!-- -->주말<!-- --> 화면입니다` 로 끊겨 문장 grep 이 영원히 실패. `demo-toggle.tsx` 가 달아 둔 `data-day`·`aria-pressed` 를 검사식이 안 씀 | `smoke-url.sh` 세 검사식을 안정 로케이터로 | 닫힘 | `bash scripts/smoke-url.sh https://jedaero.vercel.app` → **23/23 PASS** |
+| F-16 | 09-07 | 오류 | 주말 지수 → 「같은 군종」 탭 목록 | 더미들의 제대로 지수가 보인다 | **179명 전원 「집계 대기」.** 목록 안에서 체험 계정만 76.2점 | 이번 주(ISO 2026-37) 조회는 정상이다 — 더미의 `weekly_scores` 행이 그 주차에 없다. `scripts/seed.ts:181` 이 「이번 주 포함 4주치」를 넣으므로, 프로덕션 DB 가 그 창 밖에서 시드된 것 | **코드 아님.** 프로덕션 DB 에 `npm run seed` 재실행 | **열림** | 재시드 후 「같은 군종」 탭에서 점수가 보이는지 눈으로 + `select week_of, count(total) from weekly_scores group by 1` |
 
 ## B. 배포·외부 접근 (배포 뒤 채운다)
 
 | # | 날짜 | 기기 · 회선 | 조작 | 기대 | 실제 | 상태 | 재검증 |
 |---|---|---|---|---|---|---|---|
 | D-01 | 09-06 | `smoke-url.sh` (개발 PC, 모바일 UA) | `bash scripts/smoke-url.sh https://jedaero-seven.vercel.app` | 전부 PASS | **22/23 PASS.** S1-04 FAIL: 라이브 메타가 아직 «받게 될 2,000만원». 데모 303, 쿠키, 주말 토글, 404·세션 없음·폐지 라우트는 PASS. Vercel 보호벽 없음 | 문구 배포 대기 | 이 브랜치 배포 뒤 S1-04 재실행 |
+| D-05 | 09-07 | `smoke-url.sh` (개발 PC, 모바일 UA) | `bash scripts/smoke-url.sh https://jedaero.vercel.app` | 전부 PASS | **23/23 PASS.** S1-04 포함 전부 통과 (F-12 닫힘 확인). Vercel 보호벽 없음 | 닫힘 | 심사 5일 동안 매일 재실행 |
 | D-02 | | 팀원 아닌 휴대폰 · 모바일 회선 | `/` → 데모 → 토글 주말 → 편성 확정 → 재시도 | 시나리오 1·6·8 | | 대기 | |
 | D-03 | | 시크릿 창 | 회고 «하락장에도 편성을 지켰다» | AI 배지 + 질문 1개 (키 없으면 규칙 폴백 + 안내) | | 대기 | |
 | D-04 | | 시크릿 창 | 그룹명 «12사단 3대대» | 차단 문구 | | 대기 | |
