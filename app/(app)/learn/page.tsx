@@ -80,7 +80,7 @@ export default async function LearnPage() {
         <LearnCardsView cards={LEARN_CARDS} />
       </section>
 
-      <Card id="review" className="scroll-mt-40">
+      <Card id="review" className="scroll-mt-6">
         <CardHeader>
           <CardTitle className="text-base">한 줄 회고</CardTitle>
         </CardHeader>

@@ -1,23 +1,24 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { asc, eq } from 'drizzle-orm';
 import { IndexGauge } from '@/components/index-gauge';
 import { JobLinks } from '@/components/job-links';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { db } from '@/db';
-import { allocations } from '@/db/schema';
-import { SEED_AMOUNT, type Weights } from '@/lib/constants';
 import { currentDayType } from '@/lib/day-context';
-import { kstToday } from '@/lib/day-type';
 import { pct } from '@/lib/format';
-import { annualizedVol } from '@/lib/insights';
-import { effectiveFronts, INDEX_LABELS } from '@/lib/jedaero-index';
-import { board, BOARD_LABEL, computeAndStoreWeeklyScore, type BoardScope } from '@/lib/league';
-import { computeCurve, maxDrawdown, type WeightHistoryItem } from '@/lib/portfolio/engine';
-import { pricesUpTo } from '@/lib/portfolio/prices';
+import { INDEX_LABELS } from '@/lib/jedaero-index';
+import { LEAD_BAND } from '@/lib/lead-band';
+import {
+  board,
+  BOARD_LABEL,
+  computeAndStoreWeeklyScore,
+  lastSettledScore,
+  ownRisk,
+  type BoardScope,
+} from '@/lib/league';
 import { getSessionUser } from '@/lib/session';
 import { cn } from '@/lib/utils';
+import { weekRangeLabel } from '@/lib/week';
 
 // S7 리그 — 「제대로 지수」로 겨룬다. 주간 시즌제, 누적 순위 없음 (C7)
 const SCOPES: BoardScope[] = ['GROUP', 'BRANCH', 'RANK'];
@@ -32,38 +33,120 @@ export default async function LeaguePage({
 
   const dt = await currentDayType();
   if (dt !== 'WEEKEND') {
+    // 평일 — 「비교」는 닫혀 있지만 «이미 계산돼 있는 사실»은 열려 있다.
+    // 순서: 무엇이 있었나 → 지금 무엇이 열려 있나 → 다음에 무엇이 열리나.
+    // ★ 없는 숫자를 지어내지 않는다. 확정 집계가 없으면 「집계 대기」라고 적는다 (§7).
+    const settled = await lastSettledScore(user.id);
+    const risk = await ownRisk(user.id);
     return (
       <main className="flex flex-col gap-4 px-5 py-8">
         <PageHeader
           title="제대로 지수"
-          description="비교는 주말에 한 번에 봅니다. 평일에는 무엇을 재는지와 그룹만 준비합니다."
+          description="확정된 주의 집계를 읽는 화면입니다. 남과 견주는 비교는 주말에 한 번 엽니다."
         />
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col gap-3 py-5">
-            <p className="text-lg font-semibold">비교는 주말에 한 번에 봅니다</p>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              짧은 구간의 점수 줄 세우기는 대개 운입니다. 세 축은 그대로 두고, 숫자는 주말에
-              엽니다.
-            </p>
-            <ul className="flex flex-col gap-2">
-              {INDEX_LABELS.map((row) => (
-                <li key={row.key} className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="font-medium">{row.label}</span>
-                  <span className="text-right text-xs text-muted-foreground">
-                    {row.max}점 · {row.hint}
-                  </span>
-                </li>
-              ))}
-            </ul>
+
+        {/* ① 무엇이 있었나 — 이 화면의 작업 대상. 들린 표면 한 단으로 세운다 */}
+        <Card className={LEAD_BAND}>
+          <CardHeader>
+            <CardTitle className="flex items-baseline justify-between gap-3 text-base">
+              <span>최근 확정 집계</span>
+              {settled ? (
+                <span className="font-mono text-xs font-normal tabular-nums text-muted-foreground">
+                  {weekRangeLabel(settled.weekOf)}
+                </span>
+              ) : null}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {settled ? (
+              <>
+                <p className="text-3xl font-bold tabular-nums">
+                  {Math.round(settled.total * 10) / 10}
+                  <span className="ml-1 text-base font-normal text-muted-foreground">/ 100</span>
+                </p>
+                <IndexGauge parts={[settled.grown, settled.spread, settled.held]} />
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {weekRangeLabel(settled.weekOf)} 주에 확정된 값입니다. 평일에는 다시 계산하지
+                  않습니다. 매일 움직이는 숫자를 매일 보는 것이 이 서비스가 줄이려는 행동입니다.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                아직 확정된 주간 집계가 없어 집계 대기입니다. 첫 편성을 확정하면 그 주말부터
+                세 축의 점수가 여기에 남습니다.
+              </p>
+            )}
           </CardContent>
         </Card>
+
+        {/* 내 편성 이력만으로 나오는 값 — 코호트가 필요 없어 평일에도 성립한다 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">내 편성이 감당한 흔들림</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2.5">
+            {risk.hasHistory ? (
+              <>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-md bg-muted/40 p-2">
+                    <p className="text-xs text-muted-foreground">연 변동성</p>
+                    <p className="font-mono text-sm tabular-nums">{Math.round(risk.vol * 100)}%</p>
+                  </div>
+                  <div className="rounded-md bg-muted/40 p-2">
+                    <p className="text-xs text-muted-foreground">최대낙폭</p>
+                    <p className="font-mono text-sm tabular-nums">{pct(risk.mdd)}</p>
+                  </div>
+                  <div className="rounded-md bg-muted/40 p-2">
+                    <p className="text-xs text-muted-foreground">실질 전선 수</p>
+                    <p className="font-mono text-sm tabular-nums">{risk.fronts.toFixed(1)}</p>
+                  </div>
+                </div>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  내 편성 이력만으로 계산합니다. 남과 견주지 않으므로 요일과 무관하게 열려 있습니다.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                아직 편성 이력이 없어 집계 대기입니다.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ② 지금 무엇이 열려 있나 */}
         <JobLinks
           items={[
             { href: '/groups', label: '그룹', hint: '주말 「우리 그룹」 비교의 자리. 초대코드' },
             { href: '/learn', label: '학습 · 전선 등락', hint: '평일에 열려 있는 읽을거리' },
           ]}
-          footnote="성향 분석도 주말에 지수 화면에서 엽니다."
         />
+
+        {/* ③ 다음에 무엇이 열리나 — 잠근 사실이 아니라 «언제 열리는지»를 적는다 (§7) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">주말에 열리는 것</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              같은 그룹 · 같은 군종 · 같은 계급의 점수를 나란히 놓는 비교가 주말에 열립니다. 짧은
+              구간의 점수 줄 세우기는 대개 운이라, 세 축은 그대로 두고 숫자만 주 단위로 엽니다.
+            </p>
+            <ul className="divide-y divide-border overflow-hidden rounded-md border border-border">
+              {INDEX_LABELS.map((row) => (
+                <li key={row.key} className="flex items-baseline justify-between gap-3 px-3 py-3">
+                  <span className="text-sm font-medium">{row.label}</span>
+                  <span className="shrink-0 text-right text-xs text-muted-foreground">
+                    <span className="font-mono tabular-nums">{row.max}점</span> · {row.hint}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              성향 분석도 주말에 이 화면에서 엽니다. 등수 숫자와 수익 금액은 어느 요일에도 만들지
+              않습니다.
+            </p>
+          </CardContent>
+        </Card>
       </main>
     );
   }
@@ -76,28 +159,7 @@ export default async function LeaguePage({
   const mine = await computeAndStoreWeeklyScore(user);
   const list = await board(user, scope);
 
-  const allocs = await db
-    .select()
-    .from(allocations)
-    .where(eq(allocations.userId, user.id))
-    .orderBy(asc(allocations.effectiveFrom));
-  let vol = 0;
-  let mdd = 0;
-  let fronts = 0;
-  if (allocs.length > 0) {
-    const { dates, series } = pricesUpTo(kstToday());
-    const history: WeightHistoryItem[] = allocs.map((a) => ({
-      effectiveFrom: a.effectiveFrom,
-      weights: a.weights as Record<string, number>,
-      details: (a.details as Record<string, Record<string, number>> | null) ?? null,
-    }));
-    const { values } = computeCurve(dates, series, history, {
-      [allocs[0].effectiveFrom]: SEED_AMOUNT,
-    });
-    vol = annualizedVol(values);
-    mdd = maxDrawdown(values);
-    fronts = effectiveFronts(allocs[allocs.length - 1].weights as Weights);
-  }
+  const { vol, mdd, fronts } = await ownRisk(user.id);
 
   const parts = [mine.grown, mine.spread, mine.held];
 
@@ -108,14 +170,14 @@ export default async function LeaguePage({
         description="등수는 없습니다. 매주 월요일 리셋 · 누적 순위 없음."
       />
 
-      <Card>
+      <Card className={LEAD_BAND}>
         <CardHeader>
           <CardTitle className="text-base">내 점수</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 text-sm">
           {mine.hasHistory ? (
             <>
-              <p className="text-4xl font-bold tabular-nums">
+              <p className="text-3xl font-bold tabular-nums">
                 {mine.total}
                 <span className="ml-1 text-base font-normal text-muted-foreground">/ 100</span>
               </p>
@@ -133,15 +195,15 @@ export default async function LeaguePage({
           )}
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="rounded-md bg-muted/40 p-2">
-              <p className="text-[11px] text-muted-foreground">연 변동성</p>
+              <p className="text-xs text-muted-foreground">연 변동성</p>
               <p className="font-mono text-sm tabular-nums">{Math.round(vol * 100)}%</p>
             </div>
             <div className="rounded-md bg-muted/40 p-2">
-              <p className="text-[11px] text-muted-foreground">최대낙폭</p>
+              <p className="text-xs text-muted-foreground">최대낙폭</p>
               <p className="font-mono text-sm tabular-nums">{pct(mdd)}</p>
             </div>
             <div className="rounded-md bg-muted/40 p-2">
-              <p className="text-[11px] text-muted-foreground">실질 전선 수</p>
+              <p className="text-xs text-muted-foreground">실질 전선 수</p>
               <p className="font-mono text-sm tabular-nums">{fronts.toFixed(1)}</p>
             </div>
           </div>
@@ -187,7 +249,7 @@ export default async function LeaguePage({
                   <div
                     key={i}
                     className={cn(
-                      'flex items-center justify-between rounded-md px-2.5 py-1.5 text-sm',
+                      'flex items-center justify-between rounded-md px-3 py-2 text-sm',
                       // 「(나)」 라벨이 이미 누구인지 말한다. 색은 표면으로만 구분한다 —
                       // 신호색은 «할 일»에만 쓴다.
                       e.isMe && 'bg-muted',

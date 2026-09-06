@@ -16,7 +16,7 @@ import { computeMarketWeek } from '@/lib/market-week';
 import { portfolioSummary } from '@/lib/portfolio/summary';
 import { collectReviewFacts } from '@/lib/review-context';
 import { getSessionUser } from '@/lib/session';
-import { cn } from '@/lib/utils';
+import { LEAD_BAND } from '@/lib/lead-band';
 
 // S3 홈 — 브리핑룸. 「지금 어디에 있나 / 오늘 무엇을 하나」만 둔다.
 // 하단 네비와 같은 화면을 다시 깔지 않는다. 그룹만 네비 밖이라 여기서 연다.
@@ -58,15 +58,25 @@ export default async function HomePage() {
       ]
     : [
         { href: '#market', label: '오늘의 지형', hint: '전선 등락 · 내 손익 가중은 주말에' },
+        // ★ 여기에 primary(신호색+큰 표면)를 두지 않는다. 힌트가 「안 적어도 됩니다」라고
+        //   적어 둔 것을 화면에서 유일하게 든 덩어리로 만들면, 눈은 강조를 보고
+        //   「해야 하는 것」이라 읽는데 글자는 「안 해도 된다」고 말한다 — 설명되지 않는 강조다.
+        //   평일에 반드시 해야 하는 하나는 없다. 그것이 이 서비스의 주장이므로 네 줄을 같은 무게로 둔다.
         { href: '/portfolio', label: '명령하달 초안', hint: '실행되지 않는 메모. 안 적어도 됩니다' },
         { href: '/learn#drill', label: '도상훈련', hint: '지금 편성을 과거 지형에 넣기' },
         { href: '/principles', label: '나의 투자 원칙', hint: '전역 후에도 남는 기록' },
       ];
 
   return (
-    <main className="flex flex-col gap-4 px-5 py-8">
+    // ★ pt-4 — 요일 배너와 이 줄 사이를 좁혀 «머리 하나»로 읽히게 한다.
+    //   py-8이면 배너 제목과 이 줄이 멀리 떨어져 「제목이 두 개」로 읽혔다.
+    <main className="flex flex-col gap-4 px-5 pt-4 pb-8">
+      {/* ★ /home의 제목은 요일 배너가 든다 (components/demo-toggle.tsx 전체 단).
+          여기서 다시 text-3xl 표제를 세우면 300px 간격으로 같은 무게의 제목이 둘이 된다.
+          D-day는 «사실 한 줄»로 남기고 활자 단만 내린다 — h1은 의미상 그대로 여기다. */}
       <PageHeader
         kicker={`${user.nickname}님`}
+        titleClassName="text-base"
         title={open ? '지금 편성할 수 있습니다' : `다음 편성까지 D-${dday}`}
         badge={
           <Badge variant="outline" className="shrink-0">
@@ -75,7 +85,8 @@ export default async function HomePage() {
         }
       />
 
-      <Card>
+      {/* 이 화면의 작업 대상 — 「오늘 무엇을 하나」. 들린 표면 한 단으로 세운다 */}
+      <Card className={LEAD_BAND}>
         <CardHeader>
           <CardTitle className="text-base">오늘 할 수 있는 일</CardTitle>
         </CardHeader>
@@ -105,7 +116,7 @@ export default async function HomePage() {
             {weekend ? '내 편성(목표 비중) 평가액' : '누적 수익률'}
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-1">
+        <CardContent data-region="home-figure" className="flex flex-col gap-1">
           {!me.hasAllocation ? (
             <p className="text-sm text-muted-foreground">
               아직 편성이 없습니다.{' '}
@@ -137,14 +148,10 @@ export default async function HomePage() {
             </>
           ) : (
             <>
-              <p
-                className={cn(
-                  'text-3xl font-bold tabular-nums',
-                  me.cumulativePct >= 0 ? 'text-up' : 'text-down',
-                )}
-              >
-                {pct(me.cumulativePct, 2)}
-              </p>
+              {/* ★ 등락은 «사실이지 신호가 아니다» (DESIGN-RULES §1). 이 카드의 유일한 수치라
+                  크기(text-3xl)는 그대로 두되 등락색은 빼서 화면에서 가장 밝은 덩어리가
+                  되지 않게 한다. 부호(+/−)는 pct()가 항상 붙이므로 색각 분리는 유지된다. */}
+              <p className="text-3xl font-bold tabular-nums">{pct(me.cumulativePct, 2)}</p>
               <p className="text-sm text-muted-foreground">
                 평가액 {won(me.value)} · 원금 {won(SEED_AMOUNT)}
               </p>
@@ -159,7 +166,7 @@ export default async function HomePage() {
         </CardContent>
       </Card>
 
-      <Card id="market" className="scroll-mt-40">
+      <Card id="market" className="scroll-mt-6">
         <CardHeader>
           <CardTitle className="text-base">오늘의 지형</CardTitle>
         </CardHeader>
@@ -179,7 +186,7 @@ export default async function HomePage() {
         </CardContent>
       </Card>
 
-      <Card id="ai-coach" className="scroll-mt-40">
+      <Card id="ai-coach" className="scroll-mt-6">
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="text-base">AI 행동 회고 코치</CardTitle>
@@ -211,7 +218,7 @@ export default async function HomePage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between text-base">
             <span>제대로 지수</span>
-            <Link href="/league" className="text-xs font-normal text-muted-foreground underline">
+            <Link href="/league" className="inline-flex min-h-11 items-center text-xs font-normal text-muted-foreground underline">
               {weekend ? '자세히 →' : '지수 화면 →'}
             </Link>
           </CardTitle>
@@ -242,7 +249,7 @@ export default async function HomePage() {
 
       <Link
         href="/groups"
-        className="flex items-center justify-between rounded-xl border border-border px-4 py-3.5 transition-colors hover:border-muted-foreground/40"
+        className="flex items-center justify-between rounded-xl border border-border px-4 py-3 transition-colors hover:border-muted-foreground/40"
       >
         <span>
           <span className="block font-semibold">그룹</span>

@@ -59,15 +59,15 @@ export function AttributionCurves({ data }: { data: AttributionCurves }) {
       <ul className="flex flex-wrap items-center gap-x-4 gap-y-1">
         <li className="flex items-center gap-1.5">
           <span className="h-0.5 w-4 shrink-0 rounded-full bg-[var(--chart-1)]" aria-hidden />
-          <span className="text-[11px] text-muted-foreground">바꿔 온 편성</span>
+          <span className="text-xs text-muted-foreground">바꿔 온 편성</span>
         </li>
         <li className="flex items-center gap-1.5">
           <span className="h-0.5 w-4 shrink-0 rounded-full bg-faint" aria-hidden />
-          <span className="text-[11px] text-muted-foreground">첫 편성 그대로</span>
+          <span className="text-xs text-muted-foreground">첫 편성 그대로</span>
         </li>
       </ul>
 
-      <figcaption className="flex justify-between font-mono text-[11px] tabular-nums text-faint">
+      <figcaption className="flex justify-between font-mono text-xs tabular-nums text-faint">
         <span>{dates[0]}</span>
         <span>{dates[dates.length - 1]}</span>
       </figcaption>

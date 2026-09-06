@@ -33,7 +33,7 @@ export function BottomNav() {
               href={it.href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium',
+                'flex flex-1 flex-col items-center gap-0.5 py-3 text-xs font-medium',
                 active ? 'text-primary' : 'text-muted-foreground',
               )}
             >

@@ -41,12 +41,12 @@ export function OnboardingForm({ stats }: { stats: OperationStat[] }) {
   const [templateId, setTemplateId] = useState<string>('ALLIANCE');
 
   const selectClass =
-    'h-12 w-full rounded-lg border border-input bg-background px-3.5 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/25';
+    'h-12 w-full rounded-lg border border-input bg-background px-4 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/25';
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">기본 정보</h2>
+        <h2 className="text-base font-semibold">기본 정보</h2>
         <p className="text-xs text-muted-foreground">
           실명·주소를 입력하지 마세요. 별명, 계급, 날짜, 거리 구간만 저장합니다.
         </p>
@@ -105,7 +105,7 @@ export function OnboardingForm({ stats }: { stats: OperationStat[] }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">시작 배분 고르기</h2>
+        <h2 className="text-base font-semibold">시작 배분 고르기</h2>
         <p className="text-sm text-muted-foreground">
           모의 시드 <b className="text-foreground">{won(SEED_AMOUNT)}</b>으로 시작합니다. 아래는
           추천이 아니라 <b className="text-foreground">예시</b>입니다 — 고른 뒤 언제든 주말에 조정할
@@ -131,8 +131,8 @@ export function OnboardingForm({ stats }: { stats: OperationStat[] }) {
                 key={op.id}
                 onClick={() => setTemplateId(op.id)}
                 className={cn(
-                  'flex flex-col gap-2 rounded-xl border p-3.5 text-left transition-colors',
-                  selected ? 'border-primary bg-primary/10' : 'border-border hover:border-muted-foreground/40',
+                  'flex flex-col gap-2 rounded-xl border p-4 text-left transition-colors',
+                  selected ? 'border-input bg-secondary' : 'border-border hover:border-muted-foreground/40',
                 )}
               >
                 <div className="flex items-center justify-between">
@@ -146,7 +146,7 @@ export function OnboardingForm({ stats }: { stats: OperationStat[] }) {
                 {/* 장점과 단점을 같은 개수로 나란히. 한쪽만 길면 그게 곧 신호가 된다.
                     ★ 단점에 신호색(primary)을 쓰지 않는다. 개수가 같아도 색이 더 세면 무게가 달라지고,
                       가장 강한 색이 「단점」에 붙으면 카드 하나가 조용히 경고로 읽힌다. */}
-                <div className="flex flex-col gap-0.5 text-[11px] leading-relaxed">
+                <div className="flex flex-col gap-0.5 text-xs leading-relaxed">
                   {op.pros.map((line) => (
                     <span key={line} className="text-muted-foreground">+ {line}</span>
                   ))}
@@ -154,7 +154,7 @@ export function OnboardingForm({ stats }: { stats: OperationStat[] }) {
                     <span key={line} className="text-muted-foreground">− {line}</span>
                   ))}
                 </div>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {THEMES.filter((th) => op.weights[th.code] > 0)
                     .map((th) => `${th.name} ${op.weights[th.code] / POINT_UNIT}`)
                     .join(' · ')}
@@ -171,7 +171,7 @@ export function OnboardingForm({ stats }: { stats: OperationStat[] }) {
         </div>
       </section>
 
-      {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
+      {state.error ? <p role="alert" className="text-sm text-destructive">{state.error}</p> : null}
       <Button type="submit" disabled={pending} className="h-12 text-base">
         {pending ? '시작 준비 중…' : `${won(SEED_AMOUNT)} 받고 시작하기`}
       </Button>

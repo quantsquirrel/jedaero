@@ -27,7 +27,7 @@ export function PrinciplesSheet({ sentences }: { sentences: PrincipleSentence[] 
                 type="checkbox"
                 checked={picked.includes(s.id)}
                 onChange={() => toggle(s.id)}
-                className="mt-1 size-4 shrink-0 accent-primary"
+                className="mt-1 size-4 shrink-0 accent-[var(--chart-1)]"
               />
               <span className="text-sm leading-relaxed">{s.text}</span>
             </label>

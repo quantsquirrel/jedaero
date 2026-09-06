@@ -11,8 +11,8 @@ const STEPS = [
 
 export function DemoGuide() {
   return (
-    // ★ 기본은 «접힘». 펼친 채로 두면 토글과 합쳐 238px — 390px 화면의 3분의 1을 상시 차지하고,
-    //   본문 앵커(scroll-mt-40 = 160px)보다 커져서 카드 제목이 헤더 뒤로 들어간다.
+    // ★ 기본은 «접힘». 펼친 채로 두면 요일 배너와 합쳐 390px 화면의 절반을 차지하고,
+    //   펼친 채로 두면 평일 첫 화면에서 요일 배너와 본문 사이를 갈라놓는다.
     <details className="border-b border-border bg-background px-4">
       <summary className="flex min-h-11 cursor-pointer items-center text-xs font-semibold">
         3분 심사용 동선
@@ -23,15 +23,15 @@ export function DemoGuide() {
           <li key={step.label}>
             <Link
               href={step.href}
-              className="flex min-h-12 flex-col rounded-md border border-border px-1.5 py-1.5 text-[10px] leading-tight text-muted-foreground hover:border-primary/50 hover:text-foreground"
+              className="flex min-h-12 flex-col rounded-md border border-border px-2 py-2 text-xs leading-tight text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground"
             >
-              <span className="font-mono text-primary">{i + 1}</span>
+              <span className="font-mono text-faint">{i + 1}</span>
               <span>{step.label}</span>
             </Link>
           </li>
         ))}
       </ol>
-      <p className="mt-1.5 text-[10px] leading-relaxed text-muted-foreground">
+      <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
         1~2는 평일, 3~4는 위 토글을 주말로. 5·6은 요일과 무관합니다. 6은 전역 후에도 남는 기록입니다.
       </p>
       <Link

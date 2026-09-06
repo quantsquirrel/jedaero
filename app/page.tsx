@@ -19,7 +19,7 @@ import {
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">{children}</p>
+    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{children}</p>
   );
 }
 
@@ -32,7 +32,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 function Body({ children }: { children: React.ReactNode }) {
-  return <p className="max-w-[52ch] break-keep text-[15px] leading-relaxed text-muted-foreground">{children}</p>;
+  return <p className="max-w-[52ch] break-keep text-base leading-relaxed text-muted-foreground">{children}</p>;
 }
 
 /** 좌우 교차 배치 — 데스크톱에서 시선이 Z자로 흐른다 */
@@ -146,7 +146,7 @@ export default function LandingPage() {
       <section className="relative flex min-h-[92dvh] flex-col items-center justify-center px-6 text-center">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_45%_at_50%_38%,color-mix(in_oklch,var(--primary)_10%,transparent),transparent_70%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_45%_at_50%_38%,color-mix(in_oklch,var(--chart-2)_10%,transparent),transparent_70%)]"
         />
         <Reveal className="relative">
           <div className="mb-7 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
@@ -177,13 +177,13 @@ export default function LandingPage() {
             <Link
               href="/demo"
               prefetch={false}
-              className="group flex h-14 items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground shadow-lg shadow-primary/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              className="group flex h-14 items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground transition-[transform,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
               3분 심사 데모 시작
             </Link>
             <Link
               href="/onboarding"
-              className="flex h-14 items-center justify-center rounded-xl border border-input text-base font-semibold text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-muted-foreground/60 hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-muted-foreground motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              className="flex h-14 items-center justify-center rounded-xl border border-input text-base font-semibold text-foreground transition-[transform,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:border-muted-foreground/60 hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-muted-foreground motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
               시작하기
             </Link>
@@ -197,7 +197,7 @@ export default function LandingPage() {
           aria-hidden
           className="mt-10 flex flex-col items-center gap-2 text-faint/50 motion-safe:animate-bounce"
         >
-          <span className="text-[11px] tracking-widest">SCROLL</span>
+          <span className="text-xs tracking-widest">SCROLL</span>
           <span className="h-8 w-px bg-gradient-to-b from-input to-transparent" />
         </div>
       </section>
@@ -212,7 +212,7 @@ export default function LandingPage() {
             <div className="flex flex-col gap-5">
               <Eyebrow>훈련 시드</Eyebrow>
               <SectionTitle>
-                전역할 때 <span className="text-primary">2,000만원</span>을 받습니다
+                전역할 때 <span className="text-foreground">2,000만원</span>을 받습니다
               </SectionTitle>
               <Body>
                 장병내일준비적금을 채우면 목돈이 손에 들어옵니다. 문제는 그 돈을 처음 만지는 날이
@@ -225,7 +225,7 @@ export default function LandingPage() {
             </div>
             <Panel className="text-center">
               <p className="text-sm text-faint">모의 시드</p>
-              <p className="mt-2 font-mono text-5xl font-bold tabular-nums tracking-tight sm:text-6xl">
+              <p className="mt-2 font-mono text-5xl font-semibold tabular-nums tracking-tight sm:text-6xl">
                 20,000,000
               </p>
               <p className="mt-1 text-sm text-faint">원</p>
@@ -242,7 +242,7 @@ export default function LandingPage() {
             <div className="flex flex-col gap-5">
               <Eyebrow>훈련 규율</Eyebrow>
               <SectionTitle>
-                편성(목표 비중)은 <span className="text-primary">주말에 한 번</span>만 정합니다
+                편성(목표 비중)은 <span className="text-foreground">주말에 한 번</span>만 정합니다
               </SectionTitle>
               <Body>
                 평일 일과 후 휴대전화 이용 환경에서는 국내 증시 장중 대응이 어렵습니다. 이 제약을
@@ -256,16 +256,16 @@ export default function LandingPage() {
             <div className="grid grid-cols-2 gap-4">
               <Panel>
                 <p className="text-xs font-semibold tracking-wider text-faint">평일</p>
-                <p className="mt-3 text-lg font-semibold">읽고, 계획한다</p>
+                <p className="mt-3 text-base font-semibold">읽고, 계획한다</p>
                 <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                   <li>전선 등락을 읽는다</li>
                   <li>학습 카드</li>
                   <li>편성 현황 보기</li>
                 </ul>
               </Panel>
-              <Panel className="border-primary/30 bg-primary/5">
-                <p className="text-xs font-semibold tracking-wider text-primary/80">주말</p>
-                <p className="mt-3 text-lg font-semibold">한 번 실행한다</p>
+              <Panel className="border-border bg-muted/40">
+                <p className="text-xs font-semibold tracking-wider text-foreground">주말</p>
+                <p className="mt-3 text-base font-semibold">한 번 실행한다</p>
                 <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                   <li>편성 조정</li>
                   <li>이번 주 변동</li>
@@ -282,7 +282,7 @@ export default function LandingPage() {
             <div className="flex flex-col gap-5">
               <Eyebrow>편성</Eyebrow>
               <SectionTitle>
-                6개 전선(자산군)에 <span className="text-primary">포인트 20개</span>를 놓습니다
+                6개 전선(자산군)에 <span className="text-foreground">포인트 20개</span>를 놓습니다
               </SectionTitle>
               <Body>
                 종목을 고르고 수량을 계산하는 대신, 포인트를 나눠 놓습니다. 몇 주를 몇 원에 살지가
@@ -343,7 +343,7 @@ export default function LandingPage() {
             <div className="flex flex-col gap-5">
               <Eyebrow>평일</Eyebrow>
               <SectionTitle>
-                오늘 시장이 어떻게 움직였는지 <span className="text-primary">한눈에</span>
+                오늘 시장이 어떻게 움직였는지 <span className="text-foreground">한눈에</span>
               </SectionTitle>
               <Body>
                 들어오면 오늘의 지형이 먼저 보입니다. 전선별 등락은 규칙으로 계산합니다. 내 손익이
@@ -378,7 +378,7 @@ export default function LandingPage() {
             <div className="flex flex-col gap-5">
               <Eyebrow>제대로 지수</Eyebrow>
               <SectionTitle>
-                많이 번 결과보다 <span className="text-primary">제대로 결정한 힘</span>을 봅니다
+                많이 번 결과보다 <span className="text-foreground">제대로 결정한 힘</span>을 봅니다
               </SectionTitle>
               <Body>
                 한 번의 수익은 운일 수 있습니다. 제대로 지수는 위험을 감안한 성과, 분산의 구조,
@@ -386,12 +386,12 @@ export default function LandingPage() {
               </Body>
             </div>
 
-            <Panel className="border-primary/35 bg-primary/5">
+            <Panel className="border-border bg-muted/40">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <p className="text-sm font-semibold text-primary/90">제대로 지수 산식</p>
+                <p className="text-sm font-semibold text-foreground">제대로 지수 산식</p>
                 <p className="font-mono text-sm tabular-nums text-faint">총 100점</p>
               </div>
-              <p className="mt-3 break-keep text-lg font-bold leading-relaxed text-foreground sm:text-xl">
+              <p className="mt-3 break-keep text-base font-bold leading-relaxed text-foreground sm:text-2xl">
                 제대로 지수 = 위험을 이긴 성과 + 분산의 힘 + 판단을 지킨 힘
               </p>
               <div className="mt-6 grid items-stretch gap-3 sm:grid-cols-[1fr_auto_1fr_auto_1fr]">
@@ -402,12 +402,12 @@ export default function LandingPage() {
                 ].map(([score, title, description], index) => (
                   <div key={title} className="contents">
                     {index > 0 ? (
-                      <span aria-hidden className="hidden self-center text-2xl text-primary/70 sm:block">
+                      <span aria-hidden className="hidden self-center text-2xl text-faint sm:block">
                         +
                       </span>
                     ) : null}
                     <div className="rounded-xl border border-border bg-background/50 px-4 py-4">
-                      <p className="font-mono text-2xl font-bold tabular-nums text-primary">{score}</p>
+                      <p className="font-mono text-2xl font-semibold tabular-nums text-[var(--chart-1)]">{score}</p>
                       <p className="mt-2 font-semibold text-foreground">{title}</p>
                       <p className="mt-1.5 break-keep text-xs leading-relaxed text-faint">{description}</p>
                     </div>
@@ -415,7 +415,7 @@ export default function LandingPage() {
                 ))}
               </div>
               <p className="mt-5 break-keep text-sm leading-relaxed text-foreground">
-                <span className="font-semibold text-primary/90">결과에 주는 점수는 40점뿐입니다.</span> 나머지 60점은
+                <span className="font-semibold text-foreground">결과에 주는 점수는 40점뿐입니다.</span> 나머지 60점은
                 위험을 나누고, 처음의 판단을 지켜낸 과정에 줍니다.
               </p>
             </Panel>
@@ -466,7 +466,7 @@ export default function LandingPage() {
               <div className="flex items-center justify-between border-t border-border px-6 py-5">
                 <span className="text-sm font-semibold">제대로 지수 합계</span>
                 <span className="flex items-baseline gap-5 font-mono tabular-nums">
-                  <span className="text-lg text-faint">
+                  <span className="text-base text-faint">
                     {INDEX_ROWS.reduce((a, r) => a + r.solo, 0)}
                   </span>
                   <span className="text-2xl font-bold text-[var(--chart-1)]">
@@ -504,7 +504,7 @@ export default function LandingPage() {
                     </p>
                     <ul className="mt-3 flex flex-col gap-1.5">
                       {m.notes.map((n) => (
-                        <li key={n} className="break-keep text-[13px] leading-relaxed text-faint">
+                        <li key={n} className="break-keep text-sm leading-relaxed text-faint">
                           {n}
                         </li>
                       ))}
@@ -514,7 +514,7 @@ export default function LandingPage() {
               </div>
               <div className="border-t border-border px-6 py-5">
                 <p className="text-xs font-semibold text-muted-foreground">배점 근거</p>
-                <ul className="mt-2 flex flex-col gap-1.5 text-[13px] leading-relaxed text-faint">
+                <ul className="mt-2 flex flex-col gap-1.5 text-sm leading-relaxed text-faint">
                   <li className="break-keep">
                     Lo (2002), <i>The Statistics of Sharpe Ratios</i> — 샤프 비율은 관측 기간이
                     짧을수록 추정오차가 커집니다. 그래서 주간 수익률 하나로 줄을 세우지 않습니다.
@@ -528,7 +528,7 @@ export default function LandingPage() {
                     어긋나면 판단이 망가집니다. 주 1회 편성과 예비대 표시가 여기서 나왔습니다.
                   </li>
                 </ul>
-                <p className="mt-4 break-keep text-[13px] leading-relaxed text-faint">
+                <p className="mt-4 break-keep text-sm leading-relaxed text-faint">
                   등수 숫자는 만들지 않습니다. 목록도 점수순이 아니라 가입순입니다 — 정렬 자체가
                   등수가 되기 때문입니다. 수익 금액도 어디에도 표시하지 않습니다.
                 </p>
@@ -543,7 +543,7 @@ export default function LandingPage() {
             <div className="flex flex-col gap-5">
               <Eyebrow>신뢰 설계</Eyebrow>
               <SectionTitle>
-                신뢰는 문구가 아니라 <span className="text-primary">구조</span>로 만듭니다
+                신뢰는 문구가 아니라 <span className="text-foreground">구조</span>로 만듭니다
               </SectionTitle>
               <Body>
                 숫자는 공개된 규칙이 계산하고, AI는 그 숫자를 정리해 질문만 돌려주며, 확정은 사람이 주말에
@@ -568,7 +568,7 @@ export default function LandingPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <Panel>
                 <Eyebrow>AI·데이터 안전장치</Eyebrow>
-                <h2 className="mt-3 text-xl font-bold">AI는 계산하지 않고, 해석하고 질문합니다</h2>
+                <h2 className="mt-3 text-2xl font-bold">AI는 계산하지 않고, 해석하고 질문합니다</h2>
                 <ul className="mt-4 space-y-2 text-sm leading-relaxed text-muted-foreground">
                   <li>수익률과 제대로 지수는 공개된 규칙으로 계산</li>
                   <li>LLM에는 편성, 유지 기간, 주간 변동, 한 줄 회고만 전달</li>
@@ -579,7 +579,7 @@ export default function LandingPage() {
               </Panel>
               <Panel>
                 <Eyebrow>재현 가능한 합성 데이터</Eyebrow>
-                <h2 className="mt-3 text-xl font-bold">같은 입력이면 같은 계산 결과가 나옵니다</h2>
+                <h2 className="mt-3 text-2xl font-bold">같은 입력이면 같은 계산 결과가 나옵니다</h2>
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                   심사용 가격·편성 이력과 산출 규칙을 고정해 결과를 다시 확인할 수 있습니다. 학습의 세
                   시나리오를 직접 전환해 한 전략이 언제나 이기는지 비교합니다.
@@ -610,13 +610,13 @@ export default function LandingPage() {
               <Link
                 href="/demo"
                 prefetch={false}
-                className="flex h-14 items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                className="flex h-14 items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground transition-[transform,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0"
               >
                 3분 심사 데모 시작
               </Link>
               <Link
                 href="/onboarding"
-                className="flex h-14 items-center justify-center rounded-xl border border-input text-base font-semibold text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-muted-foreground/60 hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-muted-foreground motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                className="flex h-14 items-center justify-center rounded-xl border border-input text-base font-semibold text-foreground transition-[transform,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:border-muted-foreground/60 hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-muted-foreground motion-reduce:transition-none motion-reduce:hover:translate-y-0"
               >
                 시작하기
               </Link>

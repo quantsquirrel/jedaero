@@ -30,7 +30,7 @@ async function editable(userId: string): Promise<{ week: string } | { error: str
     .from(allocations)
     .where(and(eq(allocations.userId, userId), eq(allocations.weekOf, week)))
     .limit(1);
-  if (confirmed) return { error: '이번 주 편성은 이미 확정됐습니다. 초안은 다음 주에 다시 열려요.' };
+  if (confirmed) return { error: '이번 주 편성은 이미 확정됐습니다. 초안은 다음 주에 다시 열립니다.' };
   return { week };
 }
 

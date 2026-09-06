@@ -1,0 +1,23 @@
+{
+  "name": "T1 평일 기본 상태에서 주말 전용 기능을 연다",
+  "destructive": false,
+  "steps": [
+    {
+      "action": "click",
+      "selector": "[data-region=\"day-state\"] button[data-day=\"WEEKEND\"]",
+      "expect": [
+        { "type": "attribute", "selector": "[data-region=\"day-state\"] button[data-day=\"WEEKEND\"]", "name": "aria-pressed", "value": "true" },
+        { "type": "text", "selector": "[data-region=\"day-state\"] h2", "value": "지금은 주말 화면입니다" },
+        { "type": "visible", "selector": "[data-region=\"day-state\"] button[data-day=\"WEEKDAY\"]" }
+      ]
+    },
+    {
+      "action": "click",
+      "selector": "[data-region=\"day-state\"] button[data-day=\"WEEKDAY\"]",
+      "expect": [
+        { "type": "attribute", "selector": "[data-region=\"day-state\"] button[data-day=\"WEEKDAY\"]", "name": "aria-pressed", "value": "true" },
+        { "type": "text", "selector": "[data-region=\"day-state\"] h2", "value": "지금은 평일 화면입니다" }
+      ]
+    }
+  ]
+}

@@ -139,6 +139,28 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* 선택 하이라이트 — 브라우저 기본 파랑은 이 색 체계 밖의 색이다.
+     신호색을 «칠하지» 않고 표면 한 단으로 든다: 선택은 상태이지 행동이 아니다. */
+  ::selection {
+    background-color: color-mix(in oklch, var(--foreground) 22%, transparent);
+    color: var(--foreground);
+  }
+  /* 스크롤바 — 표준 속성 먼저, webkit 은 Safari 대비. 트랙은 비운다. */
+  html {
+    scrollbar-color: color-mix(in oklch, var(--foreground) 28%, transparent) transparent;
+    scrollbar-width: thin;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--foreground) 28%, transparent);
+    border-radius: 999px;
+  }
   html {
     @apply font-sans;
     /* 하단 탭(~60px) + 홈 인디케이터. #ai-coach 같은 앵커가 탭 뒤로 들어가지 않게. */

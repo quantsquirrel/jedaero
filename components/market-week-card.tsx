@@ -52,7 +52,7 @@ export function MarketWeekCard({
       <div className="flex flex-col gap-1">
         <p className="text-xs text-muted-foreground">
           {fromDate} ~ {toDate} · 영업일 {tradingDays}일{' '}
-          <span className="text-[11px]">(규칙 기반 계산 · AI 아님)</span>
+          <span className="text-xs">(규칙 기반 계산 · AI 아님)</span>
         </p>
         {variant === 'full' ? (
           <p className="text-sm">
@@ -72,7 +72,7 @@ export function MarketWeekCard({
               <FrontTerrain code={m.code} />
               <span className="w-20 shrink-0 truncate">{m.name}</span>
               {variant === 'full' ? (
-                <span className="w-10 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground">
+                <span className="w-10 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">
                   {m.myWeight}%
                 </span>
               ) : null}

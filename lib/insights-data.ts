@@ -124,3 +124,56 @@ export async function computeInsightStats(user: SessionUser): Promise<InsightDat
   const themeName = THEMES.find((t) => t.code === myMaxCode)?.name ?? myMaxCode;
   return { stats, themeName };
 }
+
+/** 코호트 없이 «내 이력만»으로 나오는 값. 평일 화면이 쓴다 — 비교가 아니므로 옵트인도 필요 없다. */
+export type OwnProfile = {
+  weights: Weights;
+  cash: number;
+  maxTheme: { code: ThemeCode; weight: number };
+  hhi: number;
+  turnover: number | null;
+  vol: number;
+  weeks: number;
+  latestWeek: string;
+};
+
+export async function computeOwnProfile(userId: string): Promise<OwnProfile | null> {
+  const myAllocs = await db
+    .select()
+    .from(allocations)
+    .where(eq(allocations.userId, userId))
+    .orderBy(allocations.effectiveFrom);
+  if (myAllocs.length === 0) return null;
+
+  const history: WeeklyWeight[] = myAllocs.map((a) => ({
+    weekOf: a.weekOf,
+    weights: a.weights as Weights,
+  }));
+  const weights = history[history.length - 1].weights;
+
+  const { dates, series } = pricesUpTo(kstToday());
+  const curveHistory: WeightHistoryItem[] = myAllocs.map((a) => ({
+    effectiveFrom: a.effectiveFrom,
+    weights: a.weights as Record<string, number>,
+    details: (a.details as Record<string, Record<string, number>> | null) ?? null,
+  }));
+  const { values } = computeCurve(dates, series, curveHistory, {
+    [myAllocs[0].effectiveFrom]: SEED_AMOUNT,
+  });
+
+  const maxCode = THEME_CODES.reduce<ThemeCode>(
+    (best, c) => ((weights[c] ?? 0) > (weights[best] ?? 0) ? c : best),
+    THEME_CODES[0],
+  );
+
+  return {
+    weights,
+    cash: reserveWeight(weights),
+    maxTheme: { code: maxCode, weight: maxWeightOf(weights) },
+    hhi: hhi(weights),
+    turnover: weeklyTurnover(history, weekOf(new Date())),
+    vol: annualizedVol(values),
+    weeks: history.length,
+    latestWeek: history[history.length - 1].weekOf,
+  };
+}

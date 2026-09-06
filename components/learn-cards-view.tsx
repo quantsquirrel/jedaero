@@ -39,10 +39,10 @@ export function LearnCardsView({ cards, initialOpen }: { cards: readonly LearnCa
       {cards.map((c) => {
         const isOpen = open === c.id;
         return (
-          <div key={c.id} id={`card-${c.id}`} className="scroll-mt-40 rounded-xl border border-border">
+          <div key={c.id} id={`card-${c.id}`} className="scroll-mt-6 rounded-xl border border-border">
             <button
               type="button"
-              className="flex w-full items-center justify-between gap-2 p-3.5 text-left"
+              className="flex w-full items-center justify-between gap-2 p-4 text-left"
               onClick={() => setOpen(isOpen ? null : c.id)}
               aria-expanded={isOpen}
             >
@@ -55,7 +55,7 @@ export function LearnCardsView({ cards, initialOpen }: { cards: readonly LearnCa
               <span className={cn('text-muted-foreground transition-transform', isOpen && 'rotate-180')}>⌄</span>
             </button>
             {isOpen ? (
-              <div className="flex flex-col gap-2.5 border-t border-border p-3.5">
+              <div className="flex flex-col gap-2.5 border-t border-border p-4">
                 {c.body.map((para, i) => (
                   <p key={i} className="text-sm leading-relaxed text-muted-foreground">
                     {para}

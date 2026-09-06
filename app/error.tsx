@@ -21,7 +21,7 @@ export default function RouteError({
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-6 py-12 text-foreground">
       <div className="flex flex-col gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           화면을 불러오지 못했습니다
         </p>
         <h1 className="text-2xl font-bold tracking-tight">잠시 연결이 끊겼습니다</h1>
@@ -53,7 +53,7 @@ export default function RouteError({
         </Link>
       </div>
 
-      <p className="text-[11px] leading-relaxed text-faint/70">
+      <p className="text-xs leading-relaxed text-faint/70">
         같은 화면이 계속 나오면 잠시 뒤 다시 열어 주세요.
         {error.digest ? (
           <>

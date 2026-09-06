@@ -32,7 +32,7 @@ export function SourceChip({
   return (
     <span
       className={cn(
-        'inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium',
+        'inline-flex w-fit items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium',
         STYLE[kind],
         className,
       )}

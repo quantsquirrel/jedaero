@@ -49,11 +49,14 @@ export function ReviewForm({ coachContext }: { coachContext?: CoachContext } = {
           defaultValue={coachContext?.defaultReview}
           required
         />
-        <Button type="submit" disabled={pending}>
+        {/* ★ 신호색을 쓰지 않는다. 같은 화면(/home)에 「오늘 할 수 있는 일」의 그날의 행동이
+            이미 amber로 서 있고, 한 줄 회고는 «안 적어도 되는» 선택이다 (§7 빈 상태 규범).
+            둘 다 amber면 화면에 「지금 누를 것」이 둘이 되어 어느 쪽도 가리키지 못한다. */}
+        <Button type="submit" variant="secondary" disabled={pending}>
           {pending ? '읽는 중…' : coachContext ? 'AI 코치' : '남기기'}
         </Button>
       </div>
-      {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
+      {state.error ? <p role="alert" className="text-sm text-destructive">{state.error}</p> : null}
       {state.ok ? (
         <p className="text-sm text-up">남겼습니다. 전역 때 그 주 편성과 함께 다시 보입니다.</p>
       ) : null}

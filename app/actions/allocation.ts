@@ -36,7 +36,7 @@ export async function saveAllocation(
     .from(allocations)
     .where(and(eq(allocations.userId, user.id), eq(allocations.weekOf, week)))
     .limit(1);
-  if (existing.length > 0) return { error: '이번 주는 이미 조정했습니다. 다음 주말에 다시 열려요.' };
+  if (existing.length > 0) return { error: '이번 주는 이미 조정했습니다. 다음 주말에 다시 열립니다.' };
 
   const effectiveFrom = nextTradingDay(kstToday());
   if (!effectiveFrom) return { error: '체결 가능한 거래일이 없습니다.' };
@@ -54,7 +54,7 @@ export async function saveAllocation(
   } catch (e) {
     // 동시 요청 등으로 UNIQUE 제약에 걸린 경우
     const code = (e as { cause?: { code?: string }; code?: string })?.cause?.code ?? (e as { code?: string })?.code;
-    if (code === '23505') return { error: '이번 주는 이미 조정했습니다. 다음 주말에 다시 열려요.' };
+    if (code === '23505') return { error: '이번 주는 이미 조정했습니다. 다음 주말에 다시 열립니다.' };
     return { error: '저장에 실패했습니다. 잠시 후 다시 시도해주세요.' };
   }
 

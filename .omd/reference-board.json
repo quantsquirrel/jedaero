@@ -1,0 +1,664 @@
+{
+ "schemaVersion": "reference-board-v1",
+ "frameSha256": "fbc60bb521439f54e5ba37faaf1e0a278369ed0969cd1df2122b015feb3450db",
+ "candidates": [
+  {
+   "id": "A-day-state-first",
+   "label": "요일이 가장 먼저 말하는 단일 기둥",
+   "route": "/portfolio",
+   "rationale": "평일에 도착한 심사자가 가장 먼저 읽는 것을 「지금은 평일이고 결정은 주말에 일어난다. 여기를 눌러 지금 본다」로 바꾼다. 요일 상태를 화면에서 가장 큰 객체로 올리고, 잠긴 편성기를 고장이 아니라 예정된 닫힘으로 읽히게 만든다. 신호색은 화면당 하나의 행동에만 남기고 상태와 데이터는 밝기와 면으로 말한다.",
+   "pieces": [
+    {
+     "slotId": "day-state-banner",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-983db21a1f19e481",
+     "targetComponent": "DemoDayBanner",
+     "targetSelector": "[data-region=\"day-state\"]",
+     "taskIds": [
+      "T1",
+      "T5"
+     ],
+     "reason": "일부만 잠긴 모드 전환의 해부를 가져온다. 열려 있는 모드와 닫힌 모드가 같은 트랙 안에 함께 보여야 「무엇이 주말에 열리는지」가 전환 자체에서 읽힌다.",
+     "take": [
+      "structure",
+      "density"
+     ],
+     "avoid": "트랙 전체를 흐리게 만드는 완전 비활성 변형. 그러면 지금 누를 수 있다는 사실이 사라진다.",
+     "adaptation": "트랙은 앰버가 아니라 한 단 밝은 면으로 선택을 표시하고, 이 화면의 유일한 행동인 「주말 화면 보기」에만 신호색을 남긴다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 0
+     }
+    },
+    {
+     "slotId": "locked-reason-notice",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-61e7815aa7ec8c40",
+     "targetComponent": "LockedReasonNotice",
+     "targetSelector": "[data-region=\"lock-reason\"]",
+     "taskIds": [
+      "T5",
+      "T2"
+     ],
+     "reason": "심각도가 기하가 아니라 키라인과 옅은 면으로만 갈리는 고지 해부. 잠김 사유와 유지 안내가 같은 카드 안에서 같은 크기로 앉아야 한다.",
+     "take": [
+      "structure",
+      "density"
+     ],
+     "avoid": "경고 색으로 잠김을 칠하는 것. 예정된 닫힘은 오류가 아니다.",
+     "adaptation": "정보 등급의 조용한 변형만 쓰고, 「조정하지 않아도 기존 편성이 유지됩니다」를 사유와 같은 활자 크기로 붙인다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 1
+     }
+    },
+    {
+     "slotId": "allocation-editor",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-f1b1d85bf1a56cb8",
+     "targetComponent": "AllocationEditor",
+     "targetSelector": "[data-region=\"allocation-editor\"]",
+     "taskIds": [
+      "T2",
+      "T3",
+      "T5"
+     ],
+     "reason": "잠긴 상태가 기하를 그대로 유지한 채 대비만 낮추는 방식. 편성기가 평일에 비활성이어도 진짜 컨트롤로 읽혀야 껍데기로 판정되지 않는다.",
+     "take": [
+      "structure",
+      "proportion"
+     ],
+     "avoid": "비활성 시 컨트롤을 축소하거나 숨기는 것. 사라지면 기능이 없는 것으로 읽힌다.",
+     "adaptation": "여섯 전선 행의 크기를 잠김 여부와 무관하게 고정하고, 여는 토글을 편성기 바로 위 같은 폭에 둔다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 2
+     }
+    },
+    {
+     "slotId": "stepper-touch-target",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-95fb9375de8278b5",
+     "targetComponent": "FrontStepper",
+     "targetSelector": "[data-region=\"front-stepper\"]",
+     "taskIds": [
+      "T3",
+      "T2"
+     ],
+     "reason": "반대 사례로 싣는다. 증감 어포던스가 호버로만 드러나는 데스크톱 패턴은 손가락 입력에서 존재하지 않는다.",
+     "take": [
+      "structure"
+     ],
+     "avoid": "호버로만 나타나는 증감 버튼. 그리고 값 칸보다 작은 버튼.",
+     "adaptation": "두 버튼을 항상 그린 상태로 두고 각각 44px 이상을 확보한다. 값은 고정폭 숫자로 가운데 둔다.",
+     "grid": {
+      "column": 1,
+      "span": 6,
+      "order": 3
+     }
+    },
+    {
+     "slotId": "reserve-remainder",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-453493d626120b87",
+     "targetComponent": "ReserveMeter",
+     "targetSelector": "[data-region=\"reserve\"]",
+     "taskIds": [
+      "T3",
+      "T7"
+     ],
+     "reason": "채워진 구간과 남은 구간이 한 트랙 안에서 폭으로만 비교되는 계량. 배치한 포인트와 예비대가 같은 막대에서 읽혀야 유한하다는 것이 손에 잡힌다.",
+     "take": [
+      "proportion",
+      "rhythm"
+     ],
+     "avoid": "범례를 따로 두는 것. 폭이 곧 수량이면 범례는 중복이다.",
+     "adaptation": "남은 구간을 예비대로 명명해 1급 정보로 두고, 구간 색은 차트 사다리에서 뽑아 신호색을 쓰지 않는다.",
+     "grid": {
+      "column": 7,
+      "span": 6,
+      "order": 4
+     }
+    },
+    {
+     "slotId": "slider-avoided",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-74586dab34135dfa",
+     "targetComponent": "AllocationControlChoice",
+     "targetSelector": "[data-region=\"allocation-control\"]",
+     "taskIds": [
+      "T3"
+     ],
+     "reason": "명시적 반대 사례. 연속 트랙은 아무 지점이나 허용해 정해진 개수의 정수 단위를 표현하지 못하고 남은 수량을 숨긴다.",
+     "take": [
+      "structure"
+     ],
+     "avoid": "연속 슬라이더와 자동 비례 재조정. 둘 다 「내가 놓았다」는 감각을 없앤다.",
+     "adaptation": "연속 트랙 대신 이산 스테퍼와 눈에 보이는 잔여 표시로 바꾼다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 5
+     }
+    },
+    {
+     "slotId": "portfolio-figure",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-6603fc456618ab28",
+     "targetComponent": "PortfolioFigure",
+     "targetSelector": "[data-region=\"portfolio-figure\"]",
+     "taskIds": [
+      "T7",
+      "T10"
+     ],
+     "reason": "큰 숫자에는 색을 대지 않고 증감 토큰에만 방향색을 붙이는 배치. 부호를 항상 달고 고정폭 숫자로 정렬한다.",
+     "take": [
+      "structure",
+      "proportion"
+     ],
+     "avoid": "평가액 숫자 자체를 등락 색으로 칠하는 것. 그러면 화면이 색으로 소리친다.",
+     "adaptation": "상승과 하락 토큰에만 up 과 down 토큰을 쓰고 숫자는 전경색으로 둔다. 합산 총자산 타일은 만들지 않는다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 6
+     }
+    },
+    {
+     "slotId": "front-terrain",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-998ea64be6ca11be",
+     "targetComponent": "FrontTerrainTable",
+     "targetSelector": "[data-region=\"front-terrain\"]",
+     "taskIds": [
+      "T7"
+     ],
+     "reason": "상태 열에만 칩을 두고 나머지 열은 중립 텍스트로 남기는 밀도. 여섯 전선을 한눈에 훑게 한다.",
+     "take": [
+      "density",
+      "rhythm"
+     ],
+     "avoid": "모든 열에 색을 뿌리는 것.",
+     "adaptation": "헤더를 셀보다 작고 흐리게 두어 데이터가 골조를 이긴다. 등락은 부호를 동반한다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 7
+     }
+    },
+    {
+     "slotId": "week-schedule",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-3dd2a78a24a95c99",
+     "targetComponent": "WeekScheduleList",
+     "targetSelector": "[data-region=\"week-schedule\"]",
+     "taskIds": [
+      "T5",
+      "T1"
+     ],
+     "reason": "끝난 항목은 담백한 글자로, 남은 항목은 옅은 칩으로 두는 목록. 이번 주에 무엇이 열리고 닫혔는지를 리듬으로 보여준다.",
+     "take": [
+      "structure",
+      "rhythm"
+     ],
+     "avoid": "완료 항목에 강조를 주는 것. 남은 일이 묻힌다.",
+     "adaptation": "상태 낱말을 한국어 한 단어로 고정하고 행마다 보조 설명 한 줄을 허용한다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 8
+     }
+    },
+    {
+     "slotId": "quiet-state-field",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-684a6611df5278d2",
+     "targetComponent": "WeekdayCalmField",
+     "targetSelector": "[data-region=\"calm-field\"]",
+     "taskIds": [
+      "T5",
+      "T1"
+     ],
+     "reason": "어두운 판에서 잠김과 열림을 밝기 차이 하나로만 가르는 사례. 배지도 자물쇠 아이콘도 없이 「아직 아님」이 전달된다.",
+     "take": [
+      "structure",
+      "density"
+     ],
+     "avoid": "잠김마다 자물쇠 아이콘과 회색 배지를 붙이는 것. 화면이 금지 표지판이 된다.",
+     "adaptation": "전선 이름의 밝기 단계로 열림과 닫힘을 말하고, 현재 위치는 한 단 밝은 면 띠로 표시한다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 9
+     }
+    }
+   ]
+  },
+  {
+   "id": "B-two-pane-terrain",
+   "label": "데스크톱에서 두 판으로 갈라지는 상황판",
+   "route": "/portfolio",
+   "rationale": "448px 기둥 하나가 검은 화면 가운데 서 있는 문제를 부품이 아니라 그릇을 바꿔 푼다. 전선 목록과 편성 상세를 넓은 뷰포트에서 나란히 두고 좁은 뷰포트에서는 같은 부품을 그대로 둔 채 그릇만 한 줄로 되돌린다. 부품의 고유 폭이 읽기 폭을 소유하므로 넓어져도 글줄이 늘어나지 않는다.",
+   "pieces": [
+    {
+     "slotId": "pane-pairing-desktop",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-0684995ac8883b1a",
+     "targetComponent": "WorkspaceSplit",
+     "targetSelector": "[data-region=\"workspace-split\"]",
+     "taskIds": [
+      "T7",
+      "T5"
+     ],
+     "reason": "넓은 폭에서 두 판이 헤어라인 한 줄로 갈리고 각 판이 자기 읽기 폭을 소유하는 배치. 뷰포트가 아니라 부품이 폭의 주인이라는 증거다.",
+     "take": [
+      "structure",
+      "proportion"
+     ],
+     "avoid": "판 사이를 넓은 여백으로 벌리는 것. 그러면 두 개의 다른 화면처럼 보인다.",
+     "adaptation": "헤어라인은 테두리 토큰으로 긋고 왼쪽 판을 전선 목록, 오른쪽 판을 편성 상세로 둔다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 0
+     }
+    },
+    {
+     "slotId": "pane-collapse-mobile",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-57bad6c2e852a8dd",
+     "targetComponent": "WorkspaceStack",
+     "targetSelector": "[data-region=\"workspace-stack\"]",
+     "taskIds": [
+      "T7",
+      "T3"
+     ],
+     "reason": "좁은 폭에서 부품의 내부 비례를 그대로 둔 채 그릇만 한 줄로 바뀌는 재구성. 같은 제품으로 읽히게 하는 핵심이다.",
+     "take": [
+      "structure",
+      "proportion"
+     ],
+     "avoid": "좁은 폭용으로 부품을 다시 그리는 것. 두 개의 다른 제품이 된다.",
+     "adaptation": "가로 스크롤 트랙 대신 세로 적층을 쓰되 카드의 안쪽 여백과 활자 크기는 넓은 폭과 동일하게 유지한다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 1
+     }
+    },
+    {
+     "slotId": "day-state-rail",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-363968838390259b",
+     "targetComponent": "DayModeControl",
+     "targetSelector": "[data-region=\"day-mode\"]",
+     "taskIds": [
+      "T1",
+      "T5"
+     ],
+     "reason": "선택을 채운 강조 블록이 아니라 눌린 트랙 안의 떠오른 면으로 표현하는 모드 전환. 붐비는 화면에서 페이지 강조색을 뺏지 않는다.",
+     "take": [
+      "structure",
+      "density"
+     ],
+     "avoid": "선택 구간을 신호색으로 채우는 것. 이 화면의 앰버는 행동 하나에만 간다.",
+     "adaptation": "선택은 면과 테두리로만 표시하고 구간마다 안쪽 여백과 활자 무게를 동일하게 고정해 선택이 움직여도 폭이 흔들리지 않게 한다.",
+     "grid": {
+      "column": 1,
+      "span": 4,
+      "order": 2
+     }
+    },
+    {
+     "slotId": "front-list-pane",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-52311fd3c49f995e",
+     "targetComponent": "FrontListPane",
+     "targetSelector": "[data-region=\"front-list\"]",
+     "taskIds": [
+      "T7",
+      "T3"
+     ],
+     "reason": "이름과 오른쪽 정렬 수치가 구분선 리듬으로 쌓이는 목록. 여섯 전선을 한 열로 내려 읽으며 비교하게 한다.",
+     "take": [
+      "density",
+      "rhythm"
+     ],
+     "avoid": "행마다 카드 테두리를 두르는 것. 묶음이 흩어진다.",
+     "adaptation": "카드 테두리 대신 구분선만 써서 여섯 행이 한 덩어리로 읽히게 한다.",
+     "grid": {
+      "column": 5,
+      "span": 8,
+      "order": 3
+     }
+    },
+    {
+     "slotId": "allocation-detail-pane",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-f1b1d85bf1a56cb8",
+     "targetComponent": "AllocationDetail",
+     "targetSelector": "[data-region=\"allocation-detail\"]",
+     "taskIds": [
+      "T2",
+      "T5",
+      "T3"
+     ],
+     "reason": "닫힌 상태가 크기를 유지한 채 대비만 낮추는 방식. 오른쪽 판이 평일에도 진짜 편성기로 읽혀야 한다.",
+     "take": [
+      "structure",
+      "proportion"
+     ],
+     "avoid": "평일에 오른쪽 판을 비우거나 안내 문구로 대체하는 것.",
+     "adaptation": "평일에도 여섯 행을 실제 값과 함께 그리고 컨트롤만 닫는다. 여는 경로를 같은 판 안에 둔다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 4
+     }
+    },
+    {
+     "slotId": "index-gauge",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-453493d626120b87",
+     "targetComponent": "IndexGauge",
+     "targetSelector": "[data-region=\"index-gauge\"]",
+     "taskIds": [
+      "T10"
+     ],
+     "reason": "칸의 폭이 곧 배점인 계량. 제대로 지수 세 축의 배점 차이를 숫자를 읽기 전에 폭으로 알게 한다.",
+     "take": [
+      "proportion",
+      "rhythm"
+     ],
+     "avoid": "세 축을 같은 폭으로 그리는 것. 그러면 배점이 사라진다.",
+     "adaptation": "세 구간 폭을 배점 비율에 그대로 묶고 색은 차트 사다리에서 뽑는다. 등수 숫자는 넣지 않는다.",
+     "grid": {
+      "column": 1,
+      "span": 6,
+      "order": 5
+     }
+    },
+    {
+     "slotId": "value-header",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-6603fc456618ab28",
+     "targetComponent": "WorkspaceFigureHeader",
+     "targetSelector": "[data-region=\"figure-header\"]",
+     "taskIds": [
+      "T7"
+     ],
+     "reason": "작은 라벨 위 큰 고정폭 숫자가 한 베이스라인을 공유하고 증감은 작은 토큰으로만 붙는 머리줄.",
+     "take": [
+      "structure",
+      "proportion"
+     ],
+     "avoid": "큰 숫자에 등락색을 칠하는 것.",
+     "adaptation": "두 판 위에 걸치는 한 줄로 두고 부호를 항상 표기한다.",
+     "grid": {
+      "column": 7,
+      "span": 6,
+      "order": 6
+     }
+    },
+    {
+     "slotId": "locked-notice",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-61e7815aa7ec8c40",
+     "targetComponent": "PaneLockNotice",
+     "targetSelector": "[data-region=\"pane-lock\"]",
+     "taskIds": [
+      "T5",
+      "T2"
+     ],
+     "reason": "키라인과 옅은 면만 바뀌고 기하는 고정되는 고지 해부.",
+     "take": [
+      "structure",
+      "density"
+     ],
+     "avoid": "경고 등급으로 예정된 닫힘을 알리는 것.",
+     "adaptation": "정보 등급으로 두고 지금 열려 있는 화면으로 가는 링크를 같은 자리에 붙인다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 7
+     }
+    },
+    {
+     "slotId": "calm-dark-field",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-684a6611df5278d2",
+     "targetComponent": "TerrainCalmField",
+     "targetSelector": "[data-region=\"terrain-field\"]",
+     "taskIds": [
+      "T5"
+     ],
+     "reason": "어두운 판에서 상태를 밝기로만 가르고 한 개의 채도 높은 색은 링크 하나에만 쓰는 절제.",
+     "take": [
+      "structure",
+      "density"
+     ],
+     "avoid": "상태마다 색을 배정하는 것.",
+     "adaptation": "전선 이름의 밝기 단계로 열림과 닫힘을 말하고 앰버는 확정 버튼 하나에만 남긴다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 8
+     }
+    }
+   ]
+  },
+  {
+   "id": "C-weekday-briefing-home",
+   "label": "평일에 읽을 것이 있는 홈",
+   "route": "/home",
+   "rationale": "한 주 7일 중 5일이 평일이고 평일 홈은 이동과 읽기만 남는다. 그 5일을 빈 화면이 아니라 브리핑으로 만든다. 오늘 열려 있는 일을 목록의 리듬으로 세우고 잠긴 것은 자물쇠가 아니라 밝기로 말한다.",
+   "pieces": [
+    {
+     "slotId": "day-state-banner",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-983db21a1f19e481",
+     "targetComponent": "HomeDayBanner",
+     "targetSelector": "[data-region=\"home-day-state\"]",
+     "taskIds": [
+      "T1"
+     ],
+     "reason": "일부만 닫힌 전환의 해부. 오늘 열린 것과 주말에 열리는 것이 한 트랙에서 같이 보인다.",
+     "take": [
+      "structure",
+      "density"
+     ],
+     "avoid": "전체를 흐리게 만드는 완전 비활성 변형.",
+     "adaptation": "트랙은 면으로만 선택을 말하고 신호색은 「주말 화면 보기」 하나에 남긴다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 0
+     }
+    },
+    {
+     "slotId": "job-links-list",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-3dd2a78a24a95c99",
+     "targetComponent": "JobLinks",
+     "targetSelector": "[data-region=\"job-links\"]",
+     "taskIds": [
+      "T1",
+      "T16"
+     ],
+     "reason": "남은 항목에 옅은 칩을 주고 끝난 항목은 담백하게 두는 목록. 가장 자주 눌리는 이동 링크가 사는 자리다.",
+     "take": [
+      "structure",
+      "rhythm"
+     ],
+     "avoid": "완료 항목을 강조하는 것.",
+     "adaptation": "행마다 보조 설명 한 줄을 허용하고 상태 낱말을 한국어 한 단어로 고정한다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 1
+     }
+    },
+    {
+     "slotId": "week-progress",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-b3145a209a012714",
+     "targetComponent": "WeekProgress",
+     "targetSelector": "[data-region=\"week-progress\"]",
+     "taskIds": [
+      "T1",
+      "T5"
+     ],
+     "reason": "지난 구간과 지금과 다음 구간이 채움 밀도만으로 갈리고 위치를 낱말로도 적는 진행 표시.",
+     "take": [
+      "structure",
+      "rhythm"
+     ],
+     "avoid": "색만으로 위치를 말하는 것.",
+     "adaptation": "요일 진행을 낱말로 함께 적어 색 없이도 읽히게 한다. 시각 단위는 쓰지 않고 요일로만 나눈다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 2
+     }
+    },
+    {
+     "slotId": "cumulative-figure",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-6603fc456618ab28",
+     "targetComponent": "HomeFigure",
+     "targetSelector": "[data-region=\"home-figure\"]",
+     "taskIds": [
+      "T7"
+     ],
+     "reason": "작은 라벨과 큰 고정폭 숫자, 그리고 숫자에서 분리된 증감 토큰.",
+     "take": [
+      "structure",
+      "proportion"
+     ],
+     "avoid": "평가액에 등락색을 칠하거나 두 곡선을 합산해 총자산 타일을 만드는 것.",
+     "adaptation": "평일에는 누적, 주말에는 평가액 하나만 세우고 부호를 항상 붙인다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 3
+     }
+    },
+    {
+     "slotId": "front-move-list",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-52311fd3c49f995e",
+     "targetComponent": "FrontMoveList",
+     "targetSelector": "[data-region=\"front-moves\"]",
+     "taskIds": [
+      "T7"
+     ],
+     "reason": "구분선 리듬으로 쌓인 이름과 오른쪽 정렬 수치.",
+     "take": [
+      "density",
+      "rhythm"
+     ],
+     "avoid": "행마다 카드를 두르는 것.",
+     "adaptation": "여섯 전선을 한 덩어리로 읽히게 하고 등락에 부호를 붙인다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 4
+     }
+    },
+    {
+     "slotId": "ai-notice",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-61e7815aa7ec8c40",
+     "targetComponent": "AiDisclosureNotice",
+     "targetSelector": "[data-region=\"ai-notice\"]",
+     "taskIds": [
+      "T8",
+      "T9"
+     ],
+     "reason": "기하는 고정하고 키라인과 면만 바꾸는 고지 해부. 생성형 AI 고지와 규칙 폴백 표기가 같은 부품의 두 변형이어야 한다.",
+     "take": [
+      "structure",
+      "density"
+     ],
+     "avoid": "AI 고지를 본문보다 작게 흘리는 것. 고지는 응답 위에 있어야 한다.",
+     "adaptation": "고지 배지를 응답 블록 위에 두고 규칙 기반일 때는 같은 자리에서 표기만 바꾼다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 5
+     }
+    },
+    {
+     "slotId": "tile-grid-desktop",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-c337e6f619b24d79",
+     "targetComponent": "HomeTileGridWide",
+     "targetSelector": "[data-region=\"home-tiles-wide\"]",
+     "taskIds": [
+      "T16"
+     ],
+     "reason": "넓은 폭에서 타일이 네 열로 가되 글줄 길이는 늘지 않고 열 수만 느는 배치. 한국어 짧은 명사구 라벨이 잘리지 않고 고르게 앉는다.",
+     "take": [
+      "structure",
+      "density"
+     ],
+     "avoid": "넓은 폭에서 타일을 늘려 글줄을 길게 만드는 것.",
+     "adaptation": "내용 폭 상한을 유지한 채 열 수만 늘리고 타일과 간격은 좁은 폭과 동일하게 둔다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 6
+     }
+    },
+    {
+     "slotId": "tile-grid-mobile",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-45e053f84c05f99c",
+     "targetComponent": "HomeTileGridNarrow",
+     "targetSelector": "[data-region=\"home-tiles-narrow\"]",
+     "taskIds": [
+      "T16"
+     ],
+     "reason": "좁은 폭에서 같은 타일이 두 열로 떨어지되 간격과 활자 크기는 그대로인 재구성.",
+     "take": [
+      "structure",
+      "density"
+     ],
+     "avoid": "좁은 폭에서 타일 크기를 줄이는 것.",
+     "adaptation": "열 수만 바꾸고 타일과 라벨 크기는 고정해 두 폭이 한 부품으로 읽히게 한다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 7
+     }
+    },
+    {
+     "slotId": "quiet-locked-field",
+     "sourceKind": "component-capture",
+     "referenceId": "ref-684a6611df5278d2",
+     "targetComponent": "HomeCalmField",
+     "targetSelector": "[data-region=\"home-calm-field\"]",
+     "taskIds": [
+      "T5",
+      "T1"
+     ],
+     "reason": "밝기 차이 하나로 잠김과 열림을 가르는 어두운 판.",
+     "take": [
+      "structure",
+      "density"
+     ],
+     "avoid": "잠긴 카드마다 자물쇠 아이콘을 붙이는 것.",
+     "adaptation": "밝기 단계로 말하고 현재 요일 줄만 한 단 밝은 면 띠로 표시한다.",
+     "grid": {
+      "column": 1,
+      "span": 12,
+      "order": 8
+     }
+    }
+   ]
+  }
+ ]
+}

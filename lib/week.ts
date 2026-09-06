@@ -69,3 +69,13 @@ export function addDays(dateStr: string, days: number): string {
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
+
+/** 주차의 사람이 읽는 구간 표기 — "08-31 ~ 09-06". 형식이 어긋나면 주차 문자열 그대로. */
+export function weekRangeLabel(weekStr: string): string {
+  // mondayOfWeek 는 형식이 어긋나면 입력을 그대로 돌려주므로 실패를 구분할 수 없다.
+  // 여기서는 원시 함수(number | null)를 직접 써서 «파싱 실패»를 분명히 가른다.
+  const ms = mondayMsOfWeek(weekStr);
+  if (ms === null) return weekStr;
+  const monday = new Date(ms).toISOString().slice(0, 10);
+  return `${monday.slice(5)} ~ ${addDays(monday, 6).slice(5)}`;
+}

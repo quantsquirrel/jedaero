@@ -2,9 +2,22 @@ import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Mono, IBM_Plex_Sans_KR } from 'next/font/google';
 import './globals.css';
 
+// ★ OG 문자열은 «새로 쓰지 않는다». 아래 title/description을 그대로 쓴다 —
+//   링크로 처음 만나는 사람에게 화면과 다른 문장을 보이면 그 자체가 두 개의 제품이 된다.
+// ★ og:image는 «만들지 않는다». 1200x630으로 설계한 카드가 없으므로 깨진 경로를 넣는 대신
+//   비워 둔다 (플랫폼은 이미지 없는 카드를 404보다 낫게 렌더한다).
+const TITLE = '제대로 (JEDAERO)';
+const DESCRIPTION = '전역할 때 받게 될 목돈을, 복무 중에 미리 굴려보는 모의투자 훈련';
+
 export const metadata: Metadata = {
-  title: '제대로 (JEDAERO)',
-  description: '전역할 때 받게 될 목돈을, 복무 중에 미리 굴려보는 모의투자 훈련',
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    type: 'website',
+  },
+  twitter: { card: 'summary', title: TITLE, description: DESCRIPTION },
 };
 
 export const viewport: Viewport = {

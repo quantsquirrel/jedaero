@@ -9,7 +9,7 @@ export function OptInGate() {
   const [pending, startTransition] = useTransition();
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border p-4">
-      <h2 className="text-lg font-semibold">집단 성향 분석 동의</h2>
+      <h2 className="text-base font-semibold">집단 성향 분석 동의</h2>
       <p className="text-sm leading-relaxed text-muted-foreground">
         동의하면 내 배분 데이터가 <b className="text-foreground">익명 집계</b>에 포함되고, 그
         대가로 동기들의 분포와 비교한 분석을 볼 수 있습니다. 내 데이터를 주지 않으면 남의
