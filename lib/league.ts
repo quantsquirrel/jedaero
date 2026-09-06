@@ -4,7 +4,7 @@
 //   그 행동을 표창하는 순간 서비스가 가르치려는 것과 반대로 작동한다.
 // ★ 코호트(전역 예정 월 자동 배정)는 폐지했다. 비교 집단은 사용자가 아는 집단이어야 한다 —
 //   우리 그룹 / 같은 군종 / 같은 계급. 부대 정보는 어디에도 쓰지 않는다 (C4).
-import { and, asc, desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, or } from 'drizzle-orm';
 import { db } from '../db';
 import { allocations, groupMembers, users, weeklyScores } from '../db/schema';
 import { SEED_AMOUNT, type Weights } from './constants';
@@ -119,9 +119,19 @@ export async function board(user: SessionUser, scope: BoardScope): Promise<Board
       );
     memberIds = [...new Set(rows.map((r) => r.userId))];
   } else {
+    // ★ 자동 배정 코호트에서는 체험 계정을 뺀다 (나는 남긴다).
+    //   `/demo` 로 들어오는 모든 세션이 CORPORAL·ARMY 로 만들어진다 (lib/demo-seed.ts).
+    //   심사 5일 동안 심사자 한 명이 누를 때마다 「같은 군종」·「같은 계급」에 «집계 대기» 한 줄이
+    //   영구히 쌓인다 — 09-07 실측으로 데모 3회에 코호트가 정확히 3 늘었다. 그 줄들은 동기가
+    //   아니라 남이 버리고 간 세션이고, 비교 화면이 존재하는 이유를 그만큼 덮는다.
+    //   ★ 그룹(GROUP)에는 걸지 않는다. 거기는 사람이 초대코드로 «직접 들어간» 집단이라
+    //     체험 계정도 그 자리의 동기다.
     const col = scope === 'BRANCH' ? users.branch : users.rank;
     const val = scope === 'BRANCH' ? user.branch : user.rank;
-    const rows = await db.select({ id: users.id }).from(users).where(eq(col, val));
+    const rows = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(col, val), or(eq(users.isDemo, false), eq(users.id, user.id))));
     memberIds = rows.map((r) => r.id);
   }
   if (memberIds.length === 0) return { scope, n: 0, entries: [] };
