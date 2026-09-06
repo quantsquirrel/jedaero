@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { asc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { allocations, reviews } from '@/db/schema';
+import { reviewsOrEmpty } from '@/lib/db-errors';
 import { SPIVA } from '@/db/seed/benchmarks';
 import { AttributionCurves } from '@/components/charts/attribution-curves';
 import { PageHeader } from '@/components/page-header';
@@ -29,17 +30,17 @@ export default async function PrinciplesPage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
 
-  const [rows, reviewRows] = await Promise.all([
-    db
-      .select()
-      .from(allocations)
-      .where(eq(allocations.userId, user.id))
-      .orderBy(asc(allocations.effectiveFrom), asc(allocations.decidedAt)),
+  const rows = await db
+    .select()
+    .from(allocations)
+    .where(eq(allocations.userId, user.id))
+    .orderBy(asc(allocations.effectiveFrom), asc(allocations.decidedAt));
+  const reviewRows = await reviewsOrEmpty(() =>
     db
       .select({ weekOf: reviews.weekOf, body: reviews.body })
       .from(reviews)
       .where(eq(reviews.userId, user.id)),
-  ]);
+  );
 
   const today = kstToday();
   const bench = benchmarkRows(today);
