@@ -53,14 +53,17 @@ export function ValueCurve({
     >
       <defs>
         <linearGradient id="curve-fade" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--chart-1)" stopOpacity="0.20" />
+          {/* ★ 0.20 → 0.12. 면적은 «선이 어디 있었나»를 받치는 것이지 읽는 대상이 아니다.
+            0.20에서는 고원 구간 아래 밝은 쐐기가 이 카드의 큰 수치만큼 크게 읽혔다.
+            데이터를 지고 있는 2px 선은 그대로 둔다 — 줄이는 것은 받침뿐이다. */}
+          <stop offset="0%" stopColor="var(--chart-1)" stopOpacity="0.12" />
           <stop offset="100%" stopColor="var(--chart-1)" stopOpacity="0" />
         </linearGradient>
       </defs>
 
       {/* 기준선 — 실선 헤어라인. 점선은 「예측」으로 읽힌다 */}
       <line x1={PAD_X} y1={baseY} x2={W - PAD_X} y2={baseY} className="stroke-border" strokeWidth="1" />
-      <text x={PAD_X} y={baseY + 10} className="fill-faint" fontSize="9">
+      <text x={PAD_X} y={baseY + 10} className="fill-faint" fontSize="12">
         {baselineLabel}
       </text>
 

@@ -24,6 +24,7 @@ import { compareDraft } from '@/lib/drafts/compare';
 import { computeMarketWeek } from '@/lib/market-week';
 import { getSessionUser } from '@/lib/session';
 import { addDays, mondayOfWeeksAgo, weekOf } from '@/lib/week';
+import { LEAD_BAND } from '@/lib/lead-band';
 import { cn } from '@/lib/utils';
 
 // S4 포트폴리오 — 사용자가 조작하는 유일한 대상: 6전선 포인트 편성
@@ -56,7 +57,7 @@ export default async function PortfolioPage() {
   const alreadyThisWeek = rows.some((r) => r.weekOf === thisWeek);
   const deadlineIso = `${addDays(mondayOfWeeksAgo(new Date(), 0), 6)}T12:00:00Z`;
   const disabledReason = !open
-    ? '주말에만 조정할 수 있습니다. 평일에는 편성 현황과 학습이 열려 있어요.'
+    ? '주말에만 조정할 수 있습니다. 평일에는 편성 현황과 학습이 열려 있습니다.'
     : alreadyThisWeek
       ? '이번 주는 이미 조정했습니다. 조정하지 않아도 기존 편성이 그대로 유지됩니다.'
       : undefined;
@@ -149,7 +150,7 @@ export default async function PortfolioPage() {
           baseline={SEED_AMOUNT}
           ariaLabel={`${lumpCurve.dates[0]}부터 ${lumpCurve.dates[lumpCurve.dates.length - 1]}까지 평가액 곡선. 원금 ${won(SEED_AMOUNT)}, 현재 ${won(lumpFinal)}`}
         />
-        <p className="flex justify-between font-mono text-[11px] tabular-nums text-faint">
+        <p className="flex justify-between font-mono text-xs tabular-nums text-faint">
           <span>{lumpCurve.dates[0]}</span>
           <span>{lumpCurve.dates[lumpCurve.dates.length - 1]}</span>
         </p>
@@ -157,7 +158,7 @@ export default async function PortfolioPage() {
     ) : null;
 
   const returnsCard = (
-    <Card>
+    <Card className={weekend ? undefined : LEAD_BAND}>
       <CardHeader>
         <CardTitle className="text-base">{weekend ? '평가액' : '누적 수익률'}</CardTitle>
       </CardHeader>
@@ -193,9 +194,11 @@ export default async function PortfolioPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-1">
-            <p
-              className={`text-3xl font-bold tabular-nums ${lumpFinal >= SEED_AMOUNT ? 'text-up' : 'text-down'}`}
-            >
+            {/* ★ 등락은 «사실이지 신호가 아니다» (DESIGN-RULES §1) — 굵게·크게 «그리고» 색까지
+                칠하면 화면에서 가장 밝은 덩어리가 된다. amber를 뺀 자리를 이 초록이 그대로
+                이어받고 있었다. 카드의 유일한 수치라 크기는 두고 등락색만 뺀다.
+                부호(+/−)는 pct()가 항상 붙이므로 색각 분리는 유지된다 (§1). */}
+            <p className="text-3xl font-bold tabular-nums">
               {pct(lumpFinal / SEED_AMOUNT - 1, 2)}
             </p>
             <p className="text-sm text-muted-foreground">
@@ -219,7 +222,7 @@ export default async function PortfolioPage() {
       <CardHeader>
         <CardTitle className="text-base">목표 vs 현재 비중</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2.5">
+      <CardContent data-region="front-terrain" className="flex flex-col gap-2.5">
         {gaps.map((g) => (
           <div key={g.code} className="flex flex-col gap-1">
             <div className="flex items-baseline justify-between gap-2 text-sm">
@@ -242,7 +245,7 @@ export default async function PortfolioPage() {
             </div>
           </div>
         ))}
-        <p className="text-[11px] text-faint">
+        <p className="text-xs text-faint">
           가운데 선이 목표입니다. 오른쪽으로 자라면 목표보다 많이, 왼쪽이면 적게 담긴 것입니다.
         </p>
         <p className="text-xs text-muted-foreground">
@@ -270,7 +273,7 @@ export default async function PortfolioPage() {
   );
 
   const editorCard = (
-    <Card>
+    <Card className={weekend ? LEAD_BAND : undefined}>
       <CardHeader>
         <CardTitle className="text-base">전선 편성 (포인트 20개)</CardTitle>
       </CardHeader>
@@ -337,9 +340,9 @@ export default async function PortfolioPage() {
       ) : (
         <>
           {returnsCard}
+          {gapCard}
           {draftEditor}
           {editorCard}
-          {gapCard}
           {draftCompare}
         </>
       )}

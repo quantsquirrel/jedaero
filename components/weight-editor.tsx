@@ -97,6 +97,10 @@ export function WeightEditor({
 
       <PointTray placed={TOTAL_POINTS - reserve} />
 
+      {/* 여섯 전선을 «한 덩어리»로 정렬한다 — 편성 화면에만 적용한다.
+          ★ 전선마다 따로 선 카드 행이면 여섯 번 따로 읽힌다. 규칙선으로 묶으면
+            유한한 포인트 20개가 여섯 전선에 어떻게 놓였는지가 한 번에 읽힌다. */}
+      <div data-region="allocation-editor" className="divide-y divide-border overflow-hidden rounded-md border border-border">
       {THEMES.map((t) => {
         const pt = pointsOf(weights, t.code);
         // 1포인트는 쪼갤 수 없다. 나눌 병력이 있어야 하위가 열린다
@@ -104,14 +108,14 @@ export function WeightEditor({
         const isOpen = open === t.code;
         const subPlaced = placedSubPoints(details, t.code);
         return (
-          <div key={t.code} className="flex flex-col gap-2">
+          <div key={t.code} className="flex flex-col gap-2 px-3 py-3">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm">{t.name}</span>
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon-sm"
+                  size="icon"
                   aria-label={`${t.name} 1포인트 빼기`}
                   disabled={locked || pt <= 0}
                   onClick={() => bump(t.code, -1)}
@@ -127,7 +131,7 @@ export function WeightEditor({
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon-sm"
+                  size="icon"
                   aria-label={`${t.name} 1포인트 놓기`}
                   disabled={locked || reserve <= 0}
                   onClick={() => bump(t.code, 1)}
@@ -154,7 +158,7 @@ export function WeightEditor({
             ) : null}
 
             {isOpen ? (
-              <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/30 px-3 py-2.5">
+              <div className="flex flex-col gap-2 rounded-sm border border-border bg-muted/30 px-3 py-3">
                 <p className="text-xs text-muted-foreground">
                   {t.name}에 놓은 <b className="text-foreground">{pt}포인트</b>를 이 안에서 다시
                   나눕니다. 남기면 그만큼 대표지수를 따라갑니다.
@@ -166,14 +170,14 @@ export function WeightEditor({
                       <span className="text-xs">
                         {row.name}
                         {row.isIndex ? (
-                          <span className="ml-1 text-[11px] text-muted-foreground">기본</span>
+                          <span className="ml-1 text-xs text-muted-foreground">기본</span>
                         ) : null}
                       </span>
                       <div className="flex items-center gap-1.5">
                         <Button
                           type="button"
                           variant="outline"
-                          size="icon-sm"
+                          size="icon"
                           aria-label={`${row.name} 1포인트 빼기`}
                           disabled={locked || at <= 0}
                           onClick={() => bumpSub(t.code, row.ticker, -1)}
@@ -184,7 +188,7 @@ export function WeightEditor({
                         <Button
                           type="button"
                           variant="outline"
-                          size="icon-sm"
+                          size="icon"
                           aria-label={`${row.name} 1포인트 놓기`}
                           disabled={locked || subPlaced >= pt}
                           onClick={() => bumpSub(t.code, row.ticker, 1)}
@@ -207,13 +211,34 @@ export function WeightEditor({
         );
       })}
 
+      {/* 예비대 — 축이 아니라 잔여지만, 같은 블록의 «마지막 행»이다.
+          블록 밖으로 빼면 「포인트 20개가 어디 있나」가 두 곳으로 갈라진다. */}
+      <div className="bg-muted/40 px-3 py-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">{RESERVE.name}</span>
+          <span className="font-mono text-base tabular-nums">
+            {reserve}
+            <span className="ml-1 text-xs text-muted-foreground">{reserve * POINT_UNIT}%</span>
+          </span>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">{RESERVE.note}</p>
+        {/* ★ 예비대가 0이면 여섯 전선의 `+`가 전부 비활성이 된다. 왜 안 눌리는지 같은 화면에
+            적지 않으면 화면이 고장난 것으로 읽힌다 (DESIGN-RULES §7 잠김 문구 규범). */}
+        {reserve === 0 && !disabled ? (
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            포인트를 전부 놓았습니다. 더 놓으려면 먼저 다른 전선에서 빼야 합니다.
+          </p>
+        ) : null}
+      </div>
+      </div>
+
       {/* 명령하달 초안 — «자동 적용 금지». 불러오는 것 자체가 명령이 되면 안 된다 (잠금 문서 §1)
           ★ 이 패널은 «설명»이지 행동이 아니다. 신호색을 쓰지 않는다 (DESIGN-RULES §7).
           같은 화면에 편성 확정 버튼과 하단 네비가 이미 amber 라, 여기까지 칠하면
           「눌러야 하는 것」이 셋이 되어 확정 버튼이 묻힌다. */}
       {draft ? (
-        <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/40 px-3 py-2.5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/40 px-3 py-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             평일에 남긴 초안
           </p>
           <div className="flex flex-col gap-1">
@@ -257,31 +282,12 @@ export function WeightEditor({
           >
             {loadedDraft ? '초안을 올렸습니다' : '초안 불러오기'}
           </Button>
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
+          <p className="text-xs leading-relaxed text-muted-foreground">
             초안은 저절로 적용되지 않습니다. 화요일의 판단과 지금의 판단은 다를 수 있고, 그 차이를
             보는 것이 이 화면의 목적입니다.
           </p>
         </div>
       ) : null}
-
-      {/* 예비대 — 축이 아니라 잔여지만, 하나의 축처럼 보여야 한다 */}
-      <div className="rounded-md border border-dashed border-border px-3 py-2">
-        <div className="flex items-center justify-between">
-          <span className="text-sm">{RESERVE.name}</span>
-          <span className="font-mono text-base tabular-nums">
-            {reserve}
-            <span className="ml-1 text-xs text-muted-foreground">{reserve * POINT_UNIT}%</span>
-          </span>
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">{RESERVE.note}</p>
-        {/* ★ 예비대가 0이면 여섯 전선의 `+`가 전부 비활성이 된다. 왜 안 눌리는지 같은 화면에
-            적지 않으면 화면이 고장난 것으로 읽힌다 (DESIGN-RULES §7 잠김 문구 규범). */}
-        {reserve === 0 && !disabled ? (
-          <p className="mt-1.5 text-xs text-muted-foreground">
-            포인트를 전부 놓았습니다. 더 놓으려면 먼저 다른 전선에서 빼야 합니다.
-          </p>
-        ) : null}
-      </div>
 
       {notice ? (
         <p className="rounded-md border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
@@ -291,7 +297,11 @@ export function WeightEditor({
       {disabled && disabledReason ? (
         <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">{disabledReason}</p>
       ) : null}
-      {result.error ? <p className="text-sm text-destructive">{result.error}</p> : null}
+      {result.error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {result.error}
+        </p>
+      ) : null}
       {result.ok ? <p className="text-sm text-up">{result.ok}</p> : null}
 
       <Button

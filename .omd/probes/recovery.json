@@ -1,0 +1,22 @@
+{
+  "name": "T11 부대 식별 그룹명이 막히고 입력값이 보존된다",
+  "destructive": false,
+  "steps": [
+    {
+      "action": "fill",
+      "selector": "#group-name",
+      "value": "12사단 3대대",
+      "expect": [
+        { "type": "attribute", "selector": "#group-name", "name": "value", "value": "12사단 3대대" }
+      ]
+    },
+    {
+      "action": "click",
+      "selector": "form:has(#group-name) button[type=\"submit\"]",
+      "expect": [
+        { "type": "visible", "selector": "form:has(#group-name) [role=\"alert\"]" },
+        { "type": "attribute", "selector": "#group-name", "name": "value", "value": "12사단 3대대" }
+      ]
+    }
+  ]
+}

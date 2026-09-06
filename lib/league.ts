@@ -4,14 +4,14 @@
 //   그 행동을 표창하는 순간 서비스가 가르치려는 것과 반대로 작동한다.
 // ★ 코호트(전역 예정 월 자동 배정)는 폐지했다. 비교 집단은 사용자가 아는 집단이어야 한다 —
 //   우리 그룹 / 같은 군종 / 같은 계급. 부대 정보는 어디에도 쓰지 않는다 (C4).
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { allocations, groupMembers, users, weeklyScores } from '../db/schema';
 import { SEED_AMOUNT, type Weights } from './constants';
 import { kstToday } from './day-type';
 import { annualizedVol, weeklyTurnover } from './insights';
-import { jedaeroIndex, type IndexParts } from './jedaero-index';
-import { computeCurve, type WeightHistoryItem } from './portfolio/engine';
+import { effectiveFronts, jedaeroIndex, type IndexParts } from './jedaero-index';
+import { computeCurve, maxDrawdown, type WeightHistoryItem } from './portfolio/engine';
 import { pricesUpTo } from './portfolio/prices';
 import { weekOf } from './week';
 import type { SessionUser } from './session';
@@ -147,5 +147,59 @@ export async function board(user: SessionUser, scope: BoardScope): Promise<Board
       isMe: p.id === user.id,
       total: byUser.get(p.id) ?? null,
     })),
+  };
+}
+
+/** 마지막으로 «확정 저장»된 주간 점수 한 건. 없으면 null.
+ *
+ *  ★ 평일 화면이 쓰는 값이다. 평일에 점수를 «다시 계산»하지 않는다 —
+ *    매일 움직이는 숫자를 매일 보여주면 이 서비스가 막으려는 행동(잦은 확인·잦은 조정)을
+ *    그대로 훈련시킨다. 확정된 주의 값을 그 주차와 함께 읽어 오고, 없으면 「집계 대기」다.
+ *  ★ total이 null인 행은 집계 전이므로 건너뛴다. 0점으로 내려쓰지 않는다 (DESIGN-RULES §7).
+ */
+export type SettledScore = { weekOf: string; grown: number; spread: number; held: number; total: number };
+
+export async function lastSettledScore(userId: string): Promise<SettledScore | null> {
+  const rows = await db
+    .select()
+    .from(weeklyScores)
+    .where(eq(weeklyScores.userId, userId))
+    .orderBy(desc(weeklyScores.weekOf))
+    .limit(5);
+  const row = rows.find((r) => r.total != null);
+  if (!row) return null;
+  return {
+    weekOf: row.weekOf,
+    grown: row.grown ?? 0,
+    spread: row.spread ?? 0,
+    held: row.held ?? 0,
+    total: row.total ?? 0,
+  };
+}
+
+/** 내 편성 이력만으로 나오는 위험 지표. 코호트도 비교도 필요 없어 요일과 무관하게 성립한다. */
+export type OwnRisk = { hasHistory: boolean; vol: number; mdd: number; fronts: number };
+
+export async function ownRisk(userId: string): Promise<OwnRisk> {
+  const allocs = await db
+    .select()
+    .from(allocations)
+    .where(eq(allocations.userId, userId))
+    .orderBy(asc(allocations.effectiveFrom));
+  if (allocs.length === 0) return { hasHistory: false, vol: 0, mdd: 0, fronts: 0 };
+  const { dates, series } = pricesUpTo(kstToday());
+  const history: WeightHistoryItem[] = allocs.map((a) => ({
+    effectiveFrom: a.effectiveFrom,
+    weights: a.weights as Record<string, number>,
+    details: (a.details as Record<string, Record<string, number>> | null) ?? null,
+  }));
+  const { values } = computeCurve(dates, series, history, {
+    [allocs[0].effectiveFrom]: SEED_AMOUNT,
+  });
+  return {
+    hasHistory: true,
+    vol: annualizedVol(values),
+    mdd: maxDrawdown(values),
+    fronts: effectiveFronts(allocs[allocs.length - 1].weights as Weights),
   };
 }

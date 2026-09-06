@@ -7,19 +7,19 @@ import { cn } from '@/lib/utils';
 export function PointTray({ placed, className }: { placed: number; className?: string }) {
   const reserve = TOTAL_POINTS - placed;
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
+    <div data-region="reserve" className={cn('flex flex-col gap-2', className)}>
       <div className="grid grid-cols-[repeat(20,minmax(0,1fr))] gap-1" aria-hidden>
         {Array.from({ length: TOTAL_POINTS }, (_, i) => (
           <span
             key={i}
             className={cn(
               'h-6 rounded-sm',
-              i < placed ? 'bg-[var(--chart-1)]' : 'border border-dashed border-input',
+              i < placed ? 'bg-[var(--chart-3)]' : 'border border-dashed border-border',
             )}
           />
         ))}
       </div>
-      <div className="flex items-center justify-between font-mono text-[11px] tabular-nums text-faint">
+      <div className="flex items-center justify-between font-mono text-xs tabular-nums text-faint">
         <span>
           배치 {placed} · 예비대 {reserve}
         </span>

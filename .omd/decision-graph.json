@@ -1,0 +1,100 @@
+{
+  "schema": "decision-graph-v1",
+  "entries": [
+    {
+      "id": "frame-jedaero-app-wide-2026-09-06",
+      "schema": "decision-graph-v1",
+      "stage": "frame",
+      "owner": "oh-my-design:framer",
+      "status": "closed",
+      "decidedAt": "2026-09-06T04:35:53.322Z",
+      "question": "제대로 앱 전체 리디자인을 무슨 표면으로 분류하고, 무엇이 실제로 고장난 것으로 규정할 것인가.",
+      "choice": "uxSurface를 mixed로 확정하고(랜딩 1장 marketing, (app) 9장 + /admin + /onboarding product), 결함을 «시각 스타일»이 아니라 «모든 제품 화면에 첫 뷰포트 작업 대상이 없다»로 규정한다. 이 실행의 최대 오류는 평일에 접속한 심사자가 요일 토글을 누르지 않아 제품을 껍데기로 판정하는 것으로 둔다.",
+      "alternatives": [
+        {
+          "option": "전체를 product로 분류",
+          "rejected": true,
+          "reason": "랜딩 /의 DO는 «도입을 결정한다»이지 «도구를 조작한다»가 아니다. theory/ux.md §Surface types가 marketing으로 정의하는 메시지 사다리 구조를 app/page.tsx가 8개 섹션으로 실제로 갖고 있다. product 문법을 랜딩에 바르면 설득 구조가 무너진다."
+        },
+        {
+          "option": "전체를 marketing으로 분류 (생성형 기본값)",
+          "rejected": true,
+          "reason": "theory/ux.md가 명시한 일방향 오분류 실패 모드 그대로다. 이미 /home·/portfolio가 작업 화면인데 히어로 문법을 얹으면 편성기가 한 뷰포트 아래로 밀린다."
+        },
+        {
+          "option": "결함을 «시각 스타일이 밋밋하다»로 규정하고 팔레트·타이포부터 손댄다",
+          "rejected": true,
+          "reason": "globals.css 토큰·44px 규칙·amber 단일 신호·문구 규범이 CLAUDE.md에 묶여 있고 실제로 정합적이다. 스타일을 바꿔도 형제 카드 5장이 같은 무게로 남는 한 위계는 그대로다. 코드 관찰이 반증한다."
+        },
+        {
+          "option": "제품 쪽 최대 오류(되돌릴 수 없는 확정)를 이 실행의 최대 오류로 둔다",
+          "rejected": true,
+          "reason": "실재하는 오류이고 매트릭스 T2가 담당하지만, 배포 URL 미도달·오판정이 결격에 직결되고 심사 5일에 주말이 하루도 없다. 둘 다 기록하되 순위를 나눴다."
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "user-verbatim",
+          "source": "현재 브리프",
+          "quote": "앱 전체에 적용하고, 커밋하고 배포하기 전에 미리보기로 나에게 승인을 받아라."
+        },
+        {
+          "kind": "project-record",
+          "source": "docs/DESIGN-DECISIONS.md §0",
+          "quote": "심사자는 기본 상태에서 평일 화면만 본다 / 즉 /demo 요일 토글은 편의 기능이 아니라 결격 방지 장치다."
+        },
+        {
+          "kind": "project-record",
+          "source": "docs/HANDOFF.md §2-7",
+          "quote": "브라우저로 본 화면이 아직 /와 /onboarding뿐이다. 이게 남은 가장 큰 리스크다."
+        },
+        {
+          "kind": "project-record",
+          "source": "docs/DESIGN-RULES.md §12-4",
+          "quote": "데스크톱(1440px)에서 앱 화면이 448px 기둥 하나로 서고 좌우가 검다."
+        },
+        {
+          "kind": "external-fact",
+          "source": "https://www.dailysecu.com/news/articleView.html?idxno=207572",
+          "quote": "참가자는 AI 기반 맞춤형 금융서비스 아이디어를 제안하는 데 그치지 않고 실제로 작동하는 서비스를 직접 구현하고 검증해야 한다."
+        },
+        {
+          "kind": "named-competitor-observation",
+          "source": "https://blog.opensurvey.co.kr/article/ux-finance-app-3/",
+          "quote": "토스증권 UX 스코어 73.2점, 나무증권 68.4점, M-STOCK 67.2점 — 이 앱의 20대 초반 이용자가 이미 익숙한 밀도와 속도의 기준선."
+        },
+        {
+          "kind": "domain-datum",
+          "source": "장병내일준비적금 만기 계산",
+          "quote": "월 55만원 18개월 만기 약 2,019만원 — SPEC.md의 시드 2,000만원은 반올림한 실제값이다."
+        },
+        {
+          "kind": "source-observation",
+          "source": "app/(app)/home/page.tsx, app/(app)/portfolio/page.tsx",
+          "quote": "형제 Card 5장 + 링크 타일 + 각주가 전부 CardTitle text-base · gap-4 · bg-card. 포트폴리오는 같은 다섯 장을 평일/주말에 순서만 바꿔 재배치한다."
+        }
+      ],
+      "constraints": [
+        "CLAUDE.md C1~C11은 결격 사유이며 브리프보다 위다. 카메라·GPS·현금성 보상·부대정보·실거래·실시간시세·미접속 이탈판정·AI 확정·AI 고지 누락·투자추천·시각 기준 차단 금지.",
+        "docs/DESIGN-RULES.md는 구속력 있는 선행 규범이며 새 색·간격·폰트 크기를 만들려면 문서를 먼저 개정해야 한다.",
+        "allocations UNIQUE(user_id, week_of)가 주 1회·수정 불가를 DB에서 강제한다. 되돌리기 UI를 만들 수 없다.",
+        "DATABASE_URL 부재로 T1~T13·T15·T16이 렌더 불가, T14·T17이 부분 렌더.",
+        "제출 마감 2026-09-07 10:00, 오늘 2026-09-06, SPEC.md §9가 09-06을 기능 동결로 잡았다.",
+        "사용자가 커밋·배포 전 미리보기 승인을 요구했다. 승인 없이 진행하지 않는다."
+      ],
+      "testedTradeoff": {
+        "gives up": "모든 블록이 동일해 무엇도 틀려 보이지 않는 안전함, DESIGN-RULES §2 5단 타입 사다리와 §1 4단 명도 사다리를 손대지 않을 자유, 그리고 동결 하루 전의 시간.",
+        "gains": "어느 화면을 열어도 첫 뷰포트에 작업 대상(포인트 20개·능선·D-n)이 먼저 서는 것, 평일 진입 심사자가 잠긴 화면 대신 열린 제품을 보는 것, 1440px에서 448px 기둥이 의도로 읽히는 것.",
+        "verdict": "받아들인다. 다만 스타일 변경이 아니라 규범 개정을 먼저 제출하는 순서로만."
+      },
+      "downstream": [
+        "scout: 획득 구역 24개(marketing 10 + product 14)를 커버리지 의무로 받는다. 시각 앵커는 카테고리 기본값이 아니라 기존 브랜드 사실(한글 「제대로」 워드마크, globals.css 토큰, 능선 모티프, IBM Plex 자가 호스팅)에서 도출한다.",
+        "composer: mixed이므로 랜딩에 메시지 사다리 문법을, 제품 화면에 작업 루프 문법을 각각 적용한다. T1~T17을 ## UX task coverage에 1:1로 보존한다.",
+        "hand: T2·T6·T11·T14·T17이 invalid-submit 프로브를, T8·T13이 transient 증거를 요구한다.",
+        "coordinator: DB 없이는 15개 행이 검증 불가이므로 게이트해야 한다. 그리고 omd 빌드에 acquisition/complete/schema가 없어 두 아티팩트가 프레임 본문에만 있다.",
+        "writer: 랜딩이 답하지 않는 두 질문(실패 시 무엇이 뜨는가, 누가 운영하고 비용은 어떻게 되는가)과 랜딩 TERRAIN/FRONTS 하드코딩에 「예시」 표시를 다는 일이 카피 의무로 넘어간다."
+      ],
+      "falsification": "실제 DATABASE_URL로 /home·/portfolio를 390x844·1280x900에서 렌더했을 때 첫 뷰포트에 이미 작업 대상이 앵커로 서 있고 카드가 크기·밀도로 갈라져 보이면 이 프레이밍은 틀렸다. omd frame reframe으로 갱신한다."
+    }
+  ]
+}

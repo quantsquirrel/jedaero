@@ -76,7 +76,7 @@ export default async function PrinciplesPage() {
       />
 
       {sentences.length === 0 ? (
-        <p className="rounded-xl border border-border px-4 py-3.5 text-sm leading-relaxed text-muted-foreground">
+        <p className="rounded-xl border border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">
           아직 편성 기록이 없습니다. 주말에 첫 편성을 확정하면 이 화면이 채워집니다.
         </p>
       ) : (

@@ -35,8 +35,8 @@ export function HeroRidges({ className }: { className?: string }) {
         className="stroke-border"
       />
       {/* 신호색 한 점 — 가까운 능선의 마루에 놓는다 */}
-      <circle cx="620" cy="148" r="5" className="fill-primary" />
-      <circle cx="620" cy="148" r="13" fill="none" strokeWidth="1.2" className="stroke-primary/35" />
+      <circle cx="620" cy="148" r="5" className="fill-[var(--chart-1)]" />
+      <circle cx="620" cy="148" r="13" fill="none" strokeWidth="1.2" className="stroke-[var(--chart-1)]/35" />
     </svg>
   );
 }
@@ -52,7 +52,7 @@ export function RidgeRule({ className }: { className?: string }) {
         strokeLinejoin="round"
         className="stroke-border"
       />
-      <circle cx="480" cy="4" r="3.4" className="fill-primary" />
+      <circle cx="480" cy="4" r="3.4" className="fill-[var(--chart-1)]" />
     </svg>
   );
 }

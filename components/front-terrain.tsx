@@ -33,7 +33,7 @@ export function FrontTerrain({ code, className }: { code: ThemeCode; className?:
     >
       <path d={d} fill="currentColor" fillOpacity="0.35" />
       <path d={d} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
-      <circle cx={dot.cx} cy={dot.cy} r="1.8" className="fill-primary" />
+      <circle cx={dot.cx} cy={dot.cy} r="1.8" className="fill-[var(--chart-1)]" />
     </svg>
   );
 }

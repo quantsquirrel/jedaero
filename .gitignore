@@ -55,3 +55,9 @@ credentials.*
 # 여기 있는 파일이 `npm run lint`(릴리스 게이트)에 섞이면 우리 코드의 신호가 묻힌다.
 /oh-my-design
 /.claude
+
+# OMD 설계 루프 산출물
+# .cache/ 는 렌더·검사 원문 등 일회성 증거라 커밋하지 않는다.
+# refs/ 는 외부 사이트에서 캡처한 «참조용» 픽셀이다 — 저장소에 싣지 않는다(클린룸 경계).
+.omd/.cache/
+.omd/refs/

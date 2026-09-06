@@ -8,7 +8,10 @@ import { cn } from '@/lib/utils';
 export function IndexGauge({ parts, className }: { parts: number[]; className?: string }) {
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      <div className="flex h-3 gap-1" aria-hidden>
+      {/* ★ h-3 → h-2. 448px 폭을 가득 채운 12px 채도 막대 한 쌍이
+          바로 위 text-3xl 점수보다 큰 덩어리로 읽혔다 — 받침이 주인을 이겼다.
+          폭이 배점을 말하는 성질은 그대로다. 높이만 절반 단으로 내린다. */}
+      <div className="flex h-2 gap-1" aria-hidden>
         {INDEX_LABELS.map((row, i) => (
           <div
             key={row.key}
@@ -46,8 +49,8 @@ export function IndexGauge({ parts, className }: { parts: number[]; className?: 
         ))}
       </div>
 
-      <p className="font-mono text-[11px] tabular-nums text-faint">
-        칸의 폭이 곧 배점입니다 — {INDEX_LABELS.map((row) => row.max).join(' · ')}
+      <p className="font-mono text-xs tabular-nums text-faint">
+        칸의 폭이 곧 배점입니다: {INDEX_LABELS.map((row) => row.max).join(" · ")}
       </p>
     </div>
   );
