@@ -63,6 +63,11 @@ if has '전역할 때 받게 될 목돈을, 복무 중에 미리 굴려보는'; 
 else
   report S1-02 FAIL "첫 화면에 기준선 문장 없음 — 기획서 첫 문장과 어긋났을 수 있다"
 fi
+if has '받게 될 2,000만원'; then
+  report S1-04 FAIL "미리보기·히어로가 «2,000만원»으로 갈라짐 — 잠근 문장은 목돈"
+else
+  report S1-04 PASS "잠근 문장이 목돈으로 통일 (2,000만원 변형 없음)"
+fi
 if has '교육용' && has '실제 거래'; then
   report S1-03 PASS "«교육용·실제 거래 없음» 고지 있음"
 else

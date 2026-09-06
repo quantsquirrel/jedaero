@@ -27,13 +27,14 @@
 | F-08 | 09-04 | 경계 | 그룹명 `제1보병사단` · `1보병사단` · `7기동군단` · `3군단` · `53전대` | 차단 | **통과** | 정규식이 `\d{1,2}\s*(사단\|…)` 라 «보병»·«기동» 같은 병과가 숫자와 단위 사이에 끼면 안 잡힘. 군단·전대 단위 없음 | `lib/filters/unit-filter.ts`: 병과 삽입 표기와 `군단`·`전대` 단위까지 1차 필터 보완 | 닫힘 | `npx tsx scripts/checks/p1-11-unit-filter.ts` → 차단 6 / 그룹명 허용 4 / 회고 허용 4 |
 | F-09 | 09-04 | 오류 | 저장소 연결 실패 상태에서 `/demo` GET | 안내 화면 | Next 기본 500 (`createDemoUser` 예외가 그대로 전파. route handler 는 `error.tsx` 밖) | try/catch 없음 | `app/demo/route.ts` catch → `/demo/unavailable` (DB 안 씀) | 닫힘 | `smoke-url.sh` S2-01·S5-04 |
 | F-10 | 09-04 | 오류 | 앱 화면 어디서든 서버 컴포넌트 예외 / 없는 주소 | 한글 안내 + 다음 클릭 | Next 기본 «Application error» / Vercel 기본 404. 안내 없음 | `app/error.tsx`·`global-error.tsx`·`not-found.tsx` 부재 | 세 파일 추가. 스택·메시지 원문 미노출 | 닫힘 | `smoke-url.sh` S5-02 + `npx tsc --noEmit` |
-| F-11 | 09-04 | 경계 | 링크 미리보기 description 과 랜딩 히어로 첫 문장 대조 | 같은 문장 | «2,000만원을 … 모의투자 훈련» vs «목돈을 … 훈련» — 다른 문장 | 두 곳을 따로 씀 | `app/layout.tsx` description 을 §0 문장으로 | 닫힘 | `docs/SUBMISSION-BASELINE.md` §0 |
+| F-11 | 09-04 | 경계 | 링크 미리보기 description 과 랜딩 히어로 첫 문장 대조 | 같은 문장 | «2,000만원을 … 모의투자 훈련» vs «목돈을 … 훈련» — 다른 문장 | 두 곳을 따로 씀 | `app/layout.tsx` description 을 §0 문장으로 바꿨다고 적었으나 2,000만원 변형이 남음 | 재오픈 → F-12 | 09-06 F-12 |
+| F-12 | 09-06 | 경계 | 히어로 큰 글자 · 본문 · `metadata.description` · SPEC §0 · 기획서 §2 첫 줄 | 잠근 문장 하나 | 큰 글자는 «전역 전, 첫 2천만원의 판단을 연습합니다», 메타는 «받게 될 2,000만원» | 세 갈래로 따로 씀 | `app/page.tsx` 히어로, `app/layout.tsx` description, SPEC §0, 기획서 §2를 목돈 문장으로 통일. `smoke-url.sh` S1-04가 `받게 될 2,000만원`을 잡음 | 닫힘 | 로컬 `:3010` HTML: 옛 히어로 없음 · «시드는 전원 2,000만원» 있음 · 메타 2,000만원 변형 없음. `/demo` → `/home`. **프로덕션은 이 브랜치 배포 뒤 S1-04** |
 
 ## B. 배포·외부 접근 (배포 뒤 채운다)
 
 | # | 날짜 | 기기 · 회선 | 조작 | 기대 | 실제 | 상태 | 재검증 |
 |---|---|---|---|---|---|---|---|
-| D-01 | | `smoke-url.sh` (개발 PC) | `bash scripts/smoke-url.sh https://…` | 전부 PASS | | 대기 | |
+| D-01 | 09-06 | `smoke-url.sh` (개발 PC, 모바일 UA) | `bash scripts/smoke-url.sh https://jedaero-seven.vercel.app` | 전부 PASS | **22/23 PASS.** S1-04 FAIL: 라이브 메타가 아직 «받게 될 2,000만원». 데모 303, 쿠키, 주말 토글, 404·세션 없음·폐지 라우트는 PASS. Vercel 보호벽 없음 | 문구 배포 대기 | 이 브랜치 배포 뒤 S1-04 재실행 |
 | D-02 | | 팀원 아닌 휴대폰 · 모바일 회선 | `/` → 데모 → 토글 주말 → 편성 확정 → 재시도 | 시나리오 1·6·8 | | 대기 | |
 | D-03 | | 시크릿 창 | 회고 «하락장에도 편성을 지켰다» | AI 배지 + 질문 1개 (키 없으면 규칙 폴백 + 안내) | | 대기 | |
 | D-04 | | 시크릿 창 | 그룹명 «12사단 3대대» | 차단 문구 | | 대기 | |
