@@ -95,10 +95,13 @@ fi
 
 # ---------- S3 데모 세션으로 앱 화면 전부 ----------
 code=$(get /home -b "$JAR")
-if [ "$code" = 200 ] && has '데모 · 지금은' && clean; then
+# ★ 배너 «문장»을 grep 하지 않는다. JSX 가 `지금은 {mode} 화면입니다` 로 보간하면
+#   SSR HTML 에 `지금은 <!-- -->주말<!-- --> 화면입니다` 로 끊겨 나와 문장이 통으로 안 잡힌다.
+#   components/demo-toggle.tsx 가 그래서 data-region / data-day 를 달아 뒀다. 그것을 짚는다.
+if [ "$code" = 200 ] && has 'data-region="day-state"' && clean; then
   report S3-01 PASS "/home 200, 요일 토글 배너 있음"
 else
-  report S3-01 FAIL "/home → $code (토글배너:$(has '데모 · 지금은' && echo y || echo n) 금지문자열:$(clean && echo 없음 || echo 있음))"
+  report S3-01 FAIL "/home → $code (토글배너:$(has 'data-region="day-state"' && echo y || echo n) 금지문자열:$(clean && echo 없음 || echo 있음))"
 fi
 if has '다음 편성까지' || has '지금 편성할 수 있습니다'; then
   report S3-02 PASS "/home 최상단이 «다음 편성까지» 계열"
@@ -119,7 +122,8 @@ done
 # ---------- S4 요일 토글 (쿠키 직접 지정 — 심사 5일이 전부 평일이므로 주말이 반드시 열려야 한다) ----------
 UID_COOKIE=$(awk '$6=="user_id"{print $7}' "$JAR" | tail -1)
 code=$(get /home -b "user_id=$UID_COOKIE; demo_day=WEEKEND")
-if [ "$code" = 200 ] && has '주말 화면'; then
+# 눌린 쪽은 aria-pressed="true" 다. 배너 문장이 아니라 컨트롤의 «상태»를 본다.
+if [ "$code" = 200 ] && has 'data-day="WEEKEND" aria-pressed="true"'; then
   report S4-01 PASS "demo_day=WEEKEND → 주말 화면"
 else
   report S4-01 FAIL "주말 전환 실패 ($code)"
@@ -131,7 +135,7 @@ else
   report S4-02 FAIL "주말인데 조정 잠금 ($code)"
 fi
 code=$(get /home -b "user_id=$UID_COOKIE; demo_day=WEEKDAY")
-if [ "$code" = 200 ] && has '평일 화면'; then
+if [ "$code" = 200 ] && has 'data-day="WEEKDAY" aria-pressed="true"'; then
   report S4-03 PASS "demo_day=WEEKDAY → 평일 화면"
 else
   report S4-03 FAIL "평일 전환 실패 ($code)"
