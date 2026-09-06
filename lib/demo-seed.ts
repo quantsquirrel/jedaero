@@ -3,10 +3,10 @@
 // 리그·성향분석용 더미 사용자 200명은 3단계(리그·인사이트 구현)에서 전역 시드로 추가한다.
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
-import { allocations, users } from '../db/schema';
+import { allocations, reviews, users } from '../db/schema';
 import { addDays, mondayOfWeeksAgo, weekOfDateStr } from './week';
 import { nextTradingDay } from './portfolio/prices';
-import { ACTIVE_WEIGHT_STORY } from './demo-story';
+import { ACTIVE_WEIGHT_STORY, REVIEW_STORY } from './demo-story';
 
 const NICKNAMES = ['해뜰날', '강철비', '초코우유', '별헤는밤', '든든적금', '월급지킴이'];
 
@@ -57,6 +57,25 @@ export async function createDemoUser(now: Date = new Date()): Promise<{ id: stri
     };
   });
   await db.insert(allocations).values(allocRows);
+  await seedDemoReviews(user.id, now);
 
   return user;
+}
+
+/** 이미 발급한 데모 계정에도 회고 시드가 없으면 넣는다. 심사자가 /demo 를 다시 눌러도 복기가 비지 않게. */
+export async function seedDemoReviews(userId: string, now: Date = new Date()): Promise<void> {
+  const existing = await db
+    .select({ id: reviews.id })
+    .from(reviews)
+    .where(eq(reviews.userId, userId))
+    .limit(1);
+  if (existing.length > 0) return;
+
+  await db.insert(reviews).values(
+    REVIEW_STORY.map((r) => ({
+      userId,
+      weekOf: weekOfDateStr(mondayOfWeeksAgo(now, r.weeksAgo)),
+      body: r.body,
+    })),
+  );
 }

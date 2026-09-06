@@ -1,6 +1,5 @@
 // AI-3: 주말 회고 되묻기 (SPEC §4)
-// ★ 1턴이다. 대화 이력을 저장할 컬럼이 스키마에 없고, 만들지 않는다 —
-//   회고는 남기는 게 아니라 돌아보는 행위이므로 저장하지 않는 편이 설계와 일치한다.
+// ★ 1턴이다. AI 응답을 저장하지 않는다. 한 줄 원문만 이번 주 행으로 남긴다.
 // 사용자가 쓴 한 줄 + 이번 주 규칙 기반 사실 → 사실 확인 1~2문장 + 열린 질문 1개.
 import type { ReviewFacts } from '../review-context';
 import { completeJson, hasLlmKey } from './complete';

@@ -5,18 +5,21 @@
 import { redirect } from 'next/navigation';
 import { asc, eq } from 'drizzle-orm';
 import { db } from '@/db';
-import { allocations } from '@/db/schema';
+import { allocations, reviews } from '@/db/schema';
 import { SPIVA } from '@/db/seed/benchmarks';
+import { AttributionCurves } from '@/components/charts/attribution-curves';
 import { PageHeader } from '@/components/page-header';
 import { SourceChip } from '@/components/source-chip';
 import { PrinciplesSheet } from '@/components/principles-sheet';
 import { PrinciplesAi } from '@/components/principles-ai';
+import { ReplayAi } from '@/components/replay-ai';
+import { ReplayList } from '@/components/replay-list';
 import { kstToday } from '@/lib/day-type';
 import { pricesUpTo } from '@/lib/portfolio/prices';
 import { benchmarkRows } from '@/lib/principles/benchmarks';
 import { FIXED_COPY, staleNotice } from '@/lib/principles/copy';
-import { AttributionCurves } from '@/components/charts/attribution-curves';
 import { buildAttributionCurves, buildPrincipleSentences, type PrincipleRow } from '@/lib/principles/facts';
+import { buildReplayWeeks } from '@/lib/principles/replay';
 import { getSessionUser } from '@/lib/session';
 import { weekOf } from '@/lib/week';
 import type { Weights } from '@/lib/constants';
@@ -26,11 +29,17 @@ export default async function PrinciplesPage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
 
-  const rows = await db
-    .select()
-    .from(allocations)
-    .where(eq(allocations.userId, user.id))
-    .orderBy(asc(allocations.effectiveFrom), asc(allocations.decidedAt));
+  const [rows, reviewRows] = await Promise.all([
+    db
+      .select()
+      .from(allocations)
+      .where(eq(allocations.userId, user.id))
+      .orderBy(asc(allocations.effectiveFrom), asc(allocations.decidedAt)),
+    db
+      .select({ weekOf: reviews.weekOf, body: reviews.body })
+      .from(reviews)
+      .where(eq(reviews.userId, user.id)),
+  ]);
 
   const today = kstToday();
   const bench = benchmarkRows(today);
@@ -51,6 +60,11 @@ export default async function PrinciplesPage() {
   };
   const sentences = principleRows.length > 0 ? buildPrincipleSentences(factInput) : [];
   const attribution = principleRows.length > 0 ? buildAttributionCurves(factInput) : null;
+  const replayWeeks = buildReplayWeeks({
+    allocations: principleRows.map((r) => ({ weekOf: r.weekOf, weights: r.weights })),
+    reviews: reviewRows,
+  });
+  const hasReviews = reviewRows.length > 0;
 
   return (
     <main className="flex flex-col gap-6 px-5 py-8">
@@ -83,6 +97,9 @@ export default async function PrinciplesPage() {
           </p>
         </section>
       ) : null}
+
+      <ReplayList weeks={replayWeeks} />
+      {hasReviews ? <ReplayAi /> : null}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-base font-semibold">{FIXED_COPY.benchTitle}</h2>

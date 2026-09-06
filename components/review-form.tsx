@@ -1,6 +1,6 @@
 'use client';
 // 주말 한 줄 회고 (REVIEW_1) + AI-3 되묻기
-// 입력은 LLM 파이프라인과 동일한 필터를 거친다. 회고 내용은 저장하지 않는다.
+// 입력은 LLM 파이프라인과 동일한 필터를 거친다. 필터를 통과한 한 줄은 이번 주 행으로 남는다.
 import { useActionState } from 'react';
 import { submitReview, type ReviewState } from '@/app/actions/learn';
 import { AiNotice } from '@/components/ai-notice';
@@ -55,7 +55,7 @@ export function ReviewForm({ coachContext }: { coachContext?: CoachContext } = {
       </div>
       {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
       {state.ok ? (
-        <p className="text-sm text-up">분석했습니다. 입력 내용은 저장되지 않습니다.</p>
+        <p className="text-sm text-up">남겼습니다. 전역 때 그 주 편성과 함께 다시 보입니다.</p>
       ) : null}
 
       {state.reflection ? (
@@ -82,7 +82,7 @@ export function ReviewForm({ coachContext }: { coachContext?: CoachContext } = {
         </div>
       ) : null}
       <p className="text-xs leading-relaxed text-muted-foreground">
-        추천과 최종 결정을 하지 않습니다. 회고 원문은 응답 생성 뒤 저장하지 않고 폐기합니다.
+        추천과 최종 결정을 하지 않습니다. 한 줄은 본인 복기용으로만 남습니다.
       </p>
     </form>
   );

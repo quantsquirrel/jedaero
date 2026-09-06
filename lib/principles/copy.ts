@@ -49,6 +49,14 @@ export const FIXED_COPY: Record<string, string> = {
     '저장한 이미지는 서버에 보관하지 않습니다. 이 서비스는 사용자님에 대한 판단을 보관하지 않습니다.',
   saveButton: '이미지로 저장',
 
+  replayTitle: '그때의 편성과 한 줄',
+  replayLead: '그 주 편성과, 남긴 한 줄이 있으면 같은 카드에 둡니다. 어느 쪽이 원인이라고 적지 않습니다.',
+  replayHeld: '이 주는 편성을 바꾸지 않았습니다.',
+  replayFirst: '이 주에 첫 편성을 확정했습니다.',
+  replayAiTitle: '그때를 되짚기',
+  replayNotInImage: '그때의 한 줄은 이미지에 넣지 않습니다. 이 화면에서만 다시 볼 수 있습니다.',
+  replayAiNoAnswer: '답을 적는 칸은 없습니다. 답은 다음 의사결정으로 하면 됩니다.',
+
   footerSim: '이 서비스의 시세는 교육용 모의 데이터입니다. 실제 거래는 일어나지 않습니다.',
   footerNoRec: '특정 상품이나 종목을 추천하지 않습니다.',
 };

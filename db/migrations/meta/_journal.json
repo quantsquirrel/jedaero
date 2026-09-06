@@ -43,6 +43,13 @@
       "when": 1788498018675,
       "tag": "0005_little_kid_colt",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788704018908,
+      "tag": "0006_outgoing_mandarin",
+      "breakpoints": true
     }
   ]
 }

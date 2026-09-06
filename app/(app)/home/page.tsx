@@ -53,7 +53,7 @@ export default async function HomePage() {
     ? [
         { href: '/portfolio', label: '편성 조정', hint: '포인트 20개 · 이번 주 한 번', primary: true },
         { href: '/league', label: '제대로 지수', hint: '세 축으로 함께 보기' },
-        { href: '#ai-coach', label: '한 줄 회고', hint: '사실 + 질문 하나' },
+        { href: '#ai-coach', label: '한 줄 회고', hint: '전역 때 편성과 같이 보임' },
         { href: '/principles', label: '나의 투자 원칙', hint: '전역 후에도 남는 기록' },
       ]
     : [

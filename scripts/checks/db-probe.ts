@@ -19,6 +19,7 @@ const EXPECTED_TABLES = [
   'groups',
   'holidays',
   'prices',
+  'reviews',
   'settings',
   'tickers',
   'users',
@@ -58,7 +59,7 @@ async function main() {
     (await client.query(sql, params)).rows as T[];
 
   try {
-    // ---------- P0-02 테이블 정확히 11개, 목록 일치 ----------
+    // ---------- P0-02 테이블 정확히 12개, 목록 일치 ----------
     const tables = (
       await q<{ tablename: string }>(
         `select tablename from pg_tables where schemaname='public' order by 1`,
@@ -69,7 +70,7 @@ async function main() {
     out(
       'P0-02',
       actual === expected,
-      actual === expected ? '테이블 11개 목록 일치' : `테이블 불일치: [${actual || '없음'}]`,
+      actual === expected ? '테이블 12개 목록 일치' : `테이블 불일치: [${actual || '없음'}]`,
     );
 
     // ---------- P0-04 holdings 테이블·cash_balance 컬럼 없음 ----------

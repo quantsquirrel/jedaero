@@ -26,7 +26,7 @@ P0: 12/14 PASS   P1: 0/13 PASS
 | # | 검사 | 통과 조건 |
 |---|---|---|
 | P0-01 | 빌드 | `npm run build` exit 0 |
-| P0-02 | 스키마 | DB에 테이블 정확히 **11개**(승인된 `ai_calls`·`drafts` 포함). 목록: `ai_calls allocations drafts group_members groups holidays prices settings tickers users weekly_scores`. **가계부·퀘스트 테이블을 되살리지 말 것** |
+| P0-02 | 스키마 | DB에 테이블 정확히 **12개**(승인된 `ai_calls`·`drafts`·`reviews` 포함). 목록: `ai_calls allocations drafts group_members groups holidays prices reviews settings tickers users weekly_scores`. **가계부·퀘스트 테이블을 되살리지 말 것** |
 | P0-03 | **부대 정보 없음** | 아래 §A-1 스코프 규칙을 그대로 따를 것. **단순 grep 금지** |
 | P0-04 | **금지 구조** | `holdings` 테이블 없음, `cash_balance` 컬럼 없음 |
 | P0-05 | **주 1회 제약** | `allocations`에 `UNIQUE(user_id, week_of)` 존재 |
@@ -72,6 +72,7 @@ P0: 12/14 PASS   P1: 0/13 PASS
 | P1-27 | AI-8 폴백 | 폴백 문장이 `output-guard`·`number-guard`를 통과 |
 | P1-28 | **심사 감사 회귀** | held 힌트에 「몇 주 유지」 없음·「비중」 포함. IBM Plex KR `preload: false`. `--faint` 명도 ≥ 0.64. 하단 탭 `scroll-padding-bottom` + `safe-area-inset-bottom` |
 | P1-29 | **심사 동선 UX** | 데모 세션은 `/onboarding`을 볼 수 있다. 출처 링크 `h-11`. 심사용 동선에 온보딩 미리보기 |
+| P1-30 | **복기 합치기** | 같은 `week_of`의 회고와 편성이 한 카드. 빈 주 제외. 첫 편성은 0→비중 차이를 그리지 않음. AI-9 폴백이 두 가드 통과 |
 
 ---
 
