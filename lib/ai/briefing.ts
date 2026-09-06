@@ -89,16 +89,25 @@ export async function generateBriefing(week: MarketWeek): Promise<Briefing | nul
       temperature: 0.3,
     });
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Briefing;
-    if (typeof parsed.summary !== 'string' || !Array.isArray(parsed.questions)) return null;
-    if (parsed.questions.length !== 3) return null;
+    const parsed = JSON.parse(raw) as { summary?: unknown; questions?: unknown };
+    if (typeof parsed.summary !== 'string') return null;
+    if (!Array.isArray(parsed.questions) || parsed.questions.length !== 3) return null;
+    // ★ 원소가 «문자열인지»까지 본다. [{q:"…"}] 같은 걸 그냥 통과시키면 아래 join 이
+    //   "[object Object]" 가 되는데, 거기엔 숫자도 조언 어휘도 없어 두 가드를 다 통과한다.
+    //   그러면 폴백이 아니라 <li>{q}</li> 에서 React 가 터진다 — 카드가 통째로 죽는다.
+    if (!parsed.questions.every((q): q is string => typeof q === 'string')) return null;
+    // 길이 3 과 원소 타입을 위에서 확인했으므로 여기서만 튜플로 좁힌다.
+    const briefing: Briefing = {
+      summary: parsed.summary,
+      questions: parsed.questions as [string, string, string],
+    };
 
     // 출력 검증 — summary와 질문 3개를 한 덩어리로 본다. 하나라도 걸리면 전부 폐기한다.
-    const text = [parsed.summary, ...parsed.questions].join(' ');
+    const text = [briefing.summary, ...briefing.questions].join(' ');
     if (!verifyFactualOutput(text).ok) return null;
     // 숫자 검증 — 입력에 없던 수치를 지어냈으면 폐기한다
     if (!verifyNumbersFrom(text, input).ok) return null;
-    return parsed;
+    return briefing;
   } catch {
     // 에러 상세를 사용자에게 흘리지 않는다 (스택트레이스 금지)
     return null;

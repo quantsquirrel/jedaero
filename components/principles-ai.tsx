@@ -27,9 +27,11 @@ export function PrinciplesAi() {
       ) : (
         <div className="flex flex-col gap-2 rounded-xl border border-border px-4 py-3.5">
           {result.source === 'ai' ? <AiNotice /> : <SourceChip kind="rule" />}
+          {/* ★ 폴백 안내는 그것이 가리키는 문장«앞»에 온다 — 뒤에 두면 아래를 가리키는 말이
+              아무것도 없는 곳을 가리킨다 (market-week-card·review-form 과 같은 순서). */}
+          {result.notice ? <p className="text-xs text-muted-foreground">{result.notice}</p> : null}
           <p className="text-sm leading-relaxed">{result.narrative.text}</p>
           <p className="text-sm font-semibold leading-relaxed">{result.narrative.question}</p>
-          {result.notice ? <p className="text-xs text-muted-foreground">{result.notice}</p> : null}
         </div>
       )}
     </div>

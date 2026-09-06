@@ -97,11 +97,16 @@ export default async function PrinciplesPage() {
                 {b.slices.map((s) => `${s.name} ${s.pct}`).join(' · ')}
               </p>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                {b.note} · {b.asOf} 기준 ·{' '}
-                <a href={b.sourceUrl} className="underline" target="_blank" rel="noreferrer noopener">
-                  출처
-                </a>
+                {b.note} · {b.asOf} 기준
               </p>
+              <a
+                href={b.sourceUrl}
+                className="mt-1 inline-flex h-11 min-w-11 items-center text-sm underline"
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                출처
+              </a>
             </li>
           ))}
         </ul>
@@ -116,12 +121,15 @@ export default async function PrinciplesPage() {
         <p className="text-sm leading-relaxed text-muted-foreground">{FIXED_COPY.gapNote}</p>
         <div className="rounded-xl border border-border px-4 py-3">
           <p className="text-sm font-semibold leading-relaxed">{FIXED_COPY.spiva}</p>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            {FIXED_COPY.spivaSource}{' '}
-            <a href={SPIVA.sourceUrl} className="underline" target="_blank" rel="noreferrer noopener">
-              출처
-            </a>
-          </p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{FIXED_COPY.spivaSource}</p>
+          <a
+            href={SPIVA.sourceUrl}
+            className="mt-1 inline-flex h-11 min-w-11 items-center text-sm underline"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            출처
+          </a>
         </div>
       </section>
 

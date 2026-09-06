@@ -239,6 +239,8 @@ run_check P1-24 scripts/checks/p1-24-security-hardening.ts
 run_check P1-25 scripts/checks/p1-25-benchmarks.ts
 run_check P1-26 scripts/checks/p1-26-principles-copy.ts
 run_check P1-27 scripts/checks/p1-27-principles-ai.ts
+run_check P1-28 scripts/checks/p1-28-audit-fixes.ts
+run_check P1-29 scripts/checks/p1-29-judge-ux.ts
 
 # ---------- 요약 ----------
 echo '---'
