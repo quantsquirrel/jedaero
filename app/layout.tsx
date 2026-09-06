@@ -4,7 +4,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: '제대로 (JEDAERO)',
-  description: '전역할 때 받게 될 2,000만원을, 복무 중에 미리 굴려보는 모의투자 훈련',
+  description: '전역할 때 받게 될 목돈을, 복무 중에 미리 굴려보는 모의투자 훈련',
 };
 
 export const viewport: Viewport = {

@@ -157,11 +157,11 @@ export default function LandingPage() {
             ))}
           </div>
           <h1 className="text-6xl font-bold tracking-tight sm:text-8xl">제대로</h1>
-          <p className="mx-auto mt-6 max-w-[24ch] text-balance break-keep text-2xl font-bold leading-snug tracking-tight text-foreground sm:text-3xl">
-            전역 전, 첫 <span className="text-primary">2천만원</span>의 판단을 연습합니다
+          <p className="mx-auto mt-6 max-w-[38ch] text-balance break-keep text-2xl font-bold leading-snug tracking-tight text-foreground sm:text-3xl">
+            전역할 때 받게 될 목돈을, 복무 중에 미리 굴려보는 모의투자 훈련.
           </p>
           <p className="mx-auto mt-4 max-w-[38ch] text-pretty break-keep text-base leading-relaxed text-muted-foreground sm:text-lg">
-            전역할 때 받게 될 목돈을, 복무 중에 미리 굴려보는 모의투자 훈련.
+            시드는 전원 2,000만원. 실제 거래 없음. 확정은 본인이 합니다.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-x-3 gap-y-2 text-xs text-faint">
             <span>평일에는 읽고</span>
