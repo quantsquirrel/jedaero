@@ -86,8 +86,7 @@ export default async function LearnPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           <p className="text-xs leading-relaxed text-muted-foreground">
-            홈의 AI 코치와 같은 한 줄입니다. 여기서는 학습 5단계와 붙여 둡니다. 입력은 저장되지
-            않습니다.
+            홈의 AI 코치와 같은 한 줄입니다. 여기서는 학습 5단계와 붙여 둡니다.
           </p>
           <ReviewForm />
         </CardContent>
